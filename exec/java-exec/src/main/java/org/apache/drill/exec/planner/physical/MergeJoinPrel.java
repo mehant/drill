@@ -28,12 +28,16 @@ import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
@@ -71,7 +75,18 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
   }
 
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
+    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
+    // cost of evaluating each leftkey=rightkey join condition
+    double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
+    double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
+    
+    return new DrillCostBase(leftRowCount + rightRowCount, cpuCost, 0, 0);    
+  }
+
+  @Override  
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {    
     final List<String> fields = getRowType().getFieldNames();
     assert isUnique(fields);
     final int leftCount = left.getRowType().getFieldCount();
