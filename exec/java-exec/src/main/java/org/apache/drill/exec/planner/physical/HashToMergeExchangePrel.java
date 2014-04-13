@@ -20,16 +20,14 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
-import net.hydromatic.linq4j.Ord;
-
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.HashToRandomExchange;
+import org.apache.drill.exec.physical.config.HashToMergeExchange;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
@@ -39,86 +37,67 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataTypeField;
 
 
-public class HashToRandomExchangePrel extends SingleRel implements Prel {
+public class HashToMergeExchangePrel extends SingleRel implements Prel {
 
-  private final List<DistributionField> fields;
+  private final List<DistributionField> distFields;
   private int numEndPoints = 0;
+  private final RelCollation collation ;
   
-  public HashToRandomExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<DistributionField> fields, 
-                                  int numEndPoints) {
+  public HashToMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, 
+                                 List<DistributionField> fields,
+                                 RelCollation collation,
+                                 int numEndPoints) {
     super(cluster, traitSet, input);
-    this.fields = fields;
+    this.distFields = fields;
+    this.collation = collation;
     this.numEndPoints = numEndPoints;
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
-  /**
-   * HashToRandomExchange processes M input rows and hash partitions them 
-   * based on computing a hash value on the distribution fields. 
-   * If there are N nodes (endpoints), we can assume for costing purposes 
-   * on average each sender will send M/N rows to 1 destination endpoint.  
-   * Let 
-   *   C = Cost per node. 
-   *   k = number of fields on which to distribute on
-   *   h = CPU cost of computing hash value on 1 field 
-   *   s = CPU cost of Selection-Vector remover per row
-   *   w = Network cost of sending 1 row to 1 destination
-   * So, C =  CPU cost of hashing k fields of M/N rows 
-   *        + CPU cost of SV remover for M/N rows 
-   *        + Network cost of sending M/N rows to 1 destination. 
-   * So, C = (h * k * M/N) + (s * M/N) + (w * M/N) 
-   * Total cost = N * C
-   */
+
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    /* 
-    int distFieldSize = 0;
-    List<RelDataTypeField> distFieldList = child.getRowType().getFieldList();
-    for (int i = 0; i < fields.size(); i++) {
-      DistributionField f = fields.get(i);
-      RelDataTypeField distField = distFieldList.get(f.getFieldId());
-      distFieldSize += distField.getType().getPrecision();
-    }
-    */
+
     int  rowWidth = child.getRowType().getPrecision();
-    double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * fields.size();
+    double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * distFields.size();
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
+    double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));    
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
-    return new DrillCostBase(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);    
+    return new DrillCostBase(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);    
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new HashToRandomExchangePrel(getCluster(), traitSet, sole(inputs), fields, numEndPoints);
+    return new HashToMergeExchangePrel(getCluster(), traitSet, sole(inputs), distFields, 
+        this.collation, numEndPoints);
   }
-
+  
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-
+    
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-
-    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
-
+    
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
+    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
+      childPOP = new SelectionVectorRemover(childPOP);
+      creator.addPhysicalOperator(childPOP);
+    }
 
-    HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
-    return g;
+    HashToMergeExchange g = new HashToMergeExchange(childPOP, 
+        PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
+        PrelUtil.getOrdering(this.collation, getChild().getRowType()));
+    creator.addPhysicalOperator(g);
+    return g;    
   }
-
-  public List<DistributionField> getFields() {
-    return this.fields;
+  
+  public List<DistributionField> getDistFields() {
+    return this.distFields;
   }
-
-  @Override
-  public RelWriter explainTerms(RelWriter pw) {
-    super.explainTerms(pw);
-      for (Ord<DistributionField> ord : Ord.zip(fields)) {
-        pw.item("dist" + ord.i, ord.e);
-      }
-    return pw;
+  
+  public RelCollation getCollation() {
+    return this.collation;
   }
-
+  
 }
