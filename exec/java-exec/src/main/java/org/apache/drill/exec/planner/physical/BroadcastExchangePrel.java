@@ -77,12 +77,9 @@ public class BroadcastExchangePrel extends SingleRel implements Prel {
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
     if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
       childPOP = new SelectionVectorRemover(childPOP);
-      creator.addPhysicalOperator(childPOP);
     }
 
-
     BroadcastExchange g = new BroadcastExchange(childPOP);
-    creator.addPhysicalOperator(g);
     return g;    
   }
   

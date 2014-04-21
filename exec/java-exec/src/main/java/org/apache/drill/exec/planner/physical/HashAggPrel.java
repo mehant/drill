@@ -110,7 +110,6 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
         keys.toArray(new NamedExpression[keys.size()]), 
         exprs.toArray(new NamedExpression[exprs.size()]), 
         1.0f);
-    creator.addPhysicalOperator(g);
     
     return g;    
 

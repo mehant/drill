@@ -85,13 +85,11 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
     if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
       childPOP = new SelectionVectorRemover(childPOP);
-      creator.addPhysicalOperator(childPOP);
     }
 
     HashToMergeExchange g = new HashToMergeExchange(childPOP, 
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
         PrelUtil.getOrdering(this.collation, getChild().getRowType()));
-    creator.addPhysicalOperator(g);
     return g;    
   }
   
