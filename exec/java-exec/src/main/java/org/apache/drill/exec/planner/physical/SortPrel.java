@@ -24,6 +24,7 @@ import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.config.SingleMergeExchange;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
@@ -60,7 +61,8 @@ public class SortPrel extends SortRel implements Prel {
     int numSortFields = this.collation.getFieldCollations().size();
     double cpuCost = DrillCostBase.compareCpuCost * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2)); 
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
-    return new DrillCostBase(inputRows, cpuCost, diskIOCost, 0);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);    
   }
 
   @Override

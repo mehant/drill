@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
@@ -42,13 +43,10 @@ import org.eigenbase.reltype.RelDataTypeField;
 public class HashToRandomExchangePrel extends SingleRel implements Prel {
 
   private final List<DistributionField> fields;
-  private int numEndPoints = 0;
   
-  public HashToRandomExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<DistributionField> fields, 
-                                  int numEndPoints) {
+  public HashToRandomExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<DistributionField> fields) {
     super(cluster, traitSet, input);
     this.fields = fields;
-    this.numEndPoints = numEndPoints;
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
@@ -77,12 +75,13 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
     double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * fields.size();
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
-    return new DrillCostBase(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);   
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new HashToRandomExchangePrel(getCluster(), traitSet, sole(inputs), fields, numEndPoints);
+    return new HashToRandomExchangePrel(getCluster(), traitSet, sole(inputs), fields);
   }
 
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {

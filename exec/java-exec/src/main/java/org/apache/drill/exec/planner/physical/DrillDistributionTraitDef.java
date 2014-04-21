@@ -17,20 +17,12 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.ops.QueryContext;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitDef;
 
 public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrait>{
   public static final DrillDistributionTraitDef INSTANCE = new DrillDistributionTraitDef();
-  
-  private QueryContext queryContext = null;
-  public static int numDefaultEndPoints = 32; /* this may not be needed once we pass QueryContext
-                                                  through RelOptPlanner */ 
   
   private DrillDistributionTraitDef() {
     super();
@@ -52,10 +44,6 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
   public String getSimpleName() {
     return this.getClass().getSimpleName();
   }
-
-  public void setQueryContext(QueryContext context) {
-    queryContext = context;
-  }
   
   // implement RelTraitDef
   public RelNode convert(
@@ -75,13 +63,8 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
     // We do not want to convert from "ANY", since it's abstract. 
     // Source trait should be concrete type: SINGLETON, HASH_DISTRIBUTED, etc.
     if (currentDist.equals(DrillDistributionTrait.DEFAULT)) {
-      if (toDist.equals(DrillDistributionTrait.ANY))
-        return rel;
-      else 
         return null;
     }
-    
-    RelCollation collation = null;
     
     switch(toDist.getType()){
       // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
@@ -90,27 +73,15 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
         return new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case HASH_DISTRIBUTED:
         return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel, 
-                                            toDist.getFields(), this.getNumEndPoints());
+                                            toDist.getFields());
       case RANGE_DISTRIBUTED:
         return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case BROADCAST_DISTRIBUTED:
-        return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel,
-                                         this.getNumEndPoints());
+        return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       default:
         return null;
     }
 
-  }
-  
-  // NOTE: this is a temporary function to get the number of end points until we get queryContext 
-  // passed through to RelOptPlanner such that computeSelfCost() can use it
-  public int getNumEndPoints() {
-    if (queryContext != null) {
-      return queryContext.getActiveEndpoints().size();
-    }
-    else {
-      return numDefaultEndPoints;
-    }
   }
 
 }

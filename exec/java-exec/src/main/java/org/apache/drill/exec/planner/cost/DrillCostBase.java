@@ -26,16 +26,20 @@ import org.eigenbase.relopt.RelOptUtil;
  */
 public class DrillCostBase implements DrillRelOptCost {
 
-  // NOTE: the multiplication factors below are not calibrated yet...these
-  // are chosen based on approximations for now. For reference purposes, 
-  // assume each disk on a server can have a sustained I/O throughput of 
-  // 100 MBytes/sec.  Suppose there are 16 disks..theoretically one could
-  // get 1.6GBytes/sec. Suppose network speed is 1GBit/sec which is 128MBytes/sec.
-  // For relative costing, let's assume sending data over the network is
-  // about 8x slower than reading/writing to an array of local disks.
+  /**
+   * NOTE: the multiplication factors below are not calibrated yet...these
+   * are chosen based on approximations for now. For reference purposes, 
+   * assume each disk on a server can have a sustained I/O throughput of 
+   * 100 MBytes/sec.  Suppose there is an array of 16 disks per server..theoretically
+   * one could get 1.6GBytes/sec. Suppose network speed is 1GBit/sec which is 
+   * 128MBytes/sec, although actual transfer rate over the network may be lower.
+   * We are only concerned with relative costs, not absolute values.  
+   * For relative costing, let's assume sending data over the network is
+   * about 16x slower than reading/writing to an array of local disks.
+   */
   public static final int baseCpuCost = 1;                        // base cpu cost per 'operation'
   public static final int byteDiskReadCost = 64 * baseCpuCost;    // disk read cost per byte
-  public static final int byteNetworkCost = 8 * byteDiskReadCost; // network transfer cost per byte
+  public static final int byteNetworkCost = 16 * byteDiskReadCost; // network transfer cost per byte
 
 
   public static final int svrCpuCost = 8 * baseCpuCost;          // cpu cost for SV remover
@@ -50,7 +54,7 @@ public class DrillCostBase implements DrillRelOptCost {
   // comparison cost of comparing one field with another (ignoring data types for now) 
   public static final int compareCpuCost = 4 * baseCpuCost;   
   
-  public static boolean useDefaultCosting = true;
+  public static boolean useDefaultCosting = false;
   
   /** For the costing formulas in computeSelfCost(), assume the following notations: 
   * Let 
@@ -101,7 +105,7 @@ public class DrillCostBase implements DrillRelOptCost {
   final double cpu;
   final double io;
   final double network;
-
+  
   public DrillCostBase(double rowCount, double cpu, double io, double network) {
     this.rowCount = rowCount;
     this.cpu = cpu;
@@ -256,5 +260,31 @@ public class DrillCostBase implements DrillRelOptCost {
     }
     return Math.pow(d, 1 / n);
 	}
+	
+	public static class DrillCostFactory implements DrillRelOptCostFactory {
+		public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
+			return new DrillCostBase(dRows, dCpu, dIo, dNetwork);
+		}
+		
+		public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
+			return new DrillCostBase(dRows, dCpu, dIo, 0);
+		}
+		
+		public RelOptCost makeHugeCost() {
+			return DrillCostBase.HUGE;
+		}
 
+		public RelOptCost makeInfiniteCost() {
+			return DrillCostBase.INFINITY;
+		}
+
+		public RelOptCost makeTinyCost() {
+			return DrillCostBase.TINY;
+		}
+
+		public RelOptCost makeZeroCost() {
+			return DrillCostBase.ZERO;
+		}
+	}	
+	
 }

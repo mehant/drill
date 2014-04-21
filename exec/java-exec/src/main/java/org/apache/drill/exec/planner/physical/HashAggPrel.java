@@ -33,6 +33,7 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
@@ -83,7 +84,8 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
     // add cpu cost for computing the aggregate functions
     cpuCost += DrillCostBase.funcCpuCost * numAggrFields * inputRows;
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
-    return new DrillCostBase(inputRows, cpuCost, diskIOCost, 0 /* network cost */);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);    
   }
 
   @Override

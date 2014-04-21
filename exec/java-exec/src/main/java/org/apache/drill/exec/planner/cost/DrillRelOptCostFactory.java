@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,41 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.apache.drill.exec.planner.physical;
-
-import net.hydromatic.optiq.tools.FrameworkContext;
-
-public class PlannerSettings implements FrameworkContext{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
-
-  private boolean singleMode;
-  private int numEndPoints = 0;
-
-  public boolean isSingleMode() {
-    return singleMode;
-  }
-
-  public int numEndPoints() {
-    return numEndPoints;  
-  }
-  
-  public void setSingleMode(boolean singleMode) {
-    this.singleMode = singleMode;
-  }
-  
-  public void setNumEndPoints(int numEndPoints) {
-    this.numEndPoints = numEndPoints;
-  }
-
-  @Override
-  public <T> T unwrap(Class<T> clazz) {
-    if(clazz == PlannerSettings.class){
-      return (T) this;
-    }else{
-      return null;
-    }
-  }
+ ******************************************************************************/
 
 
+package org.apache.drill.exec.planner.cost;
+
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCostFactory;
+
+public interface DrillRelOptCostFactory extends RelOptCostFactory {
+
+  /**
+   * Creates a cost object.
+   */
+  RelOptCost makeCost(double rowCount, double cpu, double io, double network);
 }

@@ -24,6 +24,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToMergeExchange;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
@@ -68,7 +69,8 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));    
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
-    return new DrillCostBase(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);    
   }
 
   @Override

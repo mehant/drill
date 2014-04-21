@@ -52,7 +52,8 @@ public class QueryContext{
     this.workBus = drllbitContext.getWorkBus();
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
-    this.plannerSettings = new PlannerSettings();
+    this.plannerSettings = new PlannerSettings(); 
+    this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size()); 
   }
 
   public PlannerSettings getPlannerSettings(){

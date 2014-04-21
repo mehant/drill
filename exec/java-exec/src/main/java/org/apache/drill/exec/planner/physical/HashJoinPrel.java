@@ -24,9 +24,8 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
@@ -46,22 +45,19 @@ import org.eigenbase.util.Pair;
 
 import com.beust.jcommander.internal.Lists;
 
-public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
+public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
 
-  //private final JoinCondition[] joinConditions; // Drill's representation of join conditions
-
-  /** Creates a MergeJoiPrel. */
-  public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+  public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
     if (condition.isAlwaysTrue()) {
-      throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
+      throw new InvalidRelException("HashJoinPrel does not support cartesian product join");
     }
 
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
     if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
-      throw new InvalidRelException("MergeJoinPrel only supports equi-join");
+      throw new InvalidRelException("HashJoinPrel only supports equi-join");
     }
   }
 
@@ -69,7 +65,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
   @Override
   public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType) {
     try {
-      return new MergeJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
+      return new HashJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
     }catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -84,6 +80,8 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
     // cost of evaluating each leftkey=rightkey join condition
     double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
+    /// TODO:....
+    
     double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);    
@@ -114,9 +112,9 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
       conditions.add(new JoinCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right))));
     }
 
-    MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
+    HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
 
-    return mjoin;
+    return hjoin;
   }
 
   public List<Integer> getLeftKeys() {

@@ -31,6 +31,7 @@ import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.sql.handlers.*;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.planner.sql.parser.*;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.relopt.ConventionTraitDef;
+import org.eigenbase.relopt.RelOptCostFactory;
 import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParseException;
@@ -60,6 +62,7 @@ public class DrillSqlWorker {
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
     DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
+    RelOptCostFactory costFactory = new DrillCostBase.DrillCostFactory();
     StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserImpl.FACTORY) //
@@ -69,6 +72,7 @@ public class DrillSqlWorker {
         .convertletTable(StandardConvertletTable.INSTANCE) //
         .context(context.getPlannerSettings()) //
         .ruleSets(RULES) //
+        .costFactory(costFactory) //
         .build();
     this.planner = Frameworks.getPlanner(config);
 

@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
@@ -53,7 +54,8 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
     double cpuCost = 2 * DrillCostBase.baseCpuCost * inputRows;
-    return new DrillCostBase(inputRows, cpuCost, 0, 0);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, 0, 0);    
   }
   
   @Override

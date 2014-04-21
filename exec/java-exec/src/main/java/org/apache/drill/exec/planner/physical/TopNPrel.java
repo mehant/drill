@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
@@ -78,7 +79,8 @@ public class TopNPrel extends SingleRel implements Prel {
     int numSortFields = this.collation.getFieldCollations().size();
     double cpuCost = DrillCostBase.compareCpuCost * numSortFields * inputRows * (Math.log(limit)/Math.log(2)); 
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
-    return new DrillCostBase(inputRows, cpuCost, diskIOCost, 0); 
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0); 
   }
 
 

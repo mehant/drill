@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.UnionExchange;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
@@ -63,7 +64,8 @@ public class UnionExchangePrel extends SingleRel implements Prel {
     int  rowWidth = child.getRowType().getPrecision();    
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
-    return new DrillCostBase(inputRows, svrCpuCost, 0, networkCost);   
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, svrCpuCost, 0, networkCost);   
   }
 
   @Override

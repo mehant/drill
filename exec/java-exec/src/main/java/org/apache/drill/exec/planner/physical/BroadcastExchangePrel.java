@@ -35,13 +35,9 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
 public class BroadcastExchangePrel extends SingleRel implements Prel {
-
-  int numEndPoints = 0;
   
-  public BroadcastExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, 
-                              int numEndPoints) {
+  public BroadcastExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
-    this.numEndPoints = numEndPoints;
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
@@ -60,13 +56,14 @@ public class BroadcastExchangePrel extends SingleRel implements Prel {
     double inputRows = RelMetadataQuery.getRowCount(child);
     int  rowWidth = child.getRowType().getPrecision();
     double cpuCost = DrillCostBase.svrCpuCost * inputRows ;
+    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth * numEndPoints;
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new BroadcastExchangePrel(getCluster(), traitSet, sole(inputs), numEndPoints);
+    return new BroadcastExchangePrel(getCluster(), traitSet, sole(inputs));
   }
   
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {

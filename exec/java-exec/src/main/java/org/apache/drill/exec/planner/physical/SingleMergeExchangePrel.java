@@ -22,13 +22,10 @@ import java.util.List;
 
 import net.hydromatic.linq4j.Ord;
 
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleMergeExchange;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
@@ -73,9 +70,10 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     int  rowWidth = child.getRowType().getPrecision();    
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
-    int numEndPoints = DrillDistributionTraitDef.numDefaultEndPoints; // use the hardcoded value until we get it through RelOptPlanner
+    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints(); 
     double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));
-    return new DrillCostBase(inputRows, svrCpuCost + mergeCpuCost, 0, networkCost);   
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, svrCpuCost + mergeCpuCost, 0, networkCost);   
   }
 
   @Override

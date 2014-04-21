@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.SingleMergeExchange;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.AggregateCall;
@@ -83,7 +84,8 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
     double cpuCost = DrillCostBase.compareCpuCost * numGroupByFields * inputRows;
     // add cpu cost for computing the aggregate functions
     cpuCost += DrillCostBase.funcCpuCost * numAggrFields * inputRows;
-    return new DrillCostBase(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);    
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);    
   }
    
   @Override
