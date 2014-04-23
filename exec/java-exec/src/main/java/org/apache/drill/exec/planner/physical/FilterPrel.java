@@ -45,18 +45,6 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new FilterPrel(getCluster(), traitSet, sole(inputs), getCondition());
   }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
-    }
-    RelNode child = this.getChild();
-    double inputRows = RelMetadataQuery.getRowCount(child);
-    double cpuCost = 2 * DrillCostBase.baseCpuCost * inputRows;
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, 0, 0);    
-  }
   
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {

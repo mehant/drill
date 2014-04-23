@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.common;
 
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
@@ -40,7 +41,7 @@ public abstract class DrillScreenRelBase extends SingleRel implements DrillRelNo
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
     }
     // by default, assume cost is proportional to number of rows

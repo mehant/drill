@@ -24,6 +24,7 @@ public class PlannerSettings implements FrameworkContext{
 
   private boolean singleMode = false;
   private int numEndPoints = 0;
+  private boolean useDefaultCosting = true;
 
   public boolean isSingleMode() {
     return singleMode;
@@ -31,6 +32,10 @@ public class PlannerSettings implements FrameworkContext{
 
   public int numEndPoints() {
     return numEndPoints;  
+  }
+  
+  public boolean useDefaultCosting() {
+    return useDefaultCosting;
   }
   
   public void setSingleMode(boolean singleMode) {
@@ -41,6 +46,10 @@ public class PlannerSettings implements FrameworkContext{
     this.numEndPoints = numEndPoints;
   }
 
+  public void setUseDefaultCosting(boolean defcost) {
+    this.useDefaultCosting = defcost;
+  }
+  
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){

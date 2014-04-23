@@ -70,7 +70,7 @@ public class TopNPrel extends SingleRel implements Prel {
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) { 
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) { 
       //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice. 
       return super.computeSelfCost(planner).multiplyBy(0.05);
     }

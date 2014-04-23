@@ -62,7 +62,7 @@ public class DrillRuleSets {
       PushFilterPastJoinRule.FILTER_ON_JOIN,
       PushJoinThroughJoinRule.RIGHT,
       PushJoinThroughJoinRule.LEFT,
-      // End supprot for WHERE style joins.
+      // End support for WHERE style joins.
 
       //Add back rules
 
@@ -115,9 +115,9 @@ public class DrillRuleSets {
       ScreenPrule.INSTANCE,
       ExpandConversionRule.INSTANCE,
       StreamAggPrule.INSTANCE,
-      HashAggPrule.INSTANCE,
+      // HashAggPrule.INSTANCE,
       MergeJoinPrule.INSTANCE,
-      HashJoinPrule.INSTANCE,
+      // HashJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
       LimitPrule.INSTANCE
 

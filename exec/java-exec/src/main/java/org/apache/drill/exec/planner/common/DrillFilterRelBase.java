@@ -20,11 +20,13 @@ package org.apache.drill.exec.planner.common;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.InvalidRelException;
@@ -48,10 +50,14 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
   
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    // by default, assume cost is proportional to number of rows
-    double rowCount = RelMetadataQuery.getRowCount(this);
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }
+    RelNode child = this.getChild();
+    double inputRows = RelMetadataQuery.getRowCount(child);
+    double cpuCost = 2 * DrillCostBase.baseCpuCost * inputRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, rowCount, 0, 0).multiplyBy(0.1);
+    return costFactory.makeCost(inputRows, cpuCost, 0, 0);    
   }
 
   protected LogicalExpression getFilterExpression(DrillParseContext context){

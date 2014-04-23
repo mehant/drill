@@ -26,6 +26,7 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
@@ -53,7 +54,7 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
     }
     // by default, assume cost is proportional to number of rows

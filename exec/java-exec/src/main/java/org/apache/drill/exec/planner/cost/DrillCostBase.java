@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.cost;
 
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.util.Util;
 
 /**
  * Implementation of the DrillRelOptCost, modeled similar to VolcanoCost
@@ -54,8 +55,6 @@ public class DrillCostBase implements DrillRelOptCost {
   // comparison cost of comparing one field with another (ignoring data types for now) 
   public static final int compareCpuCost = 4 * baseCpuCost;   
   public static final int avgFieldWidth = 8;
-  
-  public static boolean useDefaultCosting = false;
   
   /** For the costing formulas in computeSelfCost(), assume the following notations: 
   * Let 
@@ -134,6 +133,11 @@ public class DrillCostBase implements DrillRelOptCost {
 		return network;
 	}
 
+  @Override
+  public int hashCode() {
+    return Util.hashCode(rowCount) + Util.hashCode(cpu) + Util.hashCode(io) + Util.hashCode(network);
+  }
+
 	@Override
 	public boolean isInfinite() {
     return (this == INFINITY)
@@ -165,29 +169,24 @@ public class DrillCostBase implements DrillRelOptCost {
           && (Math.abs(this.network - that.network) < RelOptUtil.EPSILON)
           && (Math.abs(this.rowCount - that.rowCount) < RelOptUtil.EPSILON));
 	}
-
-	@Override
-	public boolean isLe(RelOptCost other) {
+	
+  @Override
+  public boolean isLe(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
-    return (this == that)
-        || ((this.cpu <= that.cpu)
-        && (this.io <= that.io) 
-        && (this.network <= that.network)
-        && (this.rowCount <= that.rowCount));
-	}
+ 
+    return this == that 
+        || (this.rowCount + this.cpu + this.io + this.network) <=
+           (that.rowCount + that.cpu + that.io + that.network) ;
+  }
 
-	@Override
-	public boolean isLt(RelOptCost other) {
+  @Override
+  public boolean isLt(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
-    if ( (this.cpu < that.cpu)
-        && (this.io < that.io) 
-        && (this.network < that.network)
-        && (this.rowCount < that.rowCount) ) {
-      return true;
-    }
-    return false;
-	}
 
+    return (this.rowCount + this.cpu + this.io + this.network < 
+        that.rowCount + that.cpu + that.io + that.network) ;
+  }
+	
 	@Override
 	public RelOptCost plus(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;

@@ -71,7 +71,7 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
     }
     RelNode child = this.getChild();

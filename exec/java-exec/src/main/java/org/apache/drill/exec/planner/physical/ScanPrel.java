@@ -66,7 +66,7 @@ public class ScanPrel extends DrillScanRelBase implements Prel{
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (DrillCostBase.useDefaultCosting) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner); 
     }
     // by default, assume cost is proportional to number of rows
