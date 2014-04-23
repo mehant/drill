@@ -68,10 +68,10 @@ public class HashJoinPrule extends RelOptRule {
       /// TODO: ANY distribution seems to create some problems..need to revisit
       // DrillDistributionTrait distAnyLeft = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.ANY);
       DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
-      // traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationLeft).plus(distAnyLeft);
+      // traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distAnyLeft);
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
 
-      createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
+      //createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());

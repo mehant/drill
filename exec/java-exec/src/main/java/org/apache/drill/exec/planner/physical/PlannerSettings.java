@@ -22,7 +22,7 @@ import net.hydromatic.optiq.tools.FrameworkContext;
 public class PlannerSettings implements FrameworkContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
-  private boolean singleMode;
+  private boolean singleMode = false;
   private int numEndPoints = 0;
 
   public boolean isSingleMode() {

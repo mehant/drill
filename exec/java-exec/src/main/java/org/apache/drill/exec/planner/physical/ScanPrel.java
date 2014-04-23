@@ -24,10 +24,15 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
 
@@ -59,5 +64,15 @@ public class ScanPrel extends DrillScanRelBase implements Prel{
     return scan;
   }
 
-
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    if (DrillCostBase.useDefaultCosting) {
+      return super.computeSelfCost(planner); 
+    }
+    // by default, assume cost is proportional to number of rows
+    double rowCount = RelMetadataQuery.getRowCount(this);
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, rowCount, 0, 0);   
+  }
+  
 }

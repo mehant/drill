@@ -53,6 +53,7 @@ public class DrillCostBase implements DrillRelOptCost {
 
   // comparison cost of comparing one field with another (ignoring data types for now) 
   public static final int compareCpuCost = 4 * baseCpuCost;   
+  public static final int avgFieldWidth = 8;
   
   public static boolean useDefaultCosting = false;
   
@@ -178,11 +179,13 @@ public class DrillCostBase implements DrillRelOptCost {
 	@Override
 	public boolean isLt(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
-    return (this == that)
-        || ((this.cpu < that.cpu)
+    if ( (this.cpu < that.cpu)
         && (this.io < that.io) 
         && (this.network < that.network)
-        && (this.rowCount < that.rowCount));
+        && (this.rowCount < that.rowCount) ) {
+      return true;
+    }
+    return false;
 	}
 
 	@Override
@@ -260,7 +263,11 @@ public class DrillCostBase implements DrillRelOptCost {
     }
     return Math.pow(d, 1 / n);
 	}
-	
+
+  public String toString() {
+    return "{" + rowCount + " rows, " + cpu + " cpu, " + io + " io, " + network + " network}";
+  }
+  
 	public static class DrillCostFactory implements DrillRelOptCostFactory {
 		public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
 			return new DrillCostBase(dRows, dCpu, dIo, dNetwork);

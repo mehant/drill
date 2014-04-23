@@ -22,10 +22,13 @@ import java.util.List;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -50,7 +53,13 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
+    if (DrillCostBase.useDefaultCosting) {
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }
+    // by default, assume cost is proportional to number of rows
+    double rowCount = RelMetadataQuery.getRowCount(this);
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, rowCount, 0, 0).multiplyBy(0.1);    
   }
 
   private List<Pair<RexNode, String>> projects() {

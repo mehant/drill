@@ -76,15 +76,20 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
     if (DrillCostBase.useDefaultCosting) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
     }
-    double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
-    double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
-    // cost of evaluating each leftkey=rightkey join condition
-    double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
-    /// TODO:....
+    double probeRowCount = RelMetadataQuery.getRowCount(this.getLeft());
+    double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
     
-    double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
+    // cpu cost of hashing the join keys for the build side
+    double cpuCostBuild = DrillCostBase.hashCpuCost * getRightKeys().size() * buildRowCount;
+    // cpu cost of hashing the join keys for the probe side
+    double cpuCostProbe = DrillCostBase.hashCpuCost * getLeftKeys().size() * probeRowCount;
+      
+    // cpu cost of evaluating each leftkey=rightkey join condition
+    double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
+    
+    double cpuCost = joinConditionCost * (buildRowCount + probeRowCount) + cpuCostBuild + cpuCostProbe;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);    
+    return costFactory.makeCost(buildRowCount + probeRowCount, cpuCost, 0, 0);    
   }
 
   @Override  

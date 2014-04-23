@@ -36,4 +36,10 @@ public abstract class DrillScanRelBase extends TableAccessRelBase implements Dri
     assert drillTable != null;
   }
 
+  @Override
+  public double getRows() {
+    // dummy for testing..
+    return 100d;
+  }
+
 }

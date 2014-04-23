@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.common;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -28,6 +29,7 @@ import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -46,7 +48,10 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
   
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
+    // by default, assume cost is proportional to number of rows
+    double rowCount = RelMetadataQuery.getRowCount(this);
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, rowCount, 0, 0).multiplyBy(0.1);
   }
 
   protected LogicalExpression getFilterExpression(DrillParseContext context){

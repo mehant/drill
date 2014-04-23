@@ -38,6 +38,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.rex.RexNode;
 
 
 public class HashToRandomExchangePrel extends SingleRel implements Prel {
@@ -71,7 +72,8 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
-    int  rowWidth = child.getRowType().getPrecision();
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;
+    
     double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * fields.size();
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;

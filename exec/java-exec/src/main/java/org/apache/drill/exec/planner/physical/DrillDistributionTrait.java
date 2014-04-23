@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitDef;

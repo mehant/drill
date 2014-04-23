@@ -64,7 +64,7 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
-    int  rowWidth = child.getRowType().getPrecision();
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;
     double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * distFields.size();
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));    

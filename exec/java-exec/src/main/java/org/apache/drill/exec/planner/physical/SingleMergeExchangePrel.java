@@ -67,7 +67,7 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getPrecision();    
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;    
     double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
     double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
     int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints(); 
