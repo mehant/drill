@@ -62,7 +62,8 @@ public class HashJoinPrule extends RelOptRule {
       RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(hashLeftPartition);   
       RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(hashRightPartition);
 
-      createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
+      //temporarily not generate this plan
+      //createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
 
       // Create transform request for HashJoin plan with left child ANY distributed and right child BROADCAST distributed
       /// TODO: ANY distribution seems to create some problems..need to revisit
@@ -71,6 +72,7 @@ public class HashJoinPrule extends RelOptRule {
       // traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distAnyLeft);
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
 
+      //temporarily not generate this plan
       //createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
 
     } catch (InvalidRelException e) {

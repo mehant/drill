@@ -69,7 +69,7 @@ public class HashAggPrule extends RelOptRule {
                                             ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
     
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
-        createTransformRequest(call, aggregate, input, traits);
+        //createTransformRequest(call, aggregate, input, traits);
       } 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());

@@ -77,7 +77,8 @@ public class MergeJoinPrule extends RelOptRule {
       // traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationLeft).plus(distAnyLeft);
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationRight).plus(distBroadcastRight);
 
-      createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
+      //temporarily not generate this plan
+      //createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
