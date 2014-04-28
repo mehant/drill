@@ -39,7 +39,7 @@ public class DrillCostBase implements DrillRelOptCost {
    * about 16x slower than reading/writing to an array of local disks.
    */
   public static final int baseCpuCost = 1;                        // base cpu cost per 'operation'
-  public static final int byteDiskReadCost = 64 * baseCpuCost;    // disk read cost per byte
+  public static final int byteDiskReadCost = 32 * baseCpuCost;    // disk read cost per byte
   public static final int byteNetworkCost = 16 * byteDiskReadCost; // network transfer cost per byte
 
 
@@ -149,6 +149,10 @@ public class DrillCostBase implements DrillRelOptCost {
 
 	@Override
 	public boolean equals(RelOptCost other) {
+	  // here we compare the individual components similar to VolcanoCost, however
+	  // an alternative would be to add up the components and compare the total.
+	  // Note that VolcanoPlanner mainly uses isLe() and isLt() for cost comparisons, 
+	  // not equals(). 
     return this == other
       || (other instanceof DrillCostBase
           && (this.cpu == ((DrillCostBase) other).cpu)

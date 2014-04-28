@@ -115,9 +115,9 @@ public class DrillRuleSets {
       ScreenPrule.INSTANCE,
       ExpandConversionRule.INSTANCE,
       StreamAggPrule.INSTANCE,
-      // HashAggPrule.INSTANCE,
+      HashAggPrule.INSTANCE,
       MergeJoinPrule.INSTANCE,
-      // HashJoinPrule.INSTANCE,
+      HashJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
       LimitPrule.INSTANCE
 

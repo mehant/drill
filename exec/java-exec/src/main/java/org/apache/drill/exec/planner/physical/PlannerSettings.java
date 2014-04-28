@@ -24,7 +24,7 @@ public class PlannerSettings implements FrameworkContext{
 
   private boolean singleMode = false;
   private int numEndPoints = 0;
-  private boolean useDefaultCosting = true;
+  private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
 
   public boolean isSingleMode() {
     return singleMode;
