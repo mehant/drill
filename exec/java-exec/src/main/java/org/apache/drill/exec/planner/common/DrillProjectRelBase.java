@@ -57,10 +57,12 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
     }
-    // by default, assume cost is proportional to number of rows
+    
+    // cost is proportional to the number of rows and number of columns being projected
     double rowCount = RelMetadataQuery.getRowCount(this);
+    double cpuCost = DrillCostBase.PROJECT_CPU_COST * getRowType().getFieldCount();
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, rowCount, 0, 0).multiplyBy(0.1);    
+    return costFactory.makeCost(rowCount, cpuCost, 0, 0);    
   }
 
   private List<Pair<RexNode, String>> projects() {

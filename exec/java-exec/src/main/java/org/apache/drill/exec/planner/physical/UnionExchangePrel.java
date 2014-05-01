@@ -61,9 +61,9 @@ public class UnionExchangePrel extends SingleRel implements Prel {
     
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;    
-    double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
-    double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;    
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, svrCpuCost, 0, networkCost);   
   }

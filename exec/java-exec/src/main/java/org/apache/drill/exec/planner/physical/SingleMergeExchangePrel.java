@@ -67,11 +67,11 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;    
-    double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
-    double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;    
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints(); 
-    double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));
+    double mergeCpuCost = DrillCostBase.COMPARE_CPU_COST * inputRows * (Math.log(numEndPoints)/Math.log(2));
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, svrCpuCost + mergeCpuCost, 0, networkCost);   
   }

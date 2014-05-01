@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.List;
 import java.util.logging.Logger;
-
-import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
@@ -34,9 +30,8 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
-public class HashAggPrule extends RelOptRule {
+public class HashAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new HashAggPrule();
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
@@ -49,6 +44,11 @@ public class HashAggPrule extends RelOptRule {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
 
+    if (aggregate.containsDistinctCall()) {
+      // currently, don't use HashAggregate if any of the logical aggrs contains DISTINCT
+      return;
+    }
+    
     DrillDistributionTrait toDist = null;
     RelTraitSet traits = null;
 
@@ -69,7 +69,9 @@ public class HashAggPrule extends RelOptRule {
                                             ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
     
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
-        //createTransformRequest(call, aggregate, input, traits);
+        createTransformRequest(call, aggregate, input, traits);
+        
+        ///TODO: 2 phase hash aggregate plan 
       } 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
@@ -85,24 +87,5 @@ public class HashAggPrule extends RelOptRule {
                                          aggregate.getAggCallList());
       
     call.transformTo(newAgg);
-  }
-  
-  
-  private List<DistributionField> getDistributionField(DrillAggregateRel rel, boolean allFields) {
-    List<DistributionField> groupByFields = Lists.newArrayList();
-
-    for (int group : BitSets.toIter(rel.getGroupSet())) {
-      DistributionField field = new DistributionField(group);
-      groupByFields.add(field);
-
-      if (!allFields && groupByFields.size() == 1) {
-        // if we are only interested in 1 grouping field, pick the first one for now..
-        // but once we have num distinct values (NDV) statistics, we should pick the one
-        // with highest NDV. 
-        break;
-      }
-    }    
-    
-    return groupByFields;
   }
 }

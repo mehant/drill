@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.List;
+
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -36,6 +38,7 @@ import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
@@ -43,9 +46,16 @@ import org.eigenbase.rex.RexNode;
  * Base class for logical and physical Filters implemented in Drill
  */
 public abstract class DrillFilterRelBase extends FilterRelBase implements DrillRelNode {
+  int numConjuncts = 0;
+  
   protected DrillFilterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, traits, child, condition);
     assert getConvention() == convention;
+    
+    // save the number of conjuncts that make up the filter condition such 
+    // that repeated calls to the costing function can use the saved copy
+    numConjuncts = RelOptUtil.conjunctions(condition).size();
+    assert numConjuncts >= 1;
   }
   
   @Override
@@ -55,7 +65,7 @@ public abstract class DrillFilterRelBase extends FilterRelBase implements DrillR
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    double cpuCost = 2 * DrillCostBase.baseCpuCost * inputRows;
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numConjuncts * inputRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, 0, 0);    
   }

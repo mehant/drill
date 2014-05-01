@@ -21,8 +21,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -37,8 +40,19 @@ public class OrderedPartitionExchangePrel extends SingleRel implements Prel {
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
-    //return planner.getCostFactory().makeCost(50, 50, 50);
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }    
+    RelNode child = this.getChild();
+    double inputRows = RelMetadataQuery.getRowCount(child);
+
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
+    
+    double rangePartitionCpuCost = DrillCostBase.RANGE_PARTITION_CPU_COST * inputRows;
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, rangePartitionCpuCost + svrCpuCost, 0, networkCost);  
   }
 
   @Override

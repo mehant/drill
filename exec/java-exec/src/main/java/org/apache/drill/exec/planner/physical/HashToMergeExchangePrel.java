@@ -64,11 +64,11 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;
-    double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * distFields.size();
-    double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
-    double mergeCpuCost = DrillCostBase.compareCpuCost * inputRows * (Math.log(numEndPoints)/Math.log(2));    
-    double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
+    double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows * distFields.size();
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double mergeCpuCost = DrillCostBase.COMPARE_CPU_COST * inputRows * (Math.log(numEndPoints)/Math.log(2));    
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);    
   }
@@ -84,11 +84,11 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
     
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
     
-    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
-      childPOP = new SelectionVectorRemover(childPOP);
-    }
+    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
+    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
+    
     HashToMergeExchange g = new HashToMergeExchange(childPOP, 
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
         PrelUtil.getOrdering(this.collation, getChild().getRowType()));

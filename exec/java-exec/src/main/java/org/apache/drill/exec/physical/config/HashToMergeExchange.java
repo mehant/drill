@@ -83,12 +83,6 @@ public class HashToMergeExchange extends AbstractExchange{
     return new HashToMergeExchange(child, distExpr, orderExprs);
   }
 
-  @Override
-  public boolean supportsSelectionVector() {
-    return true;
-  }
-
-
   @JsonProperty("orderExpr")
   public List<Ordering> getOrderExpressions(){
     return orderExprs;

@@ -54,11 +54,6 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
   public HashAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls) throws InvalidRelException {
     super(cluster, traits, child, groupSet, aggCalls);
-    for (AggregateCall aggCall : aggCalls) {
-      if (aggCall.isDistinct()) {
-        throw new InvalidRelException("DrillAggregateRel does not support DISTINCT aggregates");
-      }
-    }
   }
 
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
@@ -80,9 +75,9 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
     int numGroupByFields = this.getGroupCount();
     int numAggrFields = this.aggCalls.size();
     // cpu cost of hashing each grouping key
-    double cpuCost = DrillCostBase.hashCpuCost * numGroupByFields * inputRows;
+    double cpuCost = DrillCostBase.HASH_CPU_COST * numGroupByFields * inputRows;
     // add cpu cost for computing the aggregate functions
-    cpuCost += DrillCostBase.funcCpuCost * numAggrFields * inputRows;
+    cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);    

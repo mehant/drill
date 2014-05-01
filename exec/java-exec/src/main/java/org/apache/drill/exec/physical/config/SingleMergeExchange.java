@@ -84,11 +84,6 @@ public class SingleMergeExchange extends AbstractExchange {
     return new SingleMergeExchange(child, orderExpr);
   }
 
-  @Override
-  public boolean supportsSelectionVector() {
-    return true;
-  }
-
   @JsonProperty("orderings")
   public List<Ordering> getOrderings() {
     return this.orderExpr;

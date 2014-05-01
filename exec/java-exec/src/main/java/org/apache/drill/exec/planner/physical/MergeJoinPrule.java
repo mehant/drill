@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
@@ -36,7 +35,7 @@ import org.eigenbase.trace.EigenbaseTrace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class MergeJoinPrule extends RelOptRule {
+public class MergeJoinPrule extends JoinPruleBase {
   public static final RelOptRule INSTANCE = new MergeJoinPrule();
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
@@ -49,15 +48,14 @@ public class MergeJoinPrule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
+    final RelNode left = call.rel(1);
+    final RelNode right = call.rel(2);
+
+    if (!checkPreconditions(join, left, right)) {
+      return;
+    }
     
     try {
-      if (join.getCondition().isAlwaysTrue()) {
-        throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
-      }
-
-      final RelNode left = call.rel(1);
-      final RelNode right = call.rel(2);
-
       RelCollation collationLeft = getCollation(join.getLeftKeys());
       RelCollation collationRight = getCollation(join.getRightKeys());
 
@@ -105,16 +103,6 @@ public class MergeJoinPrule extends RelOptRule {
       fields.add(new RelFieldCollation(key));
     }
     return RelCollationImpl.of(fields);
-  }
-
-  private List<DistributionField> getDistributionField(List<Integer> keys) {
-    List<DistributionField> distFields = Lists.newArrayList();
-
-    for (int key : keys) {
-      distFields.add(new DistributionField(key));
-    }
-     
-    return distFields;
   }
 
 }

@@ -38,23 +38,30 @@ public class DrillCostBase implements DrillRelOptCost {
    * For relative costing, let's assume sending data over the network is
    * about 16x slower than reading/writing to an array of local disks.
    */
-  public static final int baseCpuCost = 1;                        // base cpu cost per 'operation'
-  public static final int byteDiskReadCost = 32 * baseCpuCost;    // disk read cost per byte
-  public static final int byteNetworkCost = 16 * byteDiskReadCost; // network transfer cost per byte
+  public static final int BASE_CPU_COST = 1;                        // base cpu cost per 'operation'
+  public static final int BYTE_DISK_READ_COST = 32 * BASE_CPU_COST;    // disk read cost per byte
+  public static final int BYTE_NETWORK_COST = 16 * BYTE_DISK_READ_COST; // network transfer cost per byte
 
 
-  public static final int svrCpuCost = 8 * baseCpuCost;          // cpu cost for SV remover
-  public static final int funcCpuCost = 12 * baseCpuCost;         // cpu cost for a function evaluation
+  public static final int SVR_CPU_COST = 8 * BASE_CPU_COST;          // cpu cost for SV remover
+  public static final int FUNC_CPU_COST = 12 * BASE_CPU_COST;         // cpu cost for a function evaluation
+
+  // cpu cost for projecting an expression; note that projecting an expression
+  // that is not a simple column or constant may include evaluation, but we 
+  // currently don't model it at that level of detail.  
+  public static final int PROJECT_CPU_COST = 4 * BASE_CPU_COST;       
 
   // hash cpu cost per field (for now we don't distinguish between fields of different types) involves 
   // the cost of the following operations: 
   // compute hash value, probe hash table, walk hash chain and compare with each element,
   // add to the end of hash chain if no match found
-  public static final int hashCpuCost = 8 * baseCpuCost;     
-
-  // comparison cost of comparing one field with another (ignoring data types for now) 
-  public static final int compareCpuCost = 4 * baseCpuCost;   
-  public static final int avgFieldWidth = 8;
+  public static final int HASH_CPU_COST = 8 * BASE_CPU_COST;  
+ 
+  public static final int RANGE_PARTITION_CPU_COST = 12 * BASE_CPU_COST;
+      
+  // cost of comparing one field with another (ignoring data types for now) 
+  public static final int COMPARE_CPU_COST = 4 * BASE_CPU_COST;   
+  public static final int AVG_FIELD_WIDTH = 8;
   
   /** For the costing formulas in computeSelfCost(), assume the following notations: 
   * Let 
@@ -179,16 +186,20 @@ public class DrillCostBase implements DrillRelOptCost {
     DrillCostBase that = (DrillCostBase) other;
  
     return this == that 
-        || (this.rowCount + this.cpu + this.io + this.network) <=
-           (that.rowCount + that.cpu + that.io + that.network) ;
+      || ( (this.cpu + this.io + this.network) <=
+           (that.cpu + that.io + that.network) 
+          && this.rowCount <= that.rowCount
+         );
   }
 
   @Override
   public boolean isLt(RelOptCost other) {
     DrillCostBase that = (DrillCostBase) other;
 
-    return (this.rowCount + this.cpu + this.io + this.network < 
-        that.rowCount + that.cpu + that.io + that.network) ;
+    return ( (this.cpu + this.io + this.network) < 
+             (that.cpu + that.io + that.network) 
+            && this.rowCount < that.rowCount
+           );
   }
 	
 	@Override
@@ -271,30 +282,30 @@ public class DrillCostBase implements DrillRelOptCost {
     return "{" + rowCount + " rows, " + cpu + " cpu, " + io + " io, " + network + " network}";
   }
   
-	public static class DrillCostFactory implements DrillRelOptCostFactory {
-		public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
-			return new DrillCostBase(dRows, dCpu, dIo, dNetwork);
-		}
+  public static class DrillCostFactory implements DrillRelOptCostFactory {
+    public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
+      return new DrillCostBase(dRows, dCpu, dIo, dNetwork);
+    }
 		
-		public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
-			return new DrillCostBase(dRows, dCpu, dIo, 0);
-		}
+    public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
+      return new DrillCostBase(dRows, dCpu, dIo, 0);
+    }
 		
-		public RelOptCost makeHugeCost() {
-			return DrillCostBase.HUGE;
-		}
+    public RelOptCost makeHugeCost() {
+      return DrillCostBase.HUGE;
+    }
 
-		public RelOptCost makeInfiniteCost() {
-			return DrillCostBase.INFINITY;
-		}
+    public RelOptCost makeInfiniteCost() {
+      return DrillCostBase.INFINITY;
+    }
 
-		public RelOptCost makeTinyCost() {
-			return DrillCostBase.TINY;
-		}
+    public RelOptCost makeTinyCost() {
+      return DrillCostBase.TINY;
+    }
 
-		public RelOptCost makeZeroCost() {
-			return DrillCostBase.ZERO;
-		}
-	}	
+    public RelOptCost makeZeroCost() {
+      return DrillCostBase.ZERO;
+    }
+  }	
 	
 }

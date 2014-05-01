@@ -72,11 +72,11 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     
-    double hashCpuCost = DrillCostBase.hashCpuCost * inputRows * fields.size();
-    double svrCpuCost = DrillCostBase.svrCpuCost * inputRows;
-    double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth;
+    double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows * fields.size();
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);   
   }

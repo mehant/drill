@@ -54,10 +54,10 @@ public class BroadcastExchangePrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
    
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.avgFieldWidth;
-    double cpuCost = DrillCostBase.svrCpuCost * inputRows ;
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
+    double cpuCost = DrillCostBase.SVR_CPU_COST * inputRows ;
     int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
-    double networkCost = DrillCostBase.byteNetworkCost * inputRows * rowWidth * numEndPoints;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
     return new DrillCostBase(inputRows, cpuCost, 0, networkCost);
   }
 

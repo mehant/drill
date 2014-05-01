@@ -77,7 +77,7 @@ public class TopNPrel extends SingleRel implements Prel {
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
     int numSortFields = this.collation.getFieldCollations().size();
-    double cpuCost = DrillCostBase.compareCpuCost * numSortFields * inputRows * (Math.log(limit)/Math.log(2)); 
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(limit)/Math.log(2)); 
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0); 

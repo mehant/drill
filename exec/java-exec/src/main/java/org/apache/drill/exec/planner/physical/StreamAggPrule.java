@@ -39,7 +39,7 @@ import org.eigenbase.trace.EigenbaseTrace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class StreamAggPrule extends RelOptRule {
+public class StreamAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new StreamAggPrule();
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
@@ -76,11 +76,11 @@ public class StreamAggPrule extends RelOptRule {
                                        ImmutableList.copyOf(getDistributionField(aggregate, false)));
     
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnOneKey);
-        //createTransformRequest(call, aggregate, input, traits);
+        createTransformRequest(call, aggregate, input, traits);
        
         
  /*       
-        // create a 2-phase plan
+        // create a 2-phase plan - commented out for now until we resolve planning for 'ANY' distribution 
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(DrillDistributionTrait.ANY);
 
         RelNode convertedInput = convert(input, traits);
@@ -127,23 +127,5 @@ public class StreamAggPrule extends RelOptRule {
       fields.add(new RelFieldCollation(group));
     }
     return RelCollationImpl.of(fields);
-  }
-
-  private List<DistributionField> getDistributionField(DrillAggregateRel rel, boolean allFields) {
-    List<DistributionField> groupByFields = Lists.newArrayList();
-
-    for (int group : BitSets.toIter(rel.getGroupSet())) {
-      DistributionField field = new DistributionField(group);
-      groupByFields.add(field);
-
-      if (!allFields && groupByFields.size() == 1) {
-        // if we are only interested in 1 grouping field, pick the first one for now..
-        // but once we have num distinct values (NDV) statistics, we should pick the one
-        // with highest NDV. 
-        break;
-      }
-    }    
-    
-    return groupByFields;
   }
 }

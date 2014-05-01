@@ -81,9 +81,9 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
 
     int numGroupByFields = this.getGroupCount();
     int numAggrFields = this.aggCalls.size();
-    double cpuCost = DrillCostBase.compareCpuCost * numGroupByFields * inputRows;
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numGroupByFields * inputRows;
     // add cpu cost for computing the aggregate functions
-    cpuCost += DrillCostBase.funcCpuCost * numAggrFields * inputRows;
+    cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);    
   }

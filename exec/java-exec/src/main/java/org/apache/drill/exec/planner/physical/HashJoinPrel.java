@@ -51,14 +51,7 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
-    if (condition.isAlwaysTrue()) {
-      throw new InvalidRelException("HashJoinPrel does not support cartesian product join");
-    }
-
-    RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-    if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
-      throw new InvalidRelException("HashJoinPrel only supports equi-join");
-    }
+    RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
   }
 
 
@@ -80,12 +73,12 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
     double buildRowCount = RelMetadataQuery.getRowCount(this.getRight());
     
     // cpu cost of hashing the join keys for the build side
-    double cpuCostBuild = DrillCostBase.hashCpuCost * getRightKeys().size() * buildRowCount;
+    double cpuCostBuild = DrillCostBase.HASH_CPU_COST * getRightKeys().size() * buildRowCount;
     // cpu cost of hashing the join keys for the probe side
-    double cpuCostProbe = DrillCostBase.hashCpuCost * getLeftKeys().size() * probeRowCount;
+    double cpuCostProbe = DrillCostBase.HASH_CPU_COST * getLeftKeys().size() * probeRowCount;
       
     // cpu cost of evaluating each leftkey=rightkey join condition
-    double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
+    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
     
     double cpuCost = joinConditionCost * (buildRowCount + probeRowCount) + cpuCostBuild + cpuCostProbe;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();

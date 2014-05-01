@@ -69,10 +69,17 @@ public class ScanPrel extends DrillScanRelBase implements Prel{
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner); 
     }
-    // by default, assume cost is proportional to number of rows
+   
     double rowCount = RelMetadataQuery.getRowCount(this);
+    double cpuCost = rowCount; // for now, assume cpu cost is proportional to row count. 
+    // Even though scan is reading from disk, in the currently generated plans all plans will
+    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.  
+    // In the future we might consider alternative scans that go against projections or 
+    // different compression schemes etc that affect the amount of data read. Such alternatives
+    // would affect both cpu and io cost. 
+    double ioCost = 0;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, rowCount, 0, 0);   
+    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);   
   }
   
 }

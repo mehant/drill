@@ -83,7 +83,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
     double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
     // cost of evaluating each leftkey=rightkey join condition
-    double joinConditionCost = 2 * DrillCostBase.baseCpuCost * this.getLeftKeys().size();
+    double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
     double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);    

@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
@@ -31,9 +29,8 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
-public class HashJoinPrule extends RelOptRule {
+public class HashJoinPrule extends JoinPruleBase {
   public static final RelOptRule INSTANCE = new HashJoinPrule();
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
@@ -46,15 +43,14 @@ public class HashJoinPrule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
+    final RelNode left = call.rel(1);
+    final RelNode right = call.rel(2);
+    
+    if (!checkPreconditions(join, left, right)) {
+      return;
+    }
     
     try {
-      if (join.getCondition().isAlwaysTrue()) {
-        throw new InvalidRelException("HashJoinPrel does not support cartesian product join");
-      }
-
-      final RelNode left = call.rel(1);
-      final RelNode right = call.rel(2);
-
       // Create transform request for HashJoin plan with both children HASH distributed
       DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
       DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
@@ -91,16 +87,6 @@ public class HashJoinPrule extends RelOptRule {
                                               convertedLeft, convertedRight, join.getCondition(),
                                               join.getJoinType());
     call.transformTo(newJoin) ;
-  }
-
-  private List<DistributionField> getDistributionField(List<Integer> keys) {
-    List<DistributionField> distFields = Lists.newArrayList();
-
-    for (int key : keys) {
-      distFields.add(new DistributionField(key));
-    }
-     
-    return distFields;
   }
 
 }

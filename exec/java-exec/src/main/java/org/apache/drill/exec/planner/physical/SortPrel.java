@@ -59,7 +59,7 @@ public class SortPrel extends SortRel implements Prel {
     double inputRows = RelMetadataQuery.getRowCount(child);
     // int  rowWidth = child.getRowType().getPrecision();
     int numSortFields = this.collation.getFieldCollations().size();
-    double cpuCost = DrillCostBase.compareCpuCost * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2)); 
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2)); 
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
     return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);    
