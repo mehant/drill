@@ -76,7 +76,12 @@ public class StreamAggPrule extends AggPruleBase {
                                        ImmutableList.copyOf(getDistributionField(aggregate, false)));
     
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnOneKey);
-        createTransformRequest(call, aggregate, input, traits);
+        // Temporarily commenting out the single distkey plan since a few tpch queries (e.g 01.sql) get stuck
+        // in VolcanoPlanner.canonize() method. Note that the corresponding single distkey plan for HashAggr works
+        // ok.  One possibility is that here we have dist on single key but collation on all keys, so that 
+        // might be causing some problem. 
+        /// TODO: re-enable this plan after resolving the issue.  
+        // createTransformRequest(call, aggregate, input, traits);
        
         
  /*       

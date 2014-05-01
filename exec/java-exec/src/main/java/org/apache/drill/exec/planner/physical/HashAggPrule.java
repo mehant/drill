@@ -65,6 +65,7 @@ public class HashAggPrule extends AggPruleBase {
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
         createTransformRequest(call, aggregate, input, traits);
 
+        // hash distribute on single grouping key
         toDist = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
                                             ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
     
