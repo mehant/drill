@@ -115,8 +115,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     // indicates if we have previously returned an output batch
     boolean firstOutputBatch = true;
 
-    IterOutcome leftUpstream = IterOutcome.NONE;
-
     @Override
     public int getRecordCount() {
         return outputRecords;
@@ -141,13 +139,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                  * as well, for the materialization to be successful. This batch will not be used
                  * till we complete the build phase.
                  */
-                leftUpstream = left.next();
+                IterOutcome leftUpstream = left.next();
 
                 // Build the hash table, using the build side record batches.
                 executeBuildPhase();
 
                 // Create the run time generated code needed to probe and project
-                hashJoinProbe = setupHashJoinProbe();
+                hashJoinProbe = setupHashJoinProbe(leftUpstream);
             }
 
             // Allocate the memory for the vectors in the output container
@@ -198,12 +196,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         // Shouldn't be recreating the hash table, this should be done only once
         assert hashTable == null;
 
-        if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
-            htConfig.setKeyExprsProbe(null);
-        }
-
         ChainedHashTable ht  = new ChainedHashTable(htConfig, context, this.right, this.left, null);
         hashTable = ht.createAndSetupHashTable(null);
+
     }
 
     public void executeBuildPhase() throws SchemaChangeException, ClassTransformationException, IOException {
@@ -276,7 +271,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         }
     }
 
-    public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
+    public HashJoinProbe setupHashJoinProbe(IterOutcome leftUpstream) throws ClassTransformationException, IOException {
 
         allocators = new ArrayList<>();
 
