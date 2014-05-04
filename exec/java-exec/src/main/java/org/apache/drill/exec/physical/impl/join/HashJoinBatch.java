@@ -216,10 +216,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         // Set the left named expression to be null if the probe batch is empty.
         if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
             leftExpr = null;
+        } else {
+          if (left.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
+            throw new SchemaChangeException("Hash join does not support probe batch with selection vectors");
+          }
         }
 
         HashTableConfig htConfig = new HashTableConfig(HashTable.DEFAULT_INITIAL_CAPACITY, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
-
 
         // Create the chained hash table
         ChainedHashTable ht  = new ChainedHashTable(htConfig, context, this.right, this.left, null);
@@ -246,6 +249,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 case OK_NEW_SCHEMA:
                     if (rightSchema == null) {
                         rightSchema = right.getSchema();
+
+                        if (rightSchema.getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
+                          throw new SchemaChangeException("Hash join does not support build batch with selection vectors");
+                        }
                         setupHashTable();
                     } else {
                         throw new SchemaChangeException("Hash join does not support schema changes");
@@ -387,8 +394,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public void cleanup() {
-        left.cleanup();
-        right.cleanup();
         hjHelper.clear();
         container.clear();
 
@@ -398,5 +403,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             hashTable.clear();
         }
         super.cleanup();
+        left.cleanup();
+        right.cleanup();
     }
 }
