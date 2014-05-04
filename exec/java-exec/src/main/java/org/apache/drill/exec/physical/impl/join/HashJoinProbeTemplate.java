@@ -80,12 +80,12 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
     @Override
     public void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
-                                   int probeRecordCount, RecordBatch outgoing, HashTable hashTable,
-                                   HashJoinHelper hjHelper, JoinRelType joinRelType) {
+                                   RecordBatch outgoing, HashTable hashTable, HashJoinHelper hjHelper,
+                                   JoinRelType joinRelType) {
 
         this.probeBatch = probeBatch;
         this.joinType = joinRelType;
-        this.recordsToProcess = probeRecordCount;
+        this.recordsToProcess = probeBatch.getRecordCount();
         this.hashTable = hashTable;
         this.hjHelper = hjHelper;
 
