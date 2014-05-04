@@ -187,33 +187,25 @@ public class HashJoinHelper {
         SelectionVector4 startIndex = startIndices.get(batchIdx);
         int linkIndex;
 
-        // If head of the list is empty, insert current index at this position
+        // If its the first value for this key
         if ((linkIndex = (startIndex.get(offsetIdx))) == INDEX_EMPTY) {
             startIndex.set(offsetIdx, batchIndex, recordIndex);
         } else {
-            /* Head of this list is not empty, if the first link
-             * is empty insert there
+            /* we already have encountered a record with the same key
+             * use links to store this value
              */
-            batchIdx = linkIndex >>> SHIFT_SIZE;
-            offsetIdx = linkIndex & Character.MAX_VALUE;
+            SelectionVector4 link;
+            do {
+                //Traverse the links to get an empty slot to insert the current index
+                batchIdx  = linkIndex >>> SHIFT_SIZE;
+                offsetIdx = linkIndex & Character.MAX_VALUE;
 
-            SelectionVector4 link = buildInfoList.get(batchIdx).getLinks();
-            int firstLink = link.get(offsetIdx);
+                // get the next link
+                link = buildInfoList.get(batchIdx).getLinks();
+            } while ((linkIndex = link.get(offsetIdx)) != INDEX_EMPTY);
 
-            if (firstLink == INDEX_EMPTY) {
-                link.set(offsetIdx, batchIndex, recordIndex);
-            } else {
-                /* Insert the current value as the first link and
-                 * make the current first link as its next
-                 */
-                int firstLinkBatchIdx  = firstLink >>> SHIFT_SIZE;
-                int firstLinkOffsetIDx = firstLink & Character.MAX_VALUE;
-
-                SelectionVector4 nextLink = buildInfoList.get(batchIndex).getLinks();
-                nextLink.set(recordIndex, firstLinkBatchIdx, firstLinkOffsetIDx);
-
-                link.set(offsetIdx, batchIndex, recordIndex);
-            }
+            // We have the correct batchIdx and offset within the batch to store the next link
+            link.set(offsetIdx, batchIndex, recordIndex);
         }
     }
 
