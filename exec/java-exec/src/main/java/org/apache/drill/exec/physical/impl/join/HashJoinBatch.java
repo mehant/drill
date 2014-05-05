@@ -153,44 +153,52 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 hashJoinProbe = setupHashJoinProbe();
             }
 
-            // Allocate the memory for the vectors in the output container
-            allocateVectors();
-
             // Store the number of records projected
             if (hashTable != null) {
+
+                // Allocate the memory for the vectors in the output container
+                allocateVectors();
+
                 outputRecords = hashJoinProbe.probeAndProject();
-            } else {
-              // Our build side is empty, we won't have any matches, clear the probe side
-              if (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
-                  for (VectorWrapper<?> wrapper : left) {
-                      wrapper.getValueVector().clear();
-                  }
-              }
-            }
 
-            /* We are here because of one the following
-             * 1. Completed processing of all the records and we are done
-             * 2. We've filled up the outgoing batch to the maximum and we need to return upstream
-             * Either case build the output container's schema and return
-             */
-            if (outputRecords > 0) {
+                /* We are here because of one the following
+                 * 1. Completed processing of all the records and we are done
+                 * 2. We've filled up the outgoing batch to the maximum and we need to return upstream
+                 * Either case build the output container's schema and return
+                 */
+                if (outputRecords > 0) {
 
-                // Build the container schema and set the counts
-                container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-                container.setRecordCount(outputRecords);
+                  // Build the container schema and set the counts
+                  container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+                  container.setRecordCount(outputRecords);
 
-                for (VectorWrapper<?> v : container) {
+                  for (VectorWrapper<?> v : container) {
                     v.getValueVector().getMutator().setValueCount(outputRecords);
-                }
+                  }
 
-                // First output batch, return OK_NEW_SCHEMA
-                if (firstOutputBatch == true) {
+                  // First output batch, return OK_NEW_SCHEMA
+                  if (firstOutputBatch == true) {
                     firstOutputBatch = false;
                     return IterOutcome.OK_NEW_SCHEMA;
-                }
+                  }
 
-                // Not the first output batch
-                return IterOutcome.OK;
+                  // Not the first output batch
+                  return IterOutcome.OK;
+                }
+            } else {
+                // Our build side is empty, we won't have any matches, clear the probe side
+                if (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
+                    for (VectorWrapper<?> wrapper : left) {
+                      wrapper.getValueVector().clear();
+                    }
+                    leftUpstream = left.next();
+                    while (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
+                      for (VectorWrapper<?> wrapper : left) {
+                        wrapper.getValueVector().clear();
+                      }
+                      leftUpstream = left.next();
+                    }
+                }
             }
 
             // No more output records, clean up and return
@@ -308,7 +316,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     break;
             }
             // Get the next record batch
-            right.cleanup();
             rightUpstream = right.next();
         }
     }
@@ -415,6 +422,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             hashTable.clear();
         }
         super.cleanup();
+
         left.cleanup();
         right.cleanup();
     }
