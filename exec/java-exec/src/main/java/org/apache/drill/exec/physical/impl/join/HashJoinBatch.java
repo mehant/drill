@@ -157,7 +157,16 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             allocateVectors();
 
             // Store the number of records projected
-            outputRecords = hashJoinProbe.probeAndProject();
+            if (hashTable != null) {
+                outputRecords = hashJoinProbe.probeAndProject();
+            } else {
+              // Our build side is empty, we won't have any matches, clear the probe side
+              if (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
+                  for (VectorWrapper<?> wrapper : left) {
+                      wrapper.getValueVector().clear();
+                  }
+              }
+            }
 
             /* We are here because of one the following
              * 1. Completed processing of all the records and we are done
@@ -299,6 +308,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     break;
             }
             // Get the next record batch
+            right.cleanup();
             rightUpstream = right.next();
         }
     }
@@ -395,11 +405,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     @Override
     public void cleanup() {
         hjHelper.clear();
-        container.clear();
 
         // If we didn't receive any data, hyperContainer may be null, check before clearing
         if (hyperContainer != null) {
             hyperContainer.clear();
+        }
+
+        if (hashTable != null) {
             hashTable.clear();
         }
         super.cleanup();
