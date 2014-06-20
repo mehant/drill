@@ -585,4 +585,15 @@ public class TestFunctionsQuery {
             "DEC38_2=1000000000000000000; " +
             "DEC38_3=1000000000.000000000000000000\n");
   }
+
+  @Test
+  public void testOptiqDecimalCapping() throws Exception {
+    String query = "select  cast('12345.678900000' as decimal(18, 9))=cast('12345.678900000' as decimal(38, 9)) as CMP " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "CMP=true\n");
+  }
 }
