@@ -596,4 +596,23 @@ public class TestFunctionsQuery {
         .returns(
             "CMP=true\n");
   }
+
+  @Test
+  public void testDecimalRoundUp() throws Exception {
+    String query = "select cast('999999999999999999.9999999999999999995' as decimal(38, 18)) as DEC38_1, " +
+                   "cast('999999999999999999.9999999999999999994' as decimal(38, 18)) as DEC38_2, " +
+                   "cast('999999999999999999.1234567895' as decimal(38, 9)) as DEC38_3, " +
+                   "cast('99999.12345' as decimal(18, 4)) as DEC18_1, " +
+                   "cast('99999.99995' as decimal(18, 4)) as DEC18_2 " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC38_1=1000000000000000000.000000000000000000; " +
+            "DEC38_2=999999999999999999.999999999999999999; " +
+            "DEC38_3=999999999999999999.123456790; " +
+            "DEC18_1=99999.1235; " +
+            "DEC18_2=100000.0000\n");
+  }
 }
