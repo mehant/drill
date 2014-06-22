@@ -615,4 +615,15 @@ public class TestFunctionsQuery {
             "DEC18_1=99999.1235; " +
             "DEC18_2=100000.0000\n");
   }
+
+  @Test
+  public void testNegative() throws Exception {
+    String query = "select  negative(2) as NEG " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "NEG=-2\n");
+  }
 }
