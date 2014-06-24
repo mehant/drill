@@ -27,12 +27,14 @@ import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -62,7 +64,7 @@ public class FragmentContext implements Closeable {
   private final DrillbitContext context;
   private final UserClientConnection connection;
   private final FragmentStats stats;
-  private final FunctionImplementationRegistry funcRegistry;
+  private final GlobalFunctionRegistry globalFunctionRegistry;
   private final QueryClassLoader loader;
   private final ClassTransformer transformer;
   private final BufferAllocator allocator;
@@ -77,14 +79,14 @@ public class FragmentContext implements Closeable {
   private volatile boolean failed = false;
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
-      FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
+      GlobalFunctionRegistry globalFunctionRegistry) throws OutOfMemoryException, ExecutionSetupException {
     this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
     this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
     this.connection = connection;
     this.fragment = fragment;
-    this.funcRegistry = funcRegistry;
+    this.globalFunctionRegistry = globalFunctionRegistry;
     this.queryStartTime = fragment.getQueryStartTime();
     this.rootFragmentTimeZone = fragment.getTimeZone();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
@@ -234,7 +236,11 @@ public class FragmentContext implements Closeable {
   }
 
   public FunctionImplementationRegistry getFunctionRegistry() {
-    return funcRegistry;
+    if (context.getOptionManager() != null && sessionOptions.getOption(ExecConstants.STOP_ON_ERROR_KEY).bool_val == false) {
+      return globalFunctionRegistry.getFunctionImplementationRegistryAsNull();
+    } else {
+      return globalFunctionRegistry.getFunctionImplementationRegistryAsException();
+    }
   }
 
   public QueryClassLoader getClassLoader() {

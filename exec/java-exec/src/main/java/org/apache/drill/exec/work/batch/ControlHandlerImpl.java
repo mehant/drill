@@ -119,7 +119,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
   @Override
   public void startNewRemoteFragment(PlanFragment fragment) throws ExecutionSetupException{
     logger.debug("Received remote fragment start instruction", fragment);
-    FragmentContext context = new FragmentContext(bee.getContext(), fragment, null, bee.getContext().getFunctionImplementationRegistry());
+    FragmentContext context = new FragmentContext(bee.getContext(), fragment, null, bee.getContext().getGlobalFunctionRegistry());
     ControlTunnel tunnel = bee.getContext().getController().getTunnel(fragment.getForeman());
 
     NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);

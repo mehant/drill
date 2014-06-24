@@ -39,8 +39,8 @@ public class DrillFunctionRegistry {
 
   private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
 
-  public DrillFunctionRegistry(DrillConfig config){
-    FunctionConverter converter = new FunctionConverter();
+  public DrillFunctionRegistry(DrillConfig config, boolean nullable){
+    FunctionConverter converter = new FunctionConverter(nullable);
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(clazz);

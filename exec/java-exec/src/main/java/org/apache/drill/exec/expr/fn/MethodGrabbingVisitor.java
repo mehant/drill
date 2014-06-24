@@ -36,10 +36,12 @@ public class MethodGrabbingVisitor{
   private Map<String, String> methods = Maps.newHashMap();
   private ClassFinder classFinder = new ClassFinder();
   private boolean captureMethods = false;
+  private boolean nullableHolders = false;
   
-  private MethodGrabbingVisitor(Class<?> c) {
+  private MethodGrabbingVisitor(Class<?> c, boolean nullableHolders) {
     super();
     this.c = c;
+    this.nullableHolders = nullableHolders;
   }
   
   public class ClassFinder extends Traverser{
@@ -56,10 +58,15 @@ public class MethodGrabbingVisitor{
     @Override
     public void traverseMethodDeclarator(MethodDeclarator md) {
 //      logger.debug(c.getName() + ": Found {}, include {}", md.name, captureMethods);
-      
+
+      ModifiedUnparseVisitor v;
       if(captureMethods){
         StringWriter writer = new StringWriter();
-        ModifiedUnparseVisitor v = new ModifiedUnparseVisitor(writer);
+        if (nullableHolders == true) {
+          v = new ModifiedUnparseNullableVisitor(writer);
+        } else {
+          v = new ModifiedUnparseVisitor(writer);
+        }
 //        UnparseVisitor v = new UnparseVisitor(writer);
         
         md.accept(v);
@@ -71,8 +78,8 @@ public class MethodGrabbingVisitor{
   }
 
   
-  public static Map<String, String> getMethods(Java.CompilationUnit cu, Class<?> c){
-    MethodGrabbingVisitor visitor = new MethodGrabbingVisitor(c);
+  public static Map<String, String> getMethods(Java.CompilationUnit cu, Class<?> c, boolean nullableHolders){
+    MethodGrabbingVisitor visitor = new MethodGrabbingVisitor(c, nullableHolders);
     cu.getPackageMemberTypeDeclarations()[0].accept(visitor.classFinder.comprehensiveVisitor());
     return visitor.methods;
   }

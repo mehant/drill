@@ -93,7 +93,7 @@ public class QueryManager implements FragmentStatusListener{
     // set up the root fragment first so we'll have incoming buffers available.
     {
       logger.debug("Setting up root context.");
-      FragmentContext rootContext = new FragmentContext(bee.getContext(), rootFragment, rootClient, bee.getContext().getFunctionImplementationRegistry());
+      FragmentContext rootContext = new FragmentContext(bee.getContext(), rootFragment, rootClient, bee.getContext().getGlobalFunctionRegistry());
       logger.debug("Setting up incoming buffers");
       IncomingBuffers buffers = new IncomingBuffers(rootOperator, rootContext);
       logger.debug("Setting buffers on root context.");

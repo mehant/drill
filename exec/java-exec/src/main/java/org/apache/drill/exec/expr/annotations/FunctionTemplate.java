@@ -54,6 +54,7 @@ public @interface FunctionTemplate {
   
   public static enum FunctionScope{
     SIMPLE,
+    SIMPLE_ERR,
     POINT_AGGREGATE,
     DECIMAL_AGGREGATE,
     HOLISTIC_AGGREGATE,
