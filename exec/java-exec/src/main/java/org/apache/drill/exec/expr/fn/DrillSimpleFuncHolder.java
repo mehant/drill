@@ -21,15 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JPrimitiveType;
-import com.sun.codemodel.JStatement;
-import com.sun.codemodel.JStringLiteral;
-import com.sun.codemodel.JType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -44,7 +38,6 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
-import org.apache.drill.exec.util.DrillFunctionErrors;
 
 class DrillSimpleFuncHolder extends DrillFuncHolder{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSimpleFuncHolder.class);
@@ -100,11 +93,6 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     HoldingContainer out = null;
     MajorType returnValueType = returnValue.type;
 
-    // Add error code
-    JType err = JPrimitiveType.parse(g.getModel(), "int");
-    //sub.decl(err, "DRILL_ERROR_CODE", JExpr.lit(0));
-    JVar err1 = sub.decl(err, "DRILL_ERROR_CODE", JExpr.lit(0));
-
     // add outside null handling if it is defined.
     if(nullHandling == NullHandling.NULL_IF_NULL){
       JExpression e = null;
@@ -137,49 +125,9 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
 
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), returnValue.name, JExpr._new(g.getHolderType(returnValueType)));
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
-
-
-    JClass t = g.getModel().ref(org.apache.drill.common.exceptions.DrillRuntimeException.class);
-    JClass drillErrorType = g.getModel().ref(org.apache.drill.exec.util.DrillFunctionErrors.class);
-
-
-
-
-    // Block if we have an error code returned
-    JBlock errBlock = new JBlock();
-    JType strType = g.getModel()._ref(String.class);
-    JVar errMsg = errBlock.decl(strType, "errorMsg", errBlock.staticInvoke(drillErrorType, "getErrorMsg").arg(err1));
-    JConditional condition = errBlock._if(g.getStopOnError().eq(JExpr.lit(true)));
-    condition._then()._throw(JExpr._new(t).arg(errMsg));
-    condition._else().assign(internalOutput.ref("isSet"), JExpr.lit(0));
-
-
-
-
-    //errBlock._throw(JExpr._new(t).arg(errMsg));
-    //sub._if(err1.ne(JExpr.lit(0)))._then().add(errBlock);
-    //sub._if(err1.ne(JExpr.lit(0)))._then().add(errBlock);
-    //sub._if(err1.ne(JExpr.lit(0)))._then().add(condition);
-    //sub._if(err1.ne(JExpr.lit(0)))._then().add(ignoreError).
-
-
-    //sub.directStatement("if (DRILL_ERROR_CODE != 0) { throw new org.apache.drill.common.exceptions.DrillRuntimeException(org.apache.drill.exec.util.DrillFunctionErrors.getErrorMsg(DRILL_ERROR_CODE)); }");
-    //JExpr str = sub.directStatement("org.apache.drill.exec.util.DrillFunctionErrors.getErrorMsg(DRILL_ERROR_CODE);")
-    //sub._if(err1.ne(JExpr.lit(0)))._then()._throw(JExpr._new(t).arg("asd"));
-
-
-    JBlock noErrBlock = new JBlock();
-    //noErrBlock.add(noErrBlock.assign(internalOutput.ref("isSet"),JExpr.lit(1)));
-
-    if (sub != topSub) noErrBlock.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
-    noErrBlock.assign(out.getHolder(), internalOutput);
-    if (sub != topSub) noErrBlock.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
-
-    JConditional topCond = sub._if(err1.ne(JExpr.lit(0)));
-    topCond._then().add(errBlock);
-    topCond._else().add(noErrBlock);
-
-    //sub.add(topCond);
+    if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
+    sub.assign(out.getHolder(), internalOutput);
+    if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
 
     g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", registeredNames[0]));
 

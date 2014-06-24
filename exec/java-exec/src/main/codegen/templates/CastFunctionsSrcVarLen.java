@@ -17,14 +17,6 @@
  */
 <@pp.dropOutputFile />
 
-<#macro doError>
-  { 
-    byte[] buf = new byte[in.end - in.start];
-    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
-  }  
-</#macro>
-
 <#list cast.types as type>
 <#if type.major == "SrcVarlen">
 
@@ -44,7 +36,7 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE_ERR, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}${type.to} implements DrillSimpleErrFunc{
 
   @Param ${type.from}Holder in;
@@ -89,24 +81,18 @@ public class Cast${type.from}${type.to} implements DrillSimpleErrFunc{
         digit = Character.digit(in.buffer.getByte(readIndex++),radix);
         //not valid digit.
         if (digit == -1) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return org.apache.drill.exec.util.DrillFunctionErrors.DRILL_PARSE_ERROR.value;
         }
         //overflow
         if (max > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return org.apache.drill.exec.util.DrillFunctionErrors.DRILL_PARSE_ERROR.value;
         }
         
         ${type.primeType} next = result * radix - digit;
         
         //overflow
         if (next > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return org.apache.drill.exec.util.DrillFunctionErrors.DRILL_PARSE_ERROR.value;
         }
         result = next;
       }
@@ -114,9 +100,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleErrFunc{
         result = -result;
         //overflow
         if (result < 0) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return org.apache.drill.exec.util.DrillFunctionErrors.DRILL_PARSE_ERROR.value;
         }
       }
    
