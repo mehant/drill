@@ -66,7 +66,7 @@ public class DrillSqlWorker {
     traitDefs.add(DrillDistributionTraitDef.INSTANCE);
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
-    DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
+    DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry().getFunctionImplementationRegistryAsException());
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
     StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //

@@ -37,10 +37,15 @@ import org.eigenbase.sql.SqlOperator;
 public class DrillFunctionRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
 
-  private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
+  private ArrayListMultimap<String, DrillFuncHolder> methods;
+
+  public DrillFunctionRegistry(ArrayListMultimap<String, DrillFuncHolder> methods) {
+    this.methods = methods;
+  }
 
   public DrillFunctionRegistry(DrillConfig config){
     FunctionConverter converter = new FunctionConverter();
+    methods = ArrayListMultimap.create();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
       DrillFuncHolder holder = converter.getHolder(clazz);
@@ -82,5 +87,23 @@ public class DrillFunctionRegistry {
         }
       }
     }
+  }
+
+  public DrillFunctionRegistry createNullableDrillRegistry() {
+
+    ArrayListMultimap<String, DrillFuncHolder> nullableHolderMethods = ArrayListMultimap.create();
+
+    for (String str : methods.keys()) {
+      List<DrillFuncHolder> holders = methods.get(str);
+
+      for (DrillFuncHolder holder : holders) {
+        if (holder instanceof DrillSimpleErrFuncHolder) {
+          nullableHolderMethods.put(str, new DrillSimpleErrFuncNullableHolder((DrillSimpleErrFuncHolder) holder));
+        } else {
+          nullableHolderMethods.put(str, holder);
+        }
+      }
+    }
+    return new DrillFunctionRegistry(nullableHolderMethods);
   }
 }

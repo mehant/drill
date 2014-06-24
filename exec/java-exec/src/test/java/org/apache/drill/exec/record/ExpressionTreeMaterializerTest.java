@@ -42,6 +42,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,8 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
 
   DrillConfig c = DrillConfig.create();
-  FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+  GlobalFunctionRegistry globalRegistry = new GlobalFunctionRegistry(c);
+  FunctionImplementationRegistry registry = globalRegistry.getFunctionImplementationRegistryAsException();
 
   private MaterializedField getField(int fieldId, String name, MajorType type) {
     return MaterializedField.create(SchemaPath.getSimplePath(name), type);

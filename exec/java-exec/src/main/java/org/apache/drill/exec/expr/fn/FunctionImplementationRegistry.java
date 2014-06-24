@@ -25,6 +25,7 @@ import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.resolver.FunctionResolver;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -34,11 +35,21 @@ import java.util.Set;
 public class FunctionImplementationRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
-  private DrillFunctionRegistry drillFuncRegistry;
-  private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
+  protected DrillFunctionRegistry drillFuncRegistry;
+  protected List<PluggableFunctionRegistry> pluggableFuncRegistries;
 
-  public FunctionImplementationRegistry(DrillConfig config){
+  protected FunctionImplementationRegistry() {
+
+  }
+
+  protected FunctionImplementationRegistry(DrillFunctionRegistry drillFuncRegistry, List<PluggableFunctionRegistry> pluggableFuncRegistries) {
+    this.drillFuncRegistry = drillFuncRegistry;
+    this.pluggableFuncRegistries = pluggableFuncRegistries;
+  }
+
+  protected FunctionImplementationRegistry(DrillConfig config){
     drillFuncRegistry = new DrillFunctionRegistry(config);
+    pluggableFuncRegistries = Lists.newArrayList();
 
     Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
         PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
@@ -125,5 +136,10 @@ public class FunctionImplementationRegistry {
     }
 
     return null;
+  }
+
+  public FunctionImplementationRegistry createFunctionRegistryWithNullableHolders() {
+    DrillFunctionRegistry drillFunctionRegistry = drillFuncRegistry.createNullableDrillRegistry();
+    return new FunctionImplementationRegistry(drillFunctionRegistry, pluggableFuncRegistries);
   }
 }

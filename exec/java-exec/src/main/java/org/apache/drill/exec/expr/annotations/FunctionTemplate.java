@@ -41,6 +41,8 @@ public @interface FunctionTemplate {
    */
   String[] names() default {};
 
+  String[] errors() default {};
+
   FunctionScope scope();
   NullHandling nulls() default NullHandling.INTERNAL;
   boolean isBinaryCommutative() default false;
@@ -54,6 +56,7 @@ public @interface FunctionTemplate {
   
   public static enum FunctionScope{
     SIMPLE,
+    SIMPLE_ERR,
     POINT_AGGREGATE,
     DECIMAL_AGGREGATE,
     HOLISTIC_AGGREGATE,
