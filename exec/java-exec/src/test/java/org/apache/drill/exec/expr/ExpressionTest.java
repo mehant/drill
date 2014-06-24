@@ -39,7 +39,7 @@ import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -53,7 +53,7 @@ public class ExpressionTest extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTest.class);
 
   DrillConfig c = DrillConfig.create();
-  FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+  GlobalFunctionRegistry registry = new GlobalFunctionRegistry(c);
 
   @Test
   public void testBasicExpression(@Injectable RecordBatch batch) throws Exception {
@@ -118,13 +118,13 @@ public class ExpressionTest extends ExecTest {
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
     LogicalExpression expr = parseExpr(expression);
     ErrorCollector error = new ErrorCollectorImpl();
-    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error, registry);
+    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error, registry.getFunctionImplementationRegistryAsException());
     if (error.getErrorCount() != 0) {
       logger.error("Failure while materializing expression [{}].  Errors: {}", expression, error);
       assertEquals(0, error.getErrorCount());
     }
 
-    ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create())).getRoot();
+    ClassGenerator<Projector> cg = CodeGenerator.get(Projector.TEMPLATE_DEFINITION, new GlobalFunctionRegistry(DrillConfig.create()).getFunctionImplementationRegistryAsException()).getRoot();
     cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.getCodeGenerator().generate();
   }

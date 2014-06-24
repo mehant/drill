@@ -51,7 +51,7 @@ import com.sun.codemodel.JVar;
 
 public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolder.class);
 
   protected final FunctionTemplate.FunctionScope scope;
   protected final FunctionTemplate.NullHandling nullHandling;

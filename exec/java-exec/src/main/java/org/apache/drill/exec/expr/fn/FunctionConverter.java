@@ -235,6 +235,11 @@ public class FunctionConverter {
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames, 
                                            ps, outputField, works, methods, imports, template.costCategory());
+      case SIMPLE_ERR:
+          return new DrillSimpleErrFuncHolder(template.scope(), template.nulls(),
+              template.isBinaryCommutative(),
+              template.isRandom(), registeredNames,
+              ps, outputField, works, methods, imports, clazz);
       case SC_BOOLEAN_OPERATOR:
         return new DrillBooleanOPHolder(template.scope(), template.nulls(), 
             template.isBinaryCommutative(),

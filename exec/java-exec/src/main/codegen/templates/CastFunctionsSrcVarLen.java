@@ -15,15 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-<@pp.dropOutputFile />
 
-<#macro doError>
-  { 
-    byte[] buf = new byte[in.end - in.start];
-    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
-  }  
-</#macro>
+import org.apache.drill.exec.expr.annotations.FunctionErrors;
+
+<@pp.dropOutputFile />
 
 <#list cast.types as type>
 <#if type.major == "SrcVarlen">
@@ -35,7 +30,9 @@
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.DrillSimpleErrFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionErrors;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -43,15 +40,18 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-public class Cast${type.from}${type.to} implements DrillSimpleFunc{
+@FunctionErrors(errors = {"OK", "PARSING EXCEPTION", "OVERFLOW EXCEPTION"})
+@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE_ERR, nulls=NullHandling.NULL_IF_NULL)
+public class Cast${type.from}${type.to} implements DrillSimpleErrFunc {
 
   @Param ${type.from}Holder in;
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {}
+  public void setup(RecordBatch incoming) {
+    return;
+  }
 
-  public void eval() {
+  public int eval() {
     <#if type.to == "Float4" || type.to == "Float8">
       
       byte[] buf = new byte[in.end - in.start];
@@ -59,14 +59,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     
       //TODO: need capture format exception, and issue SQLERR code.
       out.value = ${type.javaType}.parse${type.parse}(new String(buf, com.google.common.base.Charsets.UTF_8));
-      
+
+      return 0;
     <#elseif type.to=="Int" || type.to == "BigInt">
 
       if ((in.end - in.start) ==0) {
         //empty, not a valid number
-        byte[] buf = new byte[in.end - in.start];
-        in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+        return 1;
       }
 
       int readIndex = in.start;
@@ -75,9 +74,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
       
       if (negative && ++readIndex == in.end) {
         //only one single '-'
-        byte[] buf = new byte[in.end - in.start];
-        in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+        return 1;
       }
    
       int radix = 10;
@@ -89,24 +86,18 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         digit = Character.digit(in.buffer.getByte(readIndex++),radix);
         //not valid digit.
         if (digit == -1) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return 1;
         }
         //overflow
         if (max > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return 2;
         }
         
         ${type.primeType} next = result * radix - digit;
         
         //overflow
         if (next > result) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return 2;
         }
         result = next;
       }
@@ -114,13 +105,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         result = -result;
         //overflow
         if (result < 0) {
-          byte[] buf = new byte[in.end - in.start];
-          in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
+          return 2;
         }
       }
    
       out.value = result;
+      return 0;
     
     </#if>
   }

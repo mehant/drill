@@ -30,6 +30,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 
 import com.google.common.collect.ImmutableList;

@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.exec.expr.DrillSimpleErrFunc;
 import org.codehaus.janino.JaninoRuntimeException;
 import org.codehaus.janino.Java;
 import org.codehaus.janino.Mod;
@@ -78,6 +80,13 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
     protected final AutoIndentWriter aiw;
     protected final PrintWriter      pw;
     private         String           returnLabel;
+    private         String           functionName;
+    private  static HashSet<String>  erroringFunctions = new HashSet<>();
+
+    static {
+      // Set of all functions that can return an error code
+      erroringFunctions.add("eval");
+    }
 
     /**
      * Testing of parsing/unparsing.
@@ -207,6 +216,8 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
         }
     }
     public void visitMethodDeclarator(Java.MethodDeclarator md) {
+        this.functionName = md.name;
+
         // modified to remove method declaration printing.
          if (md.optionalStatements == null) {
              this.pw.print(';');
@@ -349,12 +360,12 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
         this.pw.print(';');
     }
     public void visitReturnStatement(Java.ReturnStatement rs) {
-        this.pw.print("break " + returnLabel);
-      
-        if (rs.optionalReturnValue != null) {
-            this.pw.print(' ');
-            this.unparse(rs.optionalReturnValue);
+        if (rs.optionalReturnValue != null && erroringFunctions.contains(functionName)) {
+          pw.print("DRILL_ERROR_CODE = ");
+          this.unparse(rs.optionalReturnValue);
+          this.pw.print(';');
         }
+        this.pw.print("break " + returnLabel);
         this.pw.print(';');
     }
     public void visitSwitchStatement(Java.SwitchStatement ss) {
