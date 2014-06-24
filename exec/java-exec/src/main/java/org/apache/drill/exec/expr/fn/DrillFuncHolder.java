@@ -21,6 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPrimitiveType;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -127,14 +130,21 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       JVar[] workspaceJVars, boolean decConstantInputOnly) {
     if (!Strings.isNullOrEmpty(body) && !body.trim().isEmpty()) {
       JBlock sub = new JBlock(true, true);
+      JType err = JPrimitiveType.parse(g.getModel(), "int");
+      sub.decl(err, "DRILL_ERROR_CODE", JExpr.lit(0));
       if (decConstantInputOnly) {
         addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, true);
       } else {
         addProtectedBlock(g, sub, body, null, workspaceJVars, false);
       }
+      //sub.decl(new JPrimitiveType() )
+      //JVar err  = JVar(JMod.NONE, JType.parse(g.getModel(), "int"), JExpr.lit(0));
+
+
       g.getBlock(bt).directStatement(String.format("/** start %s for function %s **/ ", bt.name(), registeredNames[0]));
       g.getBlock(bt).add(sub);
       g.getBlock(bt).directStatement(String.format("/** end %s for function %s **/ ", bt.name(), registeredNames[0]));
+
     }
   }
 

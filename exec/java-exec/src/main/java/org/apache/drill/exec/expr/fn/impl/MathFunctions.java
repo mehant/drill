@@ -30,6 +30,7 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.util.DrillFunctionErrors;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -51,6 +52,7 @@ public class MathFunctions{
     public void eval(){
       out.value = -input.value;
       return;
+
     }
 
   }  

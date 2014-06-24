@@ -19,6 +19,10 @@ package org.apache.drill.exec.expr;
 
 import java.io.IOException;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPrimitiveType;
+import com.sun.codemodel.JType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
