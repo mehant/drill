@@ -29,7 +29,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -116,8 +116,7 @@ public class TestOptiqPlans extends ExecTest {
     PhysicalPlan pp = new BasicOptimizer(DrillConfig.create(), qc, connection).optimize(new BasicOptimizer.BasicOptimizationContext(qc), plan);
 
 
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext fctxt = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    FragmentContext fctxt = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, new GlobalFunctionRegistry(c));
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(fctxt, (FragmentRoot) pp.getSortedOperators(false)
         .iterator().next()));
     return exec;
@@ -322,8 +321,7 @@ public class TestOptiqPlans extends ExecTest {
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),
         CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), reg);
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, new GlobalFunctionRegistry(c));
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false)
         .iterator().next()));
     return exec;

@@ -27,7 +27,7 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -56,7 +56,7 @@ public class TestNewMathFunctions {
 
 	  DrillConfig c = DrillConfig.create();
 	  PhysicalPlanReader reader;
-	  FunctionImplementationRegistry registry;
+	  GlobalFunctionRegistry registry;
 	  FragmentContext context;
 
 	  public Object[] getRunResult(SimpleRootExec exec) {
@@ -87,7 +87,7 @@ public class TestNewMathFunctions {
 
 	    String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);
 	    if(reader == null) reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-	    if(registry == null) registry = new FunctionImplementationRegistry(c);
+	    if(registry == null) registry = new GlobalFunctionRegistry(c);
 	    if(context == null) context =  new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry); //new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, registry);
 	    PhysicalPlan plan = reader.readPhysicalPlan(planString);
 	    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

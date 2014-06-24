@@ -23,7 +23,7 @@ import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ClassGenerator;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.junit.Test;
 
 public class TestClassTransformation extends ExecTest{
@@ -42,7 +42,7 @@ public class TestClassTransformation extends ExecTest{
 
     ClassTransformer ct = new ClassTransformer();
     QueryClassLoader loader = new QueryClassLoader(true);
-    CodeGenerator<ExampleInner> cg = CodeGenerator.get(template, new FunctionImplementationRegistry(DrillConfig.create()));
+    CodeGenerator<ExampleInner> cg = CodeGenerator.get(template, new GlobalFunctionRegistry(DrillConfig.create()).getFunctionImplementationRegistryAsException());
 
     ClassGenerator<ExampleInner> root = cg.getRoot();
     root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));

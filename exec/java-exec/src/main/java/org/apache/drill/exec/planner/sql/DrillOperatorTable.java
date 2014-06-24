@@ -24,7 +24,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry.FunctionImplementationRegistry;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlOperator;
