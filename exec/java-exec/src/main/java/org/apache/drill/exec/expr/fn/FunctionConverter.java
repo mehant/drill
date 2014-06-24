@@ -54,6 +54,11 @@ import com.google.common.io.Resources;
  */
 public class FunctionConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
+  private boolean nullableHolders = false;
+
+  public FunctionConverter(boolean nullableHolders) {
+    this.nullableHolders = nullableHolders;
+  }
 
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
 
@@ -209,7 +214,7 @@ public class FunctionConverter {
 
 
     try{
-      Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz);
+      Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz, (nullableHolders && template.scope() == FunctionScope.SIMPLE_ERR));
       List<String> imports = ImportGrabber.getMethods(cu);
       // return holder
       ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
@@ -235,6 +240,19 @@ public class FunctionConverter {
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames, 
                                            ps, outputField, works, methods, imports, template.costCategory());
+      case SIMPLE_ERR:
+        if (nullableHolders == true) {
+          return new DrillSimpleErrFuncNullableHolder(template.scope(), template.nulls(),
+              template.isBinaryCommutative(),
+              template.isRandom(), registeredNames,
+              ps, outputField, works, methods, imports, template.costCategory());
+        } else {
+          return new DrillSimpleFuncHolder(template.scope(), template.nulls(),
+              template.isBinaryCommutative(),
+              template.isRandom(), registeredNames,
+              ps, outputField, works, methods, imports, template.costCategory());
+        }
+
       case SC_BOOLEAN_OPERATOR:
         return new DrillBooleanOPHolder(template.scope(), template.nulls(), 
             template.isBinaryCommutative(),

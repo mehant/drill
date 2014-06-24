@@ -31,6 +31,7 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -98,7 +99,7 @@ public class PlanningBase extends ExecTest{
 
     final StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
     registry.init();
-    final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
+    final GlobalFunctionRegistry functionRegistry = new GlobalFunctionRegistry(config);
     final SchemaPlus root = Frameworks.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), root);
 
@@ -110,7 +111,7 @@ public class PlanningBase extends ExecTest{
         context.getStorage();
         result = registry;
         context.getFunctionRegistry();
-        result = functionRegistry;
+        result = functionRegistry.getFunctionImplementationRegistryAsException();
         context.getSession();
         result = UserSession.Builder.newBuilder().setSupportComplexTypes(true).build();
         context.getCurrentEndpoint();

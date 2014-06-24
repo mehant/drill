@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.GlobalFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -54,7 +55,7 @@ public class DrillbitContext {
   private final OperatorCreatorRegistry operatorCreatorRegistry;
   private final Controller controller;
   private final WorkEventBus workBus;
-  private final FunctionImplementationRegistry functionRegistry;
+  private final GlobalFunctionRegistry globalFunctionRegistry;
   private final SystemOptionManager systemOptions;
   private final PStoreProvider provider;
 
@@ -75,14 +76,14 @@ public class DrillbitContext {
     this.storagePlugins = new StoragePluginRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
-    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
+    this.globalFunctionRegistry = new GlobalFunctionRegistry(context.getConfig());
     this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
 
 //    this.globalDrillOptions = new DistributedGlobalOptions(this.cache);
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
-    return functionRegistry;
+    return globalFunctionRegistry.getRegistry();
   }
 
   public WorkEventBus getWorkBus(){
@@ -153,4 +154,7 @@ public class DrillbitContext {
     return coord;
   }
 
+  public GlobalFunctionRegistry getGlobalFunctionRegistry() {
+    return globalFunctionRegistry;
+  }
 }

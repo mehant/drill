@@ -37,8 +37,8 @@ public class FunctionImplementationRegistry {
   private DrillFunctionRegistry drillFuncRegistry;
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
 
-  public FunctionImplementationRegistry(DrillConfig config){
-    drillFuncRegistry = new DrillFunctionRegistry(config);
+  protected FunctionImplementationRegistry(DrillConfig config, boolean nullable){
+    drillFuncRegistry = new DrillFunctionRegistry(config, nullable);
 
     Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
         PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
