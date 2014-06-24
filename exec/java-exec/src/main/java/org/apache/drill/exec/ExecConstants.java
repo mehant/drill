@@ -131,4 +131,7 @@ public interface ExecConstants {
   public static final String QUEUE_TIMEOUT_KEY = "exec.queue.timeout_millis";
   public static final OptionValidator QUEUE_TIMEOUT = new PositiveLongValidator(QUEUE_TIMEOUT_KEY, Long.MAX_VALUE, 60*1000*5);
 
+  public static final String STOP_ON_ERROR_KEY = "exec.stop_on_error";
+  public static final OptionValidator STOP_ON_ERROR = new BooleanValidator(STOP_ON_ERROR_KEY, false);
+
 }

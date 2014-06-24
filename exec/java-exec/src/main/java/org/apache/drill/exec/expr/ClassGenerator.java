@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.codemodel.JPrimitiveType;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -71,6 +72,7 @@ public class ClassGenerator<T>{
   private final List<TypedFieldId> workspaceTypes = Lists.newArrayList();
   private final Map<WorkspaceReference, JVar> workspaceVectors = Maps.newHashMap();
   private final CodeGenerator<T> codeGenerator;
+  private final JVar stopOnError;
 
   public final JDefinedClass clazz;
   private final LinkedList<JBlock>[] blocks;
@@ -104,6 +106,10 @@ public class ClassGenerator<T>{
       JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
       innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model));
     }
+
+    JType booleanType = JPrimitiveType.parse(model, "boolean");
+    stopOnError = clazz.field(JMod.PRIVATE, booleanType, "DRILL_STOP_ON_ERROR", JExpr.lit(false));
+    this.getSetupBlock().directStatement("DRILL_STOP_ON_ERROR = context.getOptions().getOption(org.apache.drill.exec.ExecConstants.STOP_ON_ERROR_KEY).bool_val;");
   }
 
   public ClassGenerator<T> getInnerGenerator(String name){
@@ -416,5 +422,9 @@ public class ClassGenerator<T>{
 
   public JType getHolderType(MajorType t){
     return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
+  }
+
+  public JVar getStopOnError() {
+    return stopOnError;
   }
 }

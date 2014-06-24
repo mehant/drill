@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -349,12 +350,12 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
         this.pw.print(';');
     }
     public void visitReturnStatement(Java.ReturnStatement rs) {
-        this.pw.print("break " + returnLabel);
-      
         if (rs.optionalReturnValue != null) {
-            this.pw.print(' ');
-            this.unparse(rs.optionalReturnValue);
+          pw.print("DRILL_ERROR_CODE = ");
+          this.unparse(rs.optionalReturnValue);
+          this.pw.print(';');
         }
+        this.pw.print("break " + returnLabel);
         this.pw.print(';');
     }
     public void visitSwitchStatement(Java.SwitchStatement ss) {
