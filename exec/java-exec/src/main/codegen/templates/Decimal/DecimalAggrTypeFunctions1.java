@@ -50,7 +50,7 @@ public class Decimal${aggrtype.className}Functions {
 
 <#list aggrtype.types as type>
 
-@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.DECIMAL_AGGREGATE)
+@FunctionTemplate(name = "${aggrtype.funcName}", <#if aggrtype.funcName == "sum"> scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_AGGREGATE <#else>scope = FunctionTemplate.FunctionScope.DECIMAL_AGGREGATE</#if>)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
@@ -84,6 +84,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};
     </#if>
+  <#elseif aggrtype.funcName == "sum">
+    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[value.WIDTH]);
+    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+    value.buffer = buffer;
+    value.start  = 0;
+    for (int i = 0; i < value.nDecimalDigits; i++) {
+      value.setInteger(i, 0);
+    }
 	</#if>
 
   }
@@ -145,6 +153,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.min(value.value, in.value);
     </#if>
+    <#elseif aggrtype.funcName == "sum">
+    value.scale = in.scale;
+    value.precision = 38;
+    java.math.BigDecimal runningSum = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(value.buffer, value.start, value.nDecimalDigits, value.scale);
+    <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
+    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
+    <#else>
+    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    </#if>
+    for (int i = 0; i < value.nDecimalDigits; i++) {
+      value.setInteger(i, 0);
+    }
+    runningSum = runningSum.add(currentValue);
+
+    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(runningSum, value.buffer, value.start, value.scale, value.precision, value.nDecimalDigits);
     </#if>
 	<#if type.inputType?starts_with("Nullable")>
     } // end of sout block
@@ -156,7 +179,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if aggrtype.funcName == "count">
     out.value = value.value;
     <#else>
-    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
+    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse") || aggrtype.funcName == "sum">
     out.buffer = value.buffer;
     out.start = value.start;
     out.setSign(value.getSign());
@@ -191,6 +214,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};
     </#if>
+  <#elseif aggrtype.funcName == "sum">
+    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[value.WIDTH]);
+    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+    value.buffer = buffer;
+    value.start  = 0;
+    for (int i = 0; i < value.nDecimalDigits; i++) {
+      value.setInteger(i, 0);
+    }
 	</#if>
 
   }
