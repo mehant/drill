@@ -117,7 +117,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   @Override
-  public int load(int valueCount, ByteBuf buf){
+  public int load(int valueCount, DrillBuf buf){
     clear();
     this.valueCount = valueCount;
     int len = valueCount * ${type.width};
@@ -128,7 +128,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
   
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
+  public void load(SerializedField metadata, DrillBuf buffer) {
     assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
@@ -240,13 +240,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     
     <#if (type.width > 8)>
 
-    public ${minor.javaType!type.javaType} get(int index) {
-      ByteBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
-      //dst = new io.netty.buffer.SwappedByteBuf(dst);
-      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
-
-      return dst;
-    }
+//    public ${minor.javaType!type.javaType} get(int index) {
+//      DrillBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
+//      //dst = new io.netty.buffer.SwappedDrillBuf(dst);
+//      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
+//
+//      return dst;
+//    }
 
     <#if (minor.class == "TimeStampTZ")>
     public void get(int index, ${minor.class}Holder holder){
@@ -429,8 +429,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     @Override
     public ${friendlyType} getObject(int index) {
 
-      ByteBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
-      //dst = new io.netty.buffer.SwappedByteBuf(dst);
+      DrillBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
+      //dst = new io.netty.buffer.SwappedDrillBuf(dst);
       data.getBytes(index * ${type.width}, dst, 0, ${type.width});
 
       return dst;
@@ -445,6 +445,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public ${minor.javaType!type.javaType} get(int index) {
       return data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
+    
+    <#if type.width == 4>
+    public long getTwoAsLong(int index) {
+      return data.getLong(index * ${type.width});
+    }
+    
+    </#if>
 
     <#if minor.class == "Date">
     public ${friendlyType} getObject(int index) {
@@ -545,7 +552,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     private Mutator(){};
    /**
     * Set the element at the given index to the given value.  Note that widths smaller than
-    * 32 bits are handled by the ByteBuf interface.
+    * 32 bits are handled by the DrillBuf interface.
     *
     * @param index   position of the bit to set
     * @param value   value to set

@@ -79,7 +79,7 @@ package org.apache.drill.exec.vector;
     return offsets.getBufferSize() + values.getBufferSize();
   }
 
-  public ByteBuf getData(){
+  public DrillBuf getData(){
       return values.getData();
   }
   
@@ -200,7 +200,7 @@ package org.apache.drill.exec.vector;
   }
   
   @Override
-  public int load(int dataBytes, int parentValueCount, int childValueCount, ByteBuf buf){
+  public int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf){
     clear();
     this.parentValueCount = parentValueCount;
     this.childValueCount = childValueCount;
@@ -211,7 +211,7 @@ package org.apache.drill.exec.vector;
   }
   
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
+  public void load(SerializedField metadata, DrillBuf buffer) {
     assert this.field.matches(metadata);
     int loaded = load(metadata.getVarByteLength(), metadata.getGroupCount(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
@@ -241,7 +241,7 @@ package org.apache.drill.exec.vector;
     accessor.reset();
   }
   
-  public int load(int parentValueCount, int childValueCount, ByteBuf buf){
+  public int load(int parentValueCount, int childValueCount, DrillBuf buf){
     clear();
     this.parentValueCount = parentValueCount;
     this.childValueCount = childValueCount;
@@ -252,7 +252,7 @@ package org.apache.drill.exec.vector;
   }
   
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
+  public void load(SerializedField metadata, DrillBuf buffer) {
     assert this.field.matches(metadata);
     int loaded = load(metadata.getGroupCount(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
@@ -260,8 +260,8 @@ package org.apache.drill.exec.vector;
   </#if>
 
   @Override
-  public ByteBuf[] getBuffers() {
-    ByteBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(), values.getBuffers(), ByteBuf.class);
+  public DrillBuf[] getBuffers() {
+    DrillBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(), values.getBuffers(), DrillBuf.class);
     clear();
     return buffers;
   }

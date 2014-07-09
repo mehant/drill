@@ -18,6 +18,7 @@
 package org.apache.drill.exec.cache;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -112,7 +113,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     for (SerializedField metaData : fieldList) {
       int dataLength = metaData.getBufferLength();
       MaterializedField field = MaterializedField.create(metaData);
-      ByteBuf buf = allocator.buffer(dataLength);
+      DrillBuf buf = allocator.buffer(dataLength);
       buf.writeBytes(input, dataLength);
       ValueVector vector = TypeHelper.getNewVector(field, allocator);
       vector.load(metaData, buf);

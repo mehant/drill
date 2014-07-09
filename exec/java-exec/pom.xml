@@ -27,6 +27,12 @@
       <version>4.1</version>
     </dependency>
     <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-debug-all</artifactId>
+      <version>4.1</version>
+<!--       <scope>test</scope> -->
+    </dependency>
+    <dependency>
       <groupId>pentaho</groupId>
       <artifactId>mondrian-data-foodmart-json</artifactId>
       <version>0.3.2</version>

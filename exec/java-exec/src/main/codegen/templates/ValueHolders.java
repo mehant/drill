@@ -73,7 +73,7 @@ public final class ${className} implements ValueHolder{
     public static final int maxPrecision = ${minor.maxPrecisionDigits};
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
     public int start;
-    public ByteBuf buffer;
+    public DrillBuf buffer;
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
 
 
@@ -113,7 +113,7 @@ public final class ${className} implements ValueHolder{
 
       <#elseif (type.width > 8)>
       public int start;
-      public ByteBuf buffer;
+      public DrillBuf buffer;
       <#else>
         public ${minor.javaType!type.javaType} value;
       </#if>
@@ -125,7 +125,7 @@ public final class ${className} implements ValueHolder{
       public int end;
       
       /** The buffer holding actual values. **/
-      public ByteBuf buffer;
+      public DrillBuf buffer;
 
       public String toString() {
       <#if mode.name == "Optional">

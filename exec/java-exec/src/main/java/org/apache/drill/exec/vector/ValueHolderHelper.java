@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 
 import com.google.common.base.Charsets;
 
@@ -44,7 +45,18 @@ public class ValueHolderHelper {
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(b.length).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer. 
+//    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(b.length).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer.
+//    vch.buffer.setBytes(0, b);
+    return vch;
+  }
+
+  public static VarCharHolder getVarCharHolder(TopLevelAllocator a, String s){
+    VarCharHolder vch = new VarCharHolder();
+
+    byte[] b = s.getBytes(Charsets.UTF_8);
+    vch.start = 0;
+    vch.end = b.length;
+    vch.buffer = a.buffer(b.length); //
     vch.buffer.setBytes(0, b);
     return vch;
   }

@@ -79,7 +79,7 @@ public class FragmentContext implements Closeable {
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-    this.transformer = new ClassTransformer();
+    this.transformer = new ClassTransformer(dbContext.getCache());
     this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
     this.connection = connection;

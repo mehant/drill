@@ -15,19 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.buffer.ByteBuf;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
 
-public class VectorTrimmer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorTrimmer.class);
+public class ExampleReplaceable {
 
-  public static void trim(ByteBuf data, int idx) {
-    data.writerIndex(idx);
-    if (data instanceof DrillBuf) {
-      // data.capacity(idx);
-      data.writerIndex(idx);
+  public static void main(String[] args){
+    ExampleReplaceable r = new ExampleReplaceable();
+    System.out.println(r.xyz());
+  }
+
+  public static void z(NullableIntHolder h){
+
+  }
+  public int xyz(){
+//    NullableIntHolder h = new NullableIntHolder();
+//    h.value = 4;
+//    return h.value;
+
+    System.clearProperty("");
+
+    NullableIntHolder h = new NullableIntHolder();
+    NullableIntHolder h2 = new NullableIntHolder();
+    h.isSet = 1;
+    h.value = 4;
+    h2.isSet = 1;
+    h2.value = 6;
+    if(h.isSet == h2.isSet){
+      return h.value + h2.value;
+    }else{
+      return -1;
     }
+
   }
 }

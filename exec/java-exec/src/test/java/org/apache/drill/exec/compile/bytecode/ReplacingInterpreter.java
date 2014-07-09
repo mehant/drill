@@ -15,19 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.compile.bytecode;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.buffer.ByteBuf;
-
-public class VectorTrimmer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorTrimmer.class);
-
-  public static void trim(ByteBuf data, int idx) {
-    data.writerIndex(idx);
-    if (data instanceof DrillBuf) {
-      // data.capacity(idx);
-      data.writerIndex(idx);
-    }
-  }
+public class ReplacingInterpreter {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReplacingInterpreter.class);
 }
