@@ -104,6 +104,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private long uid;//used for spill files to ensure multiple sorts within same fragment don't clobber each others' files
   private boolean useIncomingSchema = false;
   private boolean first = true;
+  private long inMemoryRecordCnt = 0;
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -249,6 +250,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           int count = sv2.getCount();
           totalcount += count;
+          inMemoryRecordCnt += count;
 //          if (count == 0) {
 //            break outer;
 //          }
@@ -263,7 +265,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
           batchesSinceLastSpill++;
-          if (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE) {
+          if (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE &&
+              inMemoryRecordCnt > (2 * SPILL_TARGET_RECORD_COUNT)) {
             mergeAndSpill();
             batchesSinceLastSpill = 0;
           }
@@ -377,6 +380,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         outputContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
         outputContainer.setRecordCount(count);
         newGroup.addBatch(outputContainer);
+        inMemoryRecordCnt -= count;
       }
       newGroup.closeOutputStream();
       batchGroups.add(newGroup);
