@@ -72,7 +72,8 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.MIN_HASH_TABLE_SIZE,
       ExecConstants.MAX_HASH_TABLE_SIZE,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
-      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE
+      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
+      QueryClassLoader.JAVA_COMPILER_DEBUG
   };
 
   public final PStoreConfig<OptionValue> config;
