@@ -379,7 +379,7 @@ public class EvaluationVisitor {
       } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
         JExpression expr = vector.invoke("getAccessor").invoke("getReader");
-        JVar isNull = generator.getEvalBlock().decl(generator.getModel().INT, "isNull", JExpr.lit(0));
+        JVar isNull = generator.getEvalBlock().decl(generator.getModel().INT, generator.getNextVar("isNull"), JExpr.lit(0));
 
         JLabel label = generator.getEvalBlock().label("complex");
         JBlock eval = generator.getEvalBlock().block();
