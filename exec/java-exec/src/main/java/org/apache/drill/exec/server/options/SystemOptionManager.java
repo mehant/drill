@@ -68,12 +68,13 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.LARGE_QUEUE_SIZE,
       ExecConstants.QUEUE_THRESHOLD_SIZE,
       ExecConstants.QUEUE_TIMEOUT,
-      ExecConstants.SMALL_QUEUE_SIZE, 
+      ExecConstants.SMALL_QUEUE_SIZE,
       ExecConstants.MIN_HASH_TABLE_SIZE,
       ExecConstants.MAX_HASH_TABLE_SIZE,
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
-      QueryClassLoader.JAVA_COMPILER_DEBUG
+      QueryClassLoader.JAVA_COMPILER_DEBUG,
+      ExecConstants.ENABLE_VERBOSE_ERRORS
   };
 
   public final PStoreConfig<OptionValue> config;
