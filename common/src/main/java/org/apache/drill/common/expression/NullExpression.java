@@ -59,5 +59,10 @@ public class NullExpression implements LogicalExpression{
   public int getSelfCost() { return 0 ; }
   
   public int getCumulativeCost() { return 0; }
+
+  @Override
+  public boolean isConstant() {
+    return false;
+  }
   
 }

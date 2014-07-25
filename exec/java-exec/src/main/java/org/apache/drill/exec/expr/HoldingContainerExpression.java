@@ -71,5 +71,9 @@ public class HoldingContainerExpression implements LogicalExpression{
   public int getCumulativeCost() { 
     return 0; // TODO
   }
-    
+
+  @Override
+  public boolean isConstant() {
+    return false;
+  }
 }

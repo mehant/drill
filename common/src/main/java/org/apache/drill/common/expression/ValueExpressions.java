@@ -125,12 +125,10 @@ public class ValueExpressions {
   protected static abstract class ValueExpression<V> extends LogicalExpressionBase {
     public final V value;
 
-    protected ValueExpression(String value, ExpressionPosition pos) {
+    protected ValueExpression(V value, ExpressionPosition pos) {
       super(pos);
-      this.value = parseValue(value);
+      this.value = value;
     }
-
-    protected abstract V parseValue(String s);
 
     @Override
     public Iterator<LogicalExpression> iterator() {
@@ -147,19 +145,17 @@ public class ValueExpressions {
       return 0; // TODO
     }
 
+    @Override
+    public boolean isConstant() {
+      return true;
+    }
   }
 
   public static class BooleanExpression extends ValueExpression<Boolean> {
 
 
     public BooleanExpression(String value, ExpressionPosition pos) {
-      super(value, pos);
-    }
-
-
-    @Override
-    protected Boolean parseValue(String s) {
-      return Boolean.parseBoolean(s);
+      super(Boolean.parseBoolean(value), pos);
     }
 
     @Override
@@ -178,18 +174,16 @@ public class ValueExpressions {
 
   }
 
-  public static class FloatExpression extends LogicalExpressionBase {
-    private float f;
+  public static class FloatExpression extends ValueExpression<Float> {
 
     private static final MajorType FLOAT_CONSTANT = Types.required(MinorType.FLOAT4);
 
     public FloatExpression(float f, ExpressionPosition pos) {
-      super(pos);
-      this.f = f;
+      super(f, pos);
     }
 
     public float getFloat() {
-      return f;
+      return value;
     }
 
     @Override
@@ -206,32 +200,18 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-
   }
 
-  public static class IntExpression extends LogicalExpressionBase {
+  public static class IntExpression extends ValueExpression<Integer> {
 
     private static final MajorType INT_CONSTANT = Types.required(MinorType.INT);
 
-    private int i;
-
     public IntExpression(int i, ExpressionPosition pos) {
-      super(pos);
-      this.i = i;
+      super(i, pos);
     }
 
     public int getInt() {
-      return i;
+      return value;
     }
 
     @Override
@@ -248,49 +228,30 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
-
   }
 
-  public static class Decimal9Expression extends LogicalExpressionBase {
-
-    private int decimal;
-    private int scale;
-    private int precision;
+  public static class Decimal9Expression extends ValueExpression<BigDecimal> {
 
     public Decimal9Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.scale = input.scale();
-      this.precision = input.precision();
-      this.decimal = DecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
+      super(input, pos);
     }
 
 
     public int getIntFromDecimal() {
-      return decimal;
+      return DecimalUtility.getDecimal9FromBigDecimal(value, value.scale(), value.precision());
     }
 
     public int getScale() {
-      return scale;
+      return value.scale();
     }
 
     public int getPrecision() {
-      return precision;
+      return value.precision();
     }
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setScale(value.scale()).setPrecision(value.precision()).setMode(DataMode.REQUIRED).build();
     }
 
     @Override
@@ -302,49 +263,30 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
-
   }
 
-  public static class Decimal18Expression extends LogicalExpressionBase {
-
-    private long decimal;
-    private int scale;
-    private int precision;
+  public static class Decimal18Expression extends ValueExpression<BigDecimal> {
 
     public Decimal18Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.scale = input.scale();
-      this.precision = input.precision();
-      this.decimal = DecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
+      super(input, pos);
     }
 
 
     public long getLongFromDecimal() {
-      return decimal;
+      return DecimalUtility.getDecimal18FromBigDecimal(value, value.scale(), value.precision());
     }
 
     public int getScale() {
-      return scale;
+      return value.scale();
     }
 
     public int getPrecision() {
-      return precision;
+      return value.precision();
     }
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setScale(value.scale()).setPrecision(value.precision()).setMode(DataMode.REQUIRED).build();
     }
 
     @Override
@@ -356,36 +298,22 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-
   }
 
-  public static class Decimal28Expression extends LogicalExpressionBase {
-
-    private BigDecimal bigDecimal;
+  public static class Decimal28Expression extends ValueExpression<BigDecimal> {
 
     public Decimal28Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.bigDecimal = input;
+      super(input, pos);
     }
 
 
     public BigDecimal getBigDecimal() {
-      return bigDecimal;
+      return value;
     }
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setScale(value.scale()).setPrecision(value.precision()).setMode(DataMode.REQUIRED).build();
     }
 
     @Override
@@ -397,34 +325,21 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
   }
 
-  public static class Decimal38Expression extends LogicalExpressionBase {
-
-    private BigDecimal bigDecimal;
+  public static class Decimal38Expression extends ValueExpression<BigDecimal> {
 
     public Decimal38Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.bigDecimal = input;
+      super(input, pos);
     }
 
     public BigDecimal getBigDecimal() {
-      return bigDecimal;
+      return value;
     }
 
     @Override
     public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setScale(value.scale()).setPrecision(value.precision()).setMode(DataMode.REQUIRED).build();
     }
 
     @Override
@@ -436,32 +351,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
   }
 
 
-  public static class DoubleExpression extends LogicalExpressionBase {
-    private double d;
+  public static class DoubleExpression extends ValueExpression<Double> {
 
     private static final MajorType DOUBLE_CONSTANT = Types.required(MinorType.FLOAT8);
 
     public DoubleExpression(double d, ExpressionPosition pos) {
-      super(pos);
-      this.d = d;
+      super(d, pos);
     }
 
     public double getDouble() {
-      return d;
+      return value;
     }
 
     @Override
@@ -478,36 +380,22 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
   }
 
-  public static class LongExpression extends LogicalExpressionBase {
+  public static class LongExpression extends ValueExpression<Long> {
 
     private static final MajorType LONG_CONSTANT = Types.required(MinorType.BIGINT);
-
-    private long l;
 
     public LongExpression(long l) {
       this(l, ExpressionPosition.UNKNOWN);
     }
 
       public LongExpression(long l, ExpressionPosition pos) {
-      super(pos);
-      this.l = l;
+      super(l, pos);
     }
 
     public long getLong() {
-      return l;
+      return value;
     }
 
     @Override
@@ -524,38 +412,23 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
-
   }
 
 
-  public static class DateExpression extends LogicalExpressionBase {
+  public static class DateExpression extends ValueExpression<Long> {
 
     private static final MajorType DATE_CONSTANT = Types.required(MinorType.DATE);
-
-    private long dateInMillis;
 
     public DateExpression(long l) {
       this(l, ExpressionPosition.UNKNOWN);
     }
 
       public DateExpression(long dateInMillis, ExpressionPosition pos) {
-      super(pos);
-      this.dateInMillis = dateInMillis;
+      super(dateInMillis, pos);
     }
 
     public long getDate() {
-      return dateInMillis;
+      return value;
     }
 
     @Override
@@ -572,37 +445,23 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-
   }
 
 
-  public static class TimeExpression extends LogicalExpressionBase {
+  public static class TimeExpression extends ValueExpression<Integer> {
 
     private static final MajorType TIME_CONSTANT = Types.required(MinorType.TIME);
-
-    private int timeInMillis;
 
     public TimeExpression(int timeInMillis) {
       this(timeInMillis, ExpressionPosition.UNKNOWN);
     }
 
       public TimeExpression(int timeInMillis, ExpressionPosition pos) {
-      super(pos);
-      this.timeInMillis = timeInMillis;
+      super(timeInMillis, pos);
     }
 
     public int getTime() {
-      return timeInMillis;
+      return value;
     }
 
     @Override
@@ -619,36 +478,22 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
   }
 
-  public static class TimeStampExpression extends LogicalExpressionBase {
+  public static class TimeStampExpression extends ValueExpression<Long> {
 
     private static final MajorType TIMESTAMP_CONSTANT = Types.required(MinorType.TIMESTAMP);
-
-    private long timeInMillis;
 
     public TimeStampExpression(long timeInMillis) {
       this(timeInMillis, ExpressionPosition.UNKNOWN);
     }
 
       public TimeStampExpression(long timeInMillis, ExpressionPosition pos) {
-      super(pos);
-      this.timeInMillis = timeInMillis;
+      super(timeInMillis, pos);
     }
 
     public long getTimeStamp() {
-      return timeInMillis;
+      return value;
     }
 
     @Override
@@ -665,36 +510,22 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-
   }
 
-  public static class IntervalYearExpression extends LogicalExpressionBase {
+  public static class IntervalYearExpression extends ValueExpression<Integer> {
 
     private static final MajorType INTERVALYEAR_CONSTANT = Types.required(MinorType.INTERVALYEAR);
-
-    private int months;
 
     public IntervalYearExpression(int months) {
       this(months, ExpressionPosition.UNKNOWN);
     }
 
       public IntervalYearExpression(int months, ExpressionPosition pos) {
-      super(pos);
-      this.months = months;
+      super(months, pos);
     }
 
     public int getIntervalYear() {
-      return months;
+      return value;
     }
 
     @Override
@@ -711,43 +542,24 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-
   }
 
-  public static class IntervalDayExpression extends LogicalExpressionBase {
+  public static class IntervalDayExpression extends ValueExpression<Long> {
 
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
     private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 
-    private int days;
-    private int millis;
-
     public IntervalDayExpression(long intervalInMillis) {
-      this((int) (intervalInMillis / MILLIS_IN_DAY), (int) (intervalInMillis % MILLIS_IN_DAY), ExpressionPosition.UNKNOWN);
-    }
-
-      public IntervalDayExpression(int days, int millis, ExpressionPosition pos) {
-      super(pos);
-      this.days = days;
-      this.millis = millis;
+      //this((int) (intervalInMillis / MILLIS_IN_DAY), (int) (intervalInMillis % MILLIS_IN_DAY), ExpressionPosition.UNKNOWN);
+      super(intervalInMillis, ExpressionPosition.UNKNOWN);
     }
 
     public int getIntervalDay() {
-      return days;
+      return (int) (value / MILLIS_IN_DAY);
     }
 
     public int getIntervalMillis() {
-        return millis;
+      return (int) (value % MILLIS_IN_DAY);
     }
 
     @Override
@@ -764,17 +576,6 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-
-    @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
-    }
-    
-    @Override
-    public int getCumulativeCost() { 
-      return 0; // TODO
-    }
-    
   }
 
   public static class QuotedString extends ValueExpression<String> {
@@ -783,11 +584,6 @@ public class ValueExpressions {
 
     public QuotedString(String value, ExpressionPosition pos) {
       super(value, pos);
-    }
-
-    @Override
-    protected String parseValue(String s) {
-      return s;
     }
 
     @Override

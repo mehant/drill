@@ -77,5 +77,9 @@ public class ReturnValueExpression implements LogicalExpression{
   public int getCumulativeCost() { 
     throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
   }
-  
+
+  @Override
+  public boolean isConstant() {
+    return false;
+  }
 }
