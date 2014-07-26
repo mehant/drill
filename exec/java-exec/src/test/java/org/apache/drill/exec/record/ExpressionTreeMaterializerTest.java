@@ -113,25 +113,19 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
         .build();
 
     LogicalExpression expr = new IfExpression.Builder()
-        .setIfCondition(
-            new IfExpression.IfCondition( //
-                new FieldReference("test", ExpressionPosition.UNKNOWN), //
-                new IfExpression.Builder()
-                    //
-                    .setElse(elseExpression).build()) //
-        ) //
-        .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build();
+        .setIfCondition(new IfExpression.IfCondition(new FieldReference("test", ExpressionPosition.UNKNOWN), new ValueExpressions.LongExpression(2L, ExpressionPosition.UNKNOWN)))
+        .setElse(elseExpression).build();
+
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(expr, batch, ec, registry);
     assertTrue(newExpr instanceof IfExpression);
     IfExpression newIfExpr = (IfExpression) newExpr;
     //assertEquals(1, newIfExpr.conditions.size());
     IfExpression.IfCondition ifCondition = newIfExpr.conditions;
-    assertTrue(ifCondition.expression instanceof IfExpression);
-    newIfExpr = (IfExpression) ifCondition.expression;
+    assertTrue(newIfExpr.elseExpression instanceof IfExpression);
     //assertEquals(1, newIfExpr.conditions.size());
     //ifCondition = newIfExpr.conditions.get(0);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
-    assertEquals(true, ((ValueExpressions.BooleanExpression) ifCondition.condition).value);
+    assertEquals(true, ((ValueExpressions.BooleanExpression) ((IfExpression)(newIfExpr.elseExpression)).conditions.condition).value);
     if (ec.hasErrors())
       System.out.println(ec.toErrorString());
     assertFalse(ec.hasErrors());
