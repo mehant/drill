@@ -41,12 +41,12 @@ import com.google.common.collect.UnmodifiableIterator;
 public class IfExpression extends LogicalExpressionBase{
 	static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
 	
-	public final ImmutableList<IfCondition> conditions;
+	public final IfCondition conditions;
 	public final LogicalExpression elseExpression;
 	
-	private IfExpression(ExpressionPosition pos, List<IfCondition> conditions, LogicalExpression elseExpression){
+	private IfExpression(ExpressionPosition pos, IfCondition conditions, LogicalExpression elseExpression){
 	  super(pos);
-		this.conditions = ImmutableList.copyOf(conditions);
+		this.conditions = conditions;
 		this.elseExpression = elseExpression;
 	}
 	
@@ -69,7 +69,7 @@ public class IfExpression extends LogicalExpressionBase{
   }
 
   public static class Builder{
-		List<IfCondition> conditions = new ArrayList<IfCondition>();
+		IfCondition conditions;
 		private LogicalExpression elseExpression;
 		private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
 		
@@ -78,22 +78,15 @@ public class IfExpression extends LogicalExpressionBase{
 		  return this;
 		}
 		
-		public Builder addCondition(IfCondition condition){
-			conditions.add(condition);
-            return this;
-		}
-
-    public Builder addConditions(Iterable<IfCondition> conditions) {
-      for (IfCondition condition : conditions) {
-        addCondition(condition);
-      }
-      return this;
-    }
-		
 		public Builder setElse(LogicalExpression elseExpression) {
 			this.elseExpression = elseExpression;
             return this;
 		}
+
+    public Builder setIfCondition(IfCondition conditions) {
+      this.conditions = conditions;
+      return this;
+    }
 		
 		public IfExpression build(){
 		  Preconditions.checkNotNull(pos);
@@ -113,12 +106,10 @@ public class IfExpression extends LogicalExpressionBase{
       return majorType;
     }
 
-    for(IfCondition condition : conditions) {
-      if (condition.expression.getMajorType().getMode() == DataMode.OPTIONAL) {
-        assert condition.expression.getMajorType().getMinorType() == majorType.getMinorType();
+    if (conditions.expression.getMajorType().getMode() == DataMode.OPTIONAL) {
+      assert conditions.expression.getMajorType().getMinorType() == majorType.getMinorType();
 
-        return condition.expression.getMajorType();
-      }
+      return conditions.expression.getMajorType();
     }
 
     return majorType;
@@ -128,20 +119,12 @@ public class IfExpression extends LogicalExpressionBase{
 		return new Builder();
 	}
 
-
-  public Iterable<IfCondition> conditionIterable(){
-    
-    return ImmutableList.copyOf(conditions);
-  }
-
   @Override
   public Iterator<LogicalExpression> iterator() {
     List<LogicalExpression> children = Lists.newLinkedList();
     
-    for(IfCondition ic : conditions){
-      children.add(ic.condition);
-      children.add(ic.expression);
-    }
+    children.add(conditions.condition);
+    children.add(conditions.expression);
     children.add(this.elseExpression);
     return children.iterator();
   }

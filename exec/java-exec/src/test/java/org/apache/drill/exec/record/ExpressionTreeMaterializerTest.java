@@ -106,29 +106,30 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
 
     ErrorCollector ec = new ErrorCollectorImpl();
 
+
+    LogicalExpression elseExpression = new IfExpression.Builder().setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN))
+        .setIfCondition(new IfExpression.IfCondition(new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN),
+            new FieldReference("test1", ExpressionPosition.UNKNOWN)))
+        .build();
+
     LogicalExpression expr = new IfExpression.Builder()
-        .addCondition(
+        .setIfCondition(
             new IfExpression.IfCondition( //
                 new FieldReference("test", ExpressionPosition.UNKNOWN), //
                 new IfExpression.Builder()
                     //
-                    .addCondition( //
-                        new IfExpression.IfCondition(
-                            //
-                            new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN),
-                            new FieldReference("test1", ExpressionPosition.UNKNOWN)))
-                    .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build()) //
+                    .setElse(elseExpression).build()) //
         ) //
         .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build();
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(expr, batch, ec, registry);
     assertTrue(newExpr instanceof IfExpression);
     IfExpression newIfExpr = (IfExpression) newExpr;
-    assertEquals(1, newIfExpr.conditions.size());
-    IfExpression.IfCondition ifCondition = newIfExpr.conditions.get(0);
+    //assertEquals(1, newIfExpr.conditions.size());
+    IfExpression.IfCondition ifCondition = newIfExpr.conditions;
     assertTrue(ifCondition.expression instanceof IfExpression);
     newIfExpr = (IfExpression) ifCondition.expression;
-    assertEquals(1, newIfExpr.conditions.size());
-    ifCondition = newIfExpr.conditions.get(0);
+    //assertEquals(1, newIfExpr.conditions.size());
+    //ifCondition = newIfExpr.conditions.get(0);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
     assertEquals(true, ((ValueExpressions.BooleanExpression) ifCondition.condition).value);
     if (ec.hasErrors())

@@ -770,9 +770,25 @@ public class TypeCastRules {
 
   public static boolean isCastable(MajorType from, MajorType to, NullHandling nullHandling) {
     if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) return false;
+    return isCastableInternal(from, to);
+  }
 
+  private static boolean isCastableInternal(MajorType from, MajorType to) {
     return from.getMinorType().equals(MinorType.NULL) ||      //null could be casted to any other type.
-           (rules.get(to.getMinorType()) == null ? false : rules.get(to.getMinorType()).contains(from.getMinorType()));
+        (rules.get(to.getMinorType()) == null ? false : rules.get(to.getMinorType()).contains(from.getMinorType()));
+  }
+
+  public static boolean isImplicitlyCastable(MajorType from, MajorType to) {
+    MinorType fromMinor = from.getMinorType();
+    MinorType toMinor = to.getMinorType();
+
+    int fromPrec = ResolverTypePrecedence.precedenceMap.get(fromMinor);
+    int toPrec = ResolverTypePrecedence.precedenceMap.get(toMinor);
+
+    if (isCastableInternal(from, to) && fromPrec <= toPrec) {
+      return true;
+    }
+    return false;
   }
 
   private static final int DATAMODE_CAST_COST = 1;

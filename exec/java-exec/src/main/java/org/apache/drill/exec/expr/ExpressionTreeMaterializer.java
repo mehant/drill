@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Function;
@@ -70,10 +71,12 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.resolver.DefaultFunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.resolver.TypeCastRules;
 
 public class ExpressionTreeMaterializer {
 
@@ -257,29 +260,57 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitIfExpression(IfExpression ifExpr, FunctionImplementationRegistry registry) {
-      List<IfExpression.IfCondition> conditions = Lists.newArrayList(ifExpr.conditions);
+      IfExpression.IfCondition conditions = ifExpr.conditions;
       LogicalExpression newElseExpr = ifExpr.elseExpression.accept(this, registry);
 
-      for (int i = 0; i < conditions.size(); ++i) {
-        IfExpression.IfCondition condition = conditions.get(i);
+      LogicalExpression newCondition = conditions.condition.accept(this, registry);
+      LogicalExpression newExpr = conditions.expression.accept(this, registry);
+      conditions = new IfExpression.IfCondition(newCondition, newExpr);
 
-        LogicalExpression newCondition = condition.condition.accept(this, registry);
-        LogicalExpression newExpr = condition.expression.accept(this, registry);
-        conditions.set(i, new IfExpression.IfCondition(newCondition, newExpr));
+      // Check if we need a cast
+      if (conditions.expression.getMajorType().getMinorType() != newElseExpr.getMajorType().getMinorType()) {
+
+        if (TypeCastRules.isImplicitlyCastable(conditions.expression.getMajorType(), newElseExpr.getMajorType())) {
+          // Implicitly cast the then expression
+          String castFuncName = CastFunctions.getCastFunc(newElseExpr.getMajorType().getMinorType());
+          List<LogicalExpression> castArgs = new ArrayList<>();
+          castArgs.add(conditions.expression);
+
+          FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+          FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+          DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
+
+          if (matchedCastFuncHolder == null) {
+            logFunctionResolutionError(errorCollector, castCall);
+            return NullExpression.INSTANCE;
+          }
+
+          conditions = new IfExpression.IfCondition(newCondition, matchedCastFuncHolder.getExpr(castCall.getName(), castArgs, ExpressionPosition.UNKNOWN));
+        } else if (TypeCastRules.isImplicitlyCastable(newElseExpr.getMajorType(), conditions.expression.getMajorType())) {
+          // Implicitly cast the else expression
+          String castFuncName = CastFunctions.getCastFunc(conditions.expression.getMajorType().getMinorType());
+          List<LogicalExpression> castArgs = new ArrayList<>();
+          castArgs.add(newElseExpr);
+
+          FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+          FunctionResolver resolver = FunctionResolverFactory.getResolver(castCall);
+          DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
+
+          if (matchedCastFuncHolder == null) {
+            logFunctionResolutionError(errorCollector, castCall);
+            return NullExpression.INSTANCE;
+          }
+
+          newElseExpr = matchedCastFuncHolder.getExpr(castCall.getName(), castArgs, ExpressionPosition.UNKNOWN);
+        } else {
+          assert false: "Case expressions do not have matching output types";
+        }
       }
 
       // Resolve NullExpression into TypedNullConstant by visiting all conditions
       // We need to do this because we want to give the correct MajorType to the Null constant
-      Iterable<LogicalExpression> logicalExprs = Iterables.transform(conditions,
-        new Function<IfCondition, LogicalExpression>() {
-          @Override
-          public LogicalExpression apply(IfExpression.IfCondition input) {
-            return input.expression;
-          }
-        }
-      );
-
-      List<LogicalExpression> allExpressions = Lists.newArrayList(logicalExprs);
+      List<LogicalExpression> allExpressions = Lists.newArrayList();
+      allExpressions.add(conditions.expression);
       allExpressions.add(newElseExpr);
 
       boolean containsNullExpr = Iterables.any(allExpressions, new Predicate<LogicalExpression>() {
@@ -301,12 +332,7 @@ public class ExpressionTreeMaterializer {
 
         if(nonNullExpr.isPresent()) {
           MajorType type = nonNullExpr.get().getMajorType();
-          for (int i = 0; i < conditions.size(); ++i) {
-            IfExpression.IfCondition condition = conditions.get(i);
-            conditions.set(i,
-                new IfExpression.IfCondition(condition.condition, rewriteNullExpression(condition.expression, type))
-            );
-          }
+          conditions = new IfExpression.IfCondition(conditions.condition, rewriteNullExpression(conditions.expression, type));
 
           newElseExpr = rewriteNullExpression(newElseExpr, type);
         }
@@ -314,16 +340,13 @@ public class ExpressionTreeMaterializer {
 
       // If the type of the IF expression is nullable, apply a convertToNullable*Holder function for "THEN"/"ELSE"
       // expressions whose type is not nullable.
-      if (IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build().getMajorType().getMode()
+      if (IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build().getMajorType().getMode()
           == DataMode.OPTIONAL) {
-        for (int i = 0; i < conditions.size(); ++i) {
-          IfExpression.IfCondition condition = conditions.get(i);
+          IfExpression.IfCondition condition = conditions;
           if (condition.expression.getMajorType().getMode() != DataMode.OPTIONAL) {
-            conditions.set(i, new IfExpression.IfCondition(condition.condition,
-                getConvertToNullableExpr(ImmutableList.of(condition.expression),
-                    condition.expression.getMajorType().getMinorType(), registry)));
-          }
-        }
+            conditions = new IfExpression.IfCondition(condition.condition, getConvertToNullableExpr(ImmutableList.of(condition.expression),
+                                                      condition.expression.getMajorType().getMinorType(), registry));
+         }
 
         if (newElseExpr.getMajorType().getMode() != DataMode.OPTIONAL) {
           newElseExpr = getConvertToNullableExpr(ImmutableList.of(newElseExpr),
@@ -331,7 +354,7 @@ public class ExpressionTreeMaterializer {
         }
       }
 
-      return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build());
+      return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build());
     }
 
     private LogicalExpression getConvertToNullableExpr(List<LogicalExpression> args, MinorType minorType,
