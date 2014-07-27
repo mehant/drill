@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 <@pp.dropOutputFile />
 
 <#list cast.types as type>
@@ -34,6 +35,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCateg
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.joda.time.MutableDateTime;
@@ -47,22 +49,53 @@ import org.apache.drill.exec.expr.fn.impl.DateUtility;
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
+  <#if type.to == "Date">
+  @Workspace org.joda.time.chrono.ISOChronology c;
+  </#if>
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
+    <#if type.to == "Date">
+    c = org.joda.time.chrono.ISOChronology.getInstanceUTC();
+    </#if>
   }
 
   public void eval() {
+      <#if type.to == "Date">
+      int index = in.start;
+      int endIndex = in.end;
+      int digit = 0;
+      int radix = 10; // Base 10 digits
 
+      // Stores three fields (year, month, day)
+      int[] dateFields = new int[3];
+      int dateIndex = 0;
+      int value = 0;
+
+      while (dateIndex < 3 && index < endIndex) {
+        digit = Character.digit(in.buffer.getByte(index++), radix);
+
+        if (digit == -1) {
+          dateFields[dateIndex++] = value;
+          value = 0;
+        } else {
+          value = (value * 10) + digit;
+        }
+      }
+
+      if (dateIndex < 3) {
+        // If we reached the end of input, we would have not encountered a separator, store the last value
+        dateFields[dateIndex++] = value;
+      }
+
+      out.value = c.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
+
+      <#else>
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
-      <#if type.to == "Date">
-      org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();
-      out.value = (org.joda.time.DateMidnight.parse(input, f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
-
-      <#elseif type.to == "TimeStamp">
+      <#if type.to == "TimeStamp">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();
       out.value = org.joda.time.DateTime.parse(input, f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
 
@@ -75,6 +108,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       <#elseif type.to == "Time">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
       out.value = (int) ((f.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+      </#if>
       </#if>
 
   }
