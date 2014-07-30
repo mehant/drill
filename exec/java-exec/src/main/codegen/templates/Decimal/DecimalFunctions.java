@@ -446,6 +446,10 @@ public class ${type.name}Functions {
                */
               int lastScaleIndex = currentIndex + resultIntegerSize + resultScaleSize - 1;
 
+              if (result.scale == 0) {
+                // adjust the index if result's scale is zero
+                lastScaleIndex++;
+              }
               // Compute the power of 10 necessary to chop of the fractional part
               int scaleFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
                                         org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
