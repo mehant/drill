@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -44,7 +45,7 @@ public class EasySubScan extends AbstractSubScan{
 
   private final List<FileWorkImpl> files;
   private final EasyFormatPlugin<?> formatPlugin;
-  private final List<SchemaPath> columns;
+  private final List<SchemaPath> columns = new ArrayList<>();
   private String selectionRoot;
 
   @JsonCreator
@@ -60,14 +61,18 @@ public class EasySubScan extends AbstractSubScan{
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
-    this.columns = columns;
+    if (columns != null) {
+      this.columns.addAll(columns);
+    }
     this.selectionRoot = selectionRoot;
   }
 
   public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns, String selectionRoot){
     this.formatPlugin = plugin;
     this.files = files;
-    this.columns = columns;
+    if (columns != null) {
+      this.columns.addAll(columns);
+    }
     this.selectionRoot = selectionRoot;
   }
 
