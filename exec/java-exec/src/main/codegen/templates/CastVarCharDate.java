@@ -88,6 +88,19 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
         dateFields[dateIndex++] = value;
       }
 
+      /* Handle two digit years
+       * Follow convention as done by Oracle, Postgres
+       * If range of two digits between 70 - 99 then year = 1970 - 1999
+       * Else if two digits between 00 - 69 = 2000 - 2069
+       */
+      if (dateFields[0] < 100) {
+        if (dateFields[0] < 70) {
+          dateFields[0] += 2000;
+        } else {
+          dateFields[0] += 1900;
+        }
+      }
+
       out.value = c.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
 
       <#else>
