@@ -53,7 +53,7 @@ class ValueHolderIden {
     }
   }
 
-  private void initType(int index, Type t, DirectSorter v){
+  private static void initType(int index, Type t, DirectSorter v){
     switch(t.getSort()){
     case Type.BOOLEAN:
     case Type.BYTE:
@@ -88,7 +88,6 @@ class ValueHolderIden {
     int first = -1;
     for (int i = 0; i < types.length; i++) {
       int varIndex = adder.newLocal(types[i]);
-      initType(varIndex, types[i], adder);
       if (i == 0) {
         first = varIndex;
       }
@@ -106,6 +105,23 @@ class ValueHolderIden {
       this.first = first;
     }
 
+    public ValueHolderIden iden(){
+      return ValueHolderIden.this;
+    }
+
+    public void init(DirectSorter mv){
+      for (int i = 0; i < types.length; i++) {
+        initType(first+i, types[i], mv);
+      }
+    }
+    public int size(){
+      return types.length;
+    }
+
+    public int first(){
+      return first;
+    }
+
     private int field(String name, InstructionModifier mv) {
       if (!fieldMap.containsKey(name)) throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
       return fieldMap.lget();
@@ -119,6 +135,15 @@ class ValueHolderIden {
 
       case Opcodes.PUTFIELD:
         addKnownInsn(name, mv, Opcodes.ISTORE);
+      }
+    }
+
+    public void transfer(InstructionModifier mv, int newStart){
+      if(first == newStart) return;
+
+      for(int i =0; i < types.length; i++){
+        mv.directVarInsn(types[i].getOpcode(Opcodes.ILOAD), first + i);
+        mv.directVarInsn(types[i].getOpcode(Opcodes.ISTORE), newStart + i);
       }
     }
 

@@ -7,11 +7,13 @@ public class ReplacingBasicValue extends BasicValue{
 
   ValueHolderIden iden;
   int index;
+  Type type;
 
   public ReplacingBasicValue(Type type, ValueHolderIden iden, int index) {
     super(type);
     this.index = index;
     this.iden = iden;
+    this.type = type;
   }
 
   public ValueHolderIden getIden() {
@@ -22,5 +24,8 @@ public class ReplacingBasicValue extends BasicValue{
     return index;
   }
 
+  public Type getType(){
+    return type;
+  }
 
 }

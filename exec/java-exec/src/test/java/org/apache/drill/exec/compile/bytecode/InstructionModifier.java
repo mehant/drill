@@ -32,6 +32,7 @@ public class InstructionModifier extends MethodVisitor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InstructionModifier.class);
 
   private final IntObjectOpenHashMap<ValueHolderIden.ValueHolderSub> oldToNew = new IntObjectOpenHashMap<>();
+  private final IntObjectOpenHashMap<ValueHolderIden.ValueHolderSub> initLocalVar = new IntObjectOpenHashMap<>();
   private DirectSorter adder;
   int lastLineNumber = 0;
   private TrackingInstructionList list;
@@ -46,6 +47,13 @@ public class InstructionModifier extends MethodVisitor {
     this.list = list;
   }
 
+  private ReplacingBasicValue local(int var){
+    Object o = list.currentFrame.getLocal(var);
+    if(o instanceof ReplacingBasicValue){
+      return (ReplacingBasicValue) o;
+    }
+    return null;
+  }
   private ReplacingBasicValue popCurrent(){
     // for vararg, we could try to pop an empty stack.  TODO: handle this better.
     if(list.currentFrame.getStackSize() == 0) return null;
@@ -91,13 +99,34 @@ public class InstructionModifier extends MethodVisitor {
 
   @Override
   public void visitVarInsn(int opcode, int var) {
-    if(opcode == Opcodes.ASTORE && popCurrent() != null){
-      // noop.
-    }else if(opcode == Opcodes.ALOAD && getReturn() != null){
+    ReplacingBasicValue v;
+    if(opcode == Opcodes.ASTORE && (v = popCurrent()) != null){
+      ValueHolderSub from = oldToNew.get(v.getIndex());
+
+      ReplacingBasicValue current = local(var);
+      ValueHolderSub to;
+      if(current == null){
+        if(this.initLocalVar.containsKey(var)){
+          to = initLocalVar.lget();
+        }else{
+          current = new ReplacingBasicValue(v.type, from.iden(), oldToNew.size());
+          to = current.iden.getHolderSub(adder);
+          oldToNew.put(current.index, to);
+          initLocalVar.put(var, to);
+        }
+      }else{
+        to = oldToNew.get(current.index);
+      }
+      // we're cross assigning.
+      from.transfer(this, to.first());
+
+    }else if(opcode == Opcodes.ALOAD && (v = getReturn()) != null){
+
       // noop.
     }else{
       super.visitVarInsn(opcode, var);
     }
+
 
   }
 
@@ -143,6 +172,9 @@ public class InstructionModifier extends MethodVisitor {
     ReplacingBasicValue obj = popCurrent();
 
     if(obj != null && opcode != Opcodes.INVOKESTATIC){
+      if("<init>".equals(name)){
+        oldToNew.get(obj.getIndex()).init(adder);
+      }
       return;
     }
 
