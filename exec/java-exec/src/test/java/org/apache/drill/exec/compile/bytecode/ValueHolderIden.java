@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -52,10 +53,42 @@ class ValueHolderIden {
     }
   }
 
-  public ValueHolderSub getHolderSub(LocalVariablesSorter adder) {
+  private void initType(int index, Type t, DirectSorter v){
+    switch(t.getSort()){
+    case Type.BOOLEAN:
+    case Type.BYTE:
+    case Type.CHAR:
+    case Type.SHORT:
+    case Type.INT:
+      v.visitInsn(Opcodes.ICONST_0);
+      v.directVarInsn(Opcodes.ISTORE, index);
+      break;
+    case Type.LONG:
+      v.visitInsn(Opcodes.LCONST_0);
+      v.directVarInsn(Opcodes.LSTORE, index);
+      break;
+    case Type.FLOAT:
+      v.visitInsn(Opcodes.FCONST_0);
+      v.directVarInsn(Opcodes.FSTORE, index);
+      break;
+    case Type.DOUBLE:
+      v.visitInsn(Opcodes.DCONST_0);
+      v.directVarInsn(Opcodes.DSTORE, index);
+      break;
+    case Type.OBJECT:
+      v.visitInsn(Opcodes.ACONST_NULL);
+      v.directVarInsn(Opcodes.ASTORE, index);
+      break;
+    default:
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public ValueHolderSub getHolderSub(DirectSorter adder) {
     int first = -1;
     for (int i = 0; i < types.length; i++) {
       int varIndex = adder.newLocal(types[i]);
+      initType(varIndex, types[i], adder);
       if (i == 0) {
         first = varIndex;
       }

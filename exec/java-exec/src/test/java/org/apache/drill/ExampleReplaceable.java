@@ -17,31 +17,55 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 
 public class ExampleReplaceable {
 
-  public static void main(String[] args){
+  NullableVarCharVector vv0;
+  VarCharHolder string4;
+  VarCharHolder constant5;
+
+  public static void main(String[] args) {
     ExampleReplaceable r = new ExampleReplaceable();
-    System.out.println(r.xyz());
+    System.out.println(r.xyz() + r.two(5));
   }
 
-  public static void x(){
+  public static void x() {
     main(new String[0]);
   }
 
-  public int xyz(){
+  public int xyz() {
     NullableIntHolder h = new NullableIntHolder();
     NullableIntHolder h2 = new NullableIntHolder();
     h.isSet = 1;
     h.value = 4;
     h2.isSet = 1;
     h2.value = 6;
-    if(h.isSet == h2.isSet){
+    if (h.isSet == h2.isSet) {
       return h.value + h2.value;
-    }else{
+    } else {
       return -1;
     }
 
   }
+
+  public int two(int inIndex) {
+    NullableVarCharHolder left = new NullableVarCharHolder();
+//    left.start = 1;
+//    left.end = 2;
+//    left.buffer = null;
+//    left.isSet = 1;
+//    NullableVarCharHolder left = out3;
+    VarCharHolder right = constant5;
+    if (left.end - left.start == right.end - right.start) {
+
+    }
+
+    return 0;
+  }
+
 }
