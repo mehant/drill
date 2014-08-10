@@ -22,46 +22,39 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicInterpreter;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Frame;
 
 public class ScalarReplacementNode extends MethodNode {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScalarReplacementNode.class);
 
-  MethodVisitor inner;
-  String name;
 
-  public ScalarReplacementNode(String name, MethodVisitor inner){
+  String[] exceptionsArr;
+  MethodVisitor inner;
+
+  public ScalarReplacementNode(int access, String name, String desc, String signature, String[] exceptions, MethodVisitor inner) {
+    super(access, name, desc, signature, exceptions);
+    this.exceptionsArr = exceptions;
     this.inner = inner;
   }
+
 
   @Override
   public void visitEnd() {
     super.visitEnd();
 
-    // next we'll rewrite instructions.
-
-    Analyzer<BasicValue> a = new Analyzer<>(new BasicInterpreter());
+    Analyzer<BasicValue> a = new Analyzer<>(new ReplacingInterpreter());
     Frame<BasicValue>[] frames;
     try {
-      frames = a.analyze(name, this);
+      frames = a.analyze("Object", this);
     } catch (AnalyzerException e) {
       throw new IllegalStateException(e);
     }
-
-    // replace stack reference with abstractinsn
-
-
-    // finally we'll replay against class visitor.
-    accept(inner);
+    TrackingInstructionList list = new TrackingInstructionList(frames, this.instructions);
+    this.instructions = list;
+    InstructionModifier holderV = new InstructionModifier(this.access, this.name, this.desc, this.signature, this.exceptionsArr, list, inner);
+    accept(holderV);
   }
 
-
-  private void doWork(){
-    this.instructions.getFirst();
-    Frame f = new Frame(5000, 5000);
-    f.
-  }
 
 }

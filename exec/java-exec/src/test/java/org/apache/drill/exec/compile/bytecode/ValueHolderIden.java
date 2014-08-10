@@ -21,7 +21,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
-import org.apache.drill.exec.compile.bytecode.HolderReplacingMethodVisitor.ValueHolderIden.ValueHolderSub;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -74,13 +73,12 @@ class ValueHolderIden {
       this.first = first;
     }
 
-    private int field(String name, HolderReplacingMethodVisitor mv) {
-      if (!fieldMap.containsKey(name))
-        throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
+    private int field(String name, InstructionModifier mv) {
+      if (!fieldMap.containsKey(name)) throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
       return fieldMap.lget();
     }
 
-    public void addInsn(String name, HolderReplacingMethodVisitor mv, int opcode) {
+    public void addInsn(String name, InstructionModifier mv, int opcode) {
       switch (opcode) {
       case Opcodes.GETFIELD:
         addKnownInsn(name, mv, Opcodes.ILOAD);
@@ -91,7 +89,7 @@ class ValueHolderIden {
       }
     }
 
-    private void addKnownInsn(String name, HolderReplacingMethodVisitor mv, int analogOpcode) {
+    private void addKnownInsn(String name, InstructionModifier mv, int analogOpcode) {
       int f = field(name, mv);
       Type t = types[f];
       mv.directVarInsn(t.getOpcode(analogOpcode), first + f);

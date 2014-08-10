@@ -26,16 +26,11 @@ public class ExampleReplaceable {
     System.out.println(r.xyz());
   }
 
-  public static void z(NullableIntHolder h){
-
+  public static void x(){
+    main(new String[0]);
   }
+
   public int xyz(){
-//    NullableIntHolder h = new NullableIntHolder();
-//    h.value = 4;
-//    return h.value;
-
-    System.clearProperty("");
-
     NullableIntHolder h = new NullableIntHolder();
     NullableIntHolder h2 = new NullableIntHolder();
     h.isSet = 1;
