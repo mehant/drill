@@ -17,7 +17,7 @@
 
 PROJECT_ROOT=../../../
 
-# mvn dependency:build-classpath -f=$PROJECT_ROOT/pom.xml -Dmdep.outputFile=target/sh/cp.txt
+#mvn dependency:build-classpath -f=$PROJECT_ROOT/pom.xml -Dmdep.outputFile=target/sh/cp.txt
 CP=`cat $PROJECT_ROOT/target/sh/cp.txt`
 CP=./:$CP:$PROJECT_ROOT/target/classes:$PROJECT_ROOT/target/test-classes
 /Users/jnadeau/Library/Java/JavaVirtualMachines/jdk1.7.0.jdk/Contents/Home/bin/java \
@@ -32,3 +32,4 @@ CP=./:$CP:$PROJECT_ROOT/target/classes:$PROJECT_ROOT/target/test-classes
 -cp $CP \
 org.apache.drill.TestFilter $@
 #org.apache.drill.exec.RunRootExec $@
+# -agentpath:/Applications/YourKit_Java_Profiler_12.0.5.app/bin/mac/libyjpagent.jnilib=sampling,onexit=snapshot \

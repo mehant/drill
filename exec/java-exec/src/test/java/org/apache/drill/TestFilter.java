@@ -108,49 +108,49 @@ public final class TestFilter {
       }
       h.print();
     }
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP, "separate compare method with indirect addressing");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.x3(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
-//
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP, "combined method with indirect addressing");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.x2(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
-//
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP, "combined method with direct addressing");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.x4(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "separate compare method with indirect addressing");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.x3(x);
+        h.stop(x);
+      }
+      h.print();
+    }
 
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP, "original loop with updated bytebuf references and disabled checks");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.originalLoop(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "combined method with indirect addressing");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.x2(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "combined method with direct addressing");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.x4(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "original loop with updated bytebuf references and disabled checks");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.originalLoop(x);
+        h.stop(x);
+      }
+      h.print();
+    }
 
     {
       int x = 0;
@@ -174,40 +174,40 @@ public final class TestFilter {
       h.print();
     }
 //
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP, "separate method loop separate from doEval, with indirect addressing");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.loop(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
-//
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP,
-//          "combined method with direct addressing (char comparison and outer loop)");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.x5(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
-//
-//    {
-//      int x = 0;
-//      TimeHolder h = new TimeHolder(INNER_LOOP,
-//          "separate methods with direct addressing (char comparison and outer loop)");
-//      for (int z = 0; z < INNER_LOOP; z++) {
-//        h.start();
-//        x = f.sepCompareWithDoubleDirect(x);
-//        h.stop(x);
-//      }
-//      h.print();
-//    }
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "separate method loop separate from doEval, with indirect addressing");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.loop(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP,
+          "combined method with direct addressing (char comparison and outer loop)");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.x5(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP,
+          "separate methods with direct addressing (char comparison and outer loop)");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.sepCompareWithDoubleDirect(x);
+        h.stop(x);
+      }
+      h.print();
+    }
   }
 
   public int loop(int x) {
