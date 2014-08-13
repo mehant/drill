@@ -18,12 +18,9 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.SwappedByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.math.BigDecimal;
 
-import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
@@ -31,6 +28,7 @@ import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.util.DecimalUtility;
 
 import com.google.common.base.Charsets;
 

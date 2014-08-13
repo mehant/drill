@@ -37,8 +37,11 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.SwappedByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -47,12 +50,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     @Param BigIntHolder len;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferSize}]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        buffer = buffer.reallocIfNeeded(${type.bufferSize});
     }
 
     public void eval() {
@@ -107,6 +109,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -116,7 +120,9 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -125,12 +131,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     @Param BigIntHolder len;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferSize}]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        buffer = buffer.reallocIfNeeded(type.bufferSize);
     }
 
     public void eval() {

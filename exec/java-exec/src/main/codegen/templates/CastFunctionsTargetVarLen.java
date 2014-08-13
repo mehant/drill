@@ -29,6 +29,7 @@
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -45,15 +46,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Workspace ByteBuf buffer;     
+  @Inject DrillBuf buffer;     
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-    //TODO: max bufferLength should = parameter.len
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
   }
 
   public void eval() {
+    buffer = buffer.reallocIfNeeded(len.value);
     String istr = (new ${type.javaType}(in.value)).toString();
     out.buffer = buffer;
     out.start = 0;

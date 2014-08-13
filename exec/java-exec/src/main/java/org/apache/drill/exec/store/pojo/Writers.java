@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.pojo;
 
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;

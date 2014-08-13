@@ -36,7 +36,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -44,15 +47,14 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
         int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {

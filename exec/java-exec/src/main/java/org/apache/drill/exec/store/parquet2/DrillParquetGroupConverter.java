@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.Unpooled;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
@@ -41,6 +38,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;

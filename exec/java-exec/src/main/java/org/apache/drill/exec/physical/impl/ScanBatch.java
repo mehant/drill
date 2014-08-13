@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl;
 
 import io.netty.buffer.DrillBuf;
-import io.netty.buffer.Unpooled;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -48,18 +47,12 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.util.BatchPrinter;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 /**
  * Record batch used for a particular scan. Operators against one or more

@@ -424,15 +424,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public ${friendlyType} getObject(int index) {
-
-      DrillBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
-      //dst = new io.netty.buffer.SwappedDrillBuf(dst);
-      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
-
-      return dst;
-
-
-
+      return data.slice(index * ${type.width}, ${type.width})
     }
 
     </#if>

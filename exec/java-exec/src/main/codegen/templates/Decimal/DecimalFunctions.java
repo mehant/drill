@@ -252,7 +252,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -263,15 +266,14 @@ public class ${type.name}Functions {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Workspace int outputScale;
         @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
@@ -304,13 +306,12 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder right;
         @Workspace int outputScale;
         @Workspace int outputPrecision;
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
@@ -341,7 +342,7 @@ public class ${type.name}Functions {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Workspace int[] tempResult;
         @Workspace int outputScale;
         @Workspace int outputPrecision;
@@ -349,8 +350,7 @@ public class ${type.name}Functions {
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            buffer = buffer.reallocIfNeeded(size);
             tempResult = new int[${type.storage} * ${type.storage}];
             outputPrecision = Integer.MIN_VALUE;
         }
@@ -513,14 +513,13 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
         @Output ${type.name}Holder result;
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Workspace int outputScale;
         @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
@@ -551,14 +550,13 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
         @Output ${type.name}Holder result;
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Workspace int outputScale;
         @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
@@ -1069,6 +1067,11 @@ public class ${type.name}Functions {
 
 package org.apache.drill.exec.expr.fn.impl;
 
+
+
+
+
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -1076,7 +1079,9 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -1190,6 +1195,11 @@ public class ${type.name}Functions {
 
 package org.apache.drill.exec.expr.fn.impl;
 
+
+
+
+
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -1198,7 +1208,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
