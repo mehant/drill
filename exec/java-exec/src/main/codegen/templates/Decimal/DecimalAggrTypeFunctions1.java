@@ -58,6 +58,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Param ${type.inputType}Holder in;
   <#if aggrtype.funcName == "sum">
+  @Inject DrillBuf buffer;
   @Workspace ObjectHolder value;
   @Workspace IntHolder outputScale;
   <#elseif type.outputType.endsWith("Sparse")>
@@ -76,8 +77,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value = new ObjectHolder();
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     value.obj = tmp;
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[tmp.WIDTH]);
-    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+    buffer = buffer.reallocIfNeeded(tmp.WIDTH);
     tmp.buffer = buffer;
     tmp.start  = 0;
     <#if aggrtype.funcName == "max">
@@ -98,6 +98,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
+    buffer = buffer.reallocIfNeeded(tmp.WIDTH);
     value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     outputScale = new IntHolder();
@@ -170,8 +171,6 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if aggrtype.funcName == "count">
     out.value = value.value;
     <#elseif aggrtype.funcName == "sum">
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
-    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
     out.buffer = buffer;
     out.start  = 0;
     out.scale = outputScale.value;
@@ -204,10 +203,6 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   	value = new ObjectHolder();
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     value.obj = tmp;
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[tmp.WIDTH]);
-    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
-    tmp.buffer = buffer;
-    tmp.start  = 0;
     for (int i = 0; i < tmp.nDecimalDigits; i++) {
       tmp.setInteger(i, 0xFFFFFFFF);
     }

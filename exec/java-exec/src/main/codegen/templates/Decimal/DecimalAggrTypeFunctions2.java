@@ -55,12 +55,14 @@ public class Decimal${aggrtype.className}Functions {
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
+  @Inject DrillBuf buffer;
   @Workspace ObjectHolder value;
   @Workspace ${type.countRunningType}Holder count;
   @Workspace IntHolder outputScale;
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
+    buffer.reallocIfNeeded(tmp.WIDTH);
     value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();
@@ -95,8 +97,6 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
-    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
     out.buffer = buffer;
     out.start  = 0;
     out.scale = outputScale.value;
