@@ -240,13 +240,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     
     <#if (type.width > 8)>
 
-//    public ${minor.javaType!type.javaType} get(int index) {
-//      DrillBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
-//      //dst = new io.netty.buffer.SwappedDrillBuf(dst);
-//      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
-//
-//      return dst;
-//    }
+    public ${minor.javaType!type.javaType} get(int index) {
+      return data.slice(index * ${type.width}, ${type.width});
+    }
 
     <#if (minor.class == "TimeStampTZ")>
     public void get(int index, ${minor.class}Holder holder){
@@ -721,6 +717,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
        }
      }
    }
+   
+   
+
 
    <#else> <#-- type.width <= 8 -->
    public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
@@ -771,6 +770,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
          set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
        }else{
          set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
+       }
+     }
+   }
+   
+   
+   public void generateTestDataAlt(int size) {
+     setValueCount(size);
+     boolean even = true;
+     for(int i =0; i < valueCount; i++, even = !even){
+       if(even){
+         set(i, (${(minor.javaType!type.javaType)}) 1);
+       }else{
+         set(i, (${(minor.javaType!type.javaType)}) 0);
        }
      }
    }

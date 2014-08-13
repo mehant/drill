@@ -82,8 +82,8 @@
     {
       major: "Fixed",
       width: 12,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
         { class: "TimeStampTZ", milliSecondsSize: 8, friendlyType: "DateTime" },
         { class: "IntervalDay", milliSecondsOffset: 4, friendlyType: "Period" }
@@ -92,8 +92,8 @@
     {
       major: "Fixed",
       width: 16,
-      javaType: "ByteBuf"
-      boxedType: "ByteBuf",      
+      javaType: "DrillBuf"
+      boxedType: "DrillBuf",      
       minor: [
         { class: "Interval", daysOffset: 4, milliSecondsOffset: 8, friendlyType: "Period" }
       ]
@@ -101,8 +101,8 @@
     {
       major: "Fixed",
       width: 12,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
         <#--
         { class: "TimeTZ" },
@@ -114,8 +114,8 @@
     {
       major: "Fixed",
       width: 16,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       
       minor: [
         { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4, friendlyType: "BigDecimal" }
@@ -124,8 +124,8 @@
     {
       major: "Fixed",
       width: 24,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
         { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6, friendlyType: "BigDecimal" }
       ]
@@ -133,8 +133,8 @@
     {
       major: "Fixed",
       width: 20,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
         { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5, friendlyType: "BigDecimal" }
       ]
@@ -143,7 +143,7 @@
       major: "VarLen",
       width: 4,
       javaType: "int",
-      boxedType: "ByteBuf",
+      boxedType: "DrillBuf",
       minor: [
         { class: "VarBinary" , friendlyType: "byte[]" },
         { class: "VarChar" , friendlyType: "Text" }
@@ -154,7 +154,7 @@
       major: "Bit",
       width: 1,
       javaType: "int",
-      boxedType: "ByteBuf",
+      boxedType: "Integer",
       minor: [
         { class: "Bit" , friendlyType: "Boolean" }
       ]

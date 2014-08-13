@@ -75,13 +75,13 @@ public class PojoRecordReader<T> implements RecordReader{
         }else if(type == Double.class){
           writers[i] = new NDoubleWriter(f);
         }else if(type.isEnum()){
-          writers[i] = new EnumWriter(f);
+          writers[i] = new EnumWriter(f, output.getManagedBuffer());
         }else if(type == boolean.class){
           writers[i] = new BitWriter(f);
         }else if(type == long.class){
           writers[i] = new LongWriter(f);
         }else if(type == String.class){
-          writers[i] = new StringWriter(f);
+          writers[i] = new StringWriter(f, output.getManagedBuffer());
         }else if (type == Timestamp.class) {
           writers[i] = new NTimeStampWriter(f);
         }else{

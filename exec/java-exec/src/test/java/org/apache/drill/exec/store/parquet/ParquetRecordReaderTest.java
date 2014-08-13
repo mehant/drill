@@ -21,6 +21,7 @@ import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFiel
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.DrillBuf;
 
 import java.io.File;
 import java.io.IOException;
@@ -241,6 +242,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     @Override
     public boolean isNewSchema() {
       return false;
+    }
+
+    @Override
+    public DrillBuf getManagedBuffer() {
+      return allocator.buffer(255);
     }
   }
 

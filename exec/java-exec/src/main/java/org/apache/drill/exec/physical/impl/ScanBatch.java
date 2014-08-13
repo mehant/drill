@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.Unpooled;
 
 import java.util.Collections;
@@ -55,6 +56,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -309,6 +311,11 @@ public class ScanBatch implements RecordBatch {
         return true;
       }
       return false;
+    }
+
+    @Override
+    public DrillBuf getManagedBuffer() {
+      return oContext.getManagedBuffer();
     }
   }
 
