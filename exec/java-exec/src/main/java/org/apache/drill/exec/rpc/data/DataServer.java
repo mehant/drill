@@ -118,7 +118,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
           dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
         }
       }
-      dataHandler.handle(connection, manager, fragmentBatch, body, sender);
+      dataHandler.handle(connection, manager, fragmentBatch, (DrillBuf) body, sender);
 
     } catch (FragmentSetupException e) {
       logger.error("Failure while getting fragment manager. {}", QueryIdHelper.getQueryIdentifier(handle),  e);

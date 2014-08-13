@@ -15,17 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr.annotations;
+package org.apache.drill.exec.expr;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class ReadExpressionHelper {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReadExpressionHelper.class);
 
-/**
- * A field that will populated by Drill to provide a chunk of managed resizeable memory.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
-public @interface Buf {
+
+  //eval.add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
 }

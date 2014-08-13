@@ -50,10 +50,10 @@ public class JsonReader {
   private JsonParser parser;
   private DrillBuf workBuf;
 
-  public JsonReader(OperatorContext context) throws JsonParseException, IOException {
+  public JsonReader(DrillBuf managedBuf) throws JsonParseException, IOException {
     factory.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     factory.configure(Feature.ALLOW_COMMENTS, true);
-    this.workBuf = context.getManagedBuffer();
+    this.workBuf = managedBuf;
   }
 
   public boolean write(Reader reader, ComplexWriter writer) throws JsonParseException, IOException {

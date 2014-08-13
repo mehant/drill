@@ -223,7 +223,7 @@ public class ScanBatch implements RecordBatch {
         AllocationHelper.allocate(v, recordCount, val.length());
         NullableVarCharHolder h = new NullableVarCharHolder();
         byte[] bytes = val.getBytes();
-        h.buffer = Unpooled.buffer(bytes.length);
+        h.buffer = this.oContext.getAllocator().buffer(bytes.length);
         h.buffer.writeBytes(bytes);
         h.start = 0;
         h.isSet = 1;
@@ -332,5 +332,5 @@ public class ScanBatch implements RecordBatch {
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
-  
+
 }

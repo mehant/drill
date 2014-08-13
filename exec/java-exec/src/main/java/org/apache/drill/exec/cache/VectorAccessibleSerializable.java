@@ -147,7 +147,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     UserBitShared.RecordBatchDef batchDef = batch.getDef();
 
         /* ByteBuf associated with the selection vector */
-    ByteBuf svBuf = null;
+    DrillBuf svBuf = null;
     Integer svCount =  null;
 
     if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE)

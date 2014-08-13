@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 
 import org.apache.drill.exec.memory.Accountor;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.jboss.netty.util.DebugUtil;
 
@@ -45,6 +46,7 @@ public final class DrillBuf extends AbstractByteBuf {
   private volatile Accountor acct;
   private volatile int length;
   private OperatorContext context;
+  private FragmentContext fContext;
 
 
   public DrillBuf(BufferAllocator allocator, Accountor a, UnsafeDirectLittleEndian b) {
@@ -60,6 +62,9 @@ public final class DrillBuf extends AbstractByteBuf {
 
   public void setOperatorContext(OperatorContext c){
     this.context = c;
+  }
+  public void setFragmentContext(FragmentContext c){
+    this.fContext = c;
   }
 
   private DrillBuf(DrillBuf buffer, int index, int length) {
@@ -88,6 +93,8 @@ public final class DrillBuf extends AbstractByteBuf {
     if(this.capacity() >= size) return this;
     if(context != null){
       return context.replace(this, size);
+    }else if(fContext != null){
+      return fContext.replace(this, size);
     }else{
       throw new UnsupportedOperationException("Realloc is only available in the context of an operator's UDFs");
     }

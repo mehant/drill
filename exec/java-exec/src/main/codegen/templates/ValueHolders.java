@@ -77,7 +77,7 @@ public final class ${className} implements ValueHolder{
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
 
 
-    public int getInteger(int index) {
+    public static int getInteger(int index, int start, DrillBuf buffer) {
         int value = buffer.getInt(start + (index * 4));
 
         if (index == 0) {
@@ -91,19 +91,19 @@ public final class ${className} implements ValueHolder{
         return value;
     }
 
-    public void setInteger(int index, int value) {
+    public static void setInteger(int index, int value, int start, DrillBuf buffer) {
         buffer.setInt(start + (index * 4), value);
     }
 
-    public void setSign(boolean sign) {
+    public static void setSign(boolean sign, int start, DrillBuf buffer) {
       // Set MSB to 1 if sign is negative
       if (sign == true) {
-        int value = getInteger(0);
-        setInteger(0, (value | 0x80000000));
+        int value = getInteger(0, start, buffer);
+        setInteger(0, (value | 0x80000000), start, buffer);
       }
     }
 
-    public boolean getSign() {
+    public static boolean getSign(int start, DrillBuf buffer) {
       return ((buffer.getInt(start) & 0x80000000) != 0);
     }
 
@@ -127,7 +127,7 @@ public final class ${className} implements ValueHolder{
       /** The buffer holding actual values. **/
       public DrillBuf buffer;
 
-      public String toString() {
+      public static String toString(<#if mode.name == "Optional">int isSet, </#if>int start, int end, DrillBuf buffer) {
       <#if mode.name == "Optional">
         if (isSet == 0)
           return "<NULL>";
@@ -163,6 +163,11 @@ public final class ${className} implements ValueHolder{
       }
 
     </#if>
+    
+    @Deprecated
+    public String toString(){
+      throw new UnsupportedOperationException();
+    }
 }
 
 </#list>

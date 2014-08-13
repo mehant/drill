@@ -88,7 +88,7 @@ public class TestJsonReader {
     writer.allocate();
 
 
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound));
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), allocator.buffer(255));
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 

@@ -48,6 +48,7 @@ public class JSONRecordReader2 implements RecordReader{
   private FileSystem fileSystem;
   private InputStream stream;
   private JsonReaderWithState jsonReader;
+  private FragmentContext fragmentContext;
 
   public JSONRecordReader2(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
@@ -62,7 +63,7 @@ public class JSONRecordReader2 implements RecordReader{
       JsonRecordSplitter splitter = new UTF8JsonRecordSplitter(stream);
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
-      jsonReader = new JsonReaderWithState(splitter);
+      jsonReader = new JsonReaderWithState(splitter, fragmentContext.getManagedBuffer());
     }catch(IOException e){
       throw new ExecutionSetupException("Failure reading JSON file.", e);
     }

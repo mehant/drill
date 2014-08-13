@@ -18,7 +18,9 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -268,11 +270,10 @@ public class DateTypeFunctions {
 
     @FunctionTemplate(name = "timeofday", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
     public static class TimeOfDay implements DrillSimpleFunc {
-        @Workspace ByteBuf buffer;
+        @Inject DrillBuf buffer;
         @Output VarCharHolder out;
 
         public void setup(RecordBatch incoming) {
-            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[100]);
         }
 
         public void eval() {

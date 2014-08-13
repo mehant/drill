@@ -96,7 +96,7 @@ public class ValueHolderHelper {
 
     dch.scale = bigDecimal.scale();
     dch.precision = bigDecimal.precision();
-    dch.setSign(bigDecimal.signum() == -1);
+    Decimal28SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
     dch.start = 0;
     dch.buffer = buf.reallocIfNeeded(5 * DecimalUtility.integerSize);
     DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
@@ -112,7 +112,7 @@ public class ValueHolderHelper {
 
       dch.scale = bigDecimal.scale();
       dch.precision = bigDecimal.precision();
-      dch.setSign(bigDecimal.signum() == -1);
+      Decimal38SparseHolder.setSign(bigDecimal.signum() == -1, dch.start, dch.buffer);
       dch.start = 0;
       dch.buffer = buf.reallocIfNeeded(dch.maxPrecision * DecimalUtility.integerSize);
       DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
