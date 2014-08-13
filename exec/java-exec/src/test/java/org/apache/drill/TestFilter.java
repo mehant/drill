@@ -34,15 +34,20 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 public final class TestFilter {
   final NullableVarCharVector vv0;
   final VarCharHolder string4;
+
   final VarCharHolder constant5;
   final NullableVarCharVector.Accessor vv0a;
   final long laddr;
   final long raddr;
+  int constant5_start;
+  int constant5_end;
+  DrillBuf constant5_buffer;
 
   private static final int MAX = 1 << 16;
   private static final int INNER_LOOP = 20000;
@@ -682,6 +687,10 @@ public final class TestFilter {
     vv0a = vv0.getAccessor();
     string4 = ValueHolderHelper.getVarCharHolder(a, "James Compagno");
     constant5 = string4;
+    constant5_start = constant5.start;
+    constant5_end = constant5.end;
+    constant5_buffer = constant5.buffer;
+
     laddr = vv0.getData().memoryAddress();
     raddr = string4.buffer.memoryAddress() + string4.start;
   }
@@ -758,6 +767,40 @@ public final class TestFilter {
       return true;
     } else {
       return false;
+    }
+  }
+
+  public static final int compare2i(int l, int r, final int lEnd, final int rEnd, final long laddr, final long raddr) {
+    // final AccountingByteBuf lb = left.buffer;
+    // final AccountingByteBuf rb = right.buffer;
+
+    int n = lEnd - l;
+    if (n == rEnd - r) {
+      long lPos = laddr + l;
+      long rPos = raddr + r;
+
+      while (n > 7) {
+        long leftLong = PlatformDependent.getLong(lPos);
+        long rightLong = PlatformDependent.getLong(rPos);
+        if (leftLong != rightLong) {
+          return 0;
+        }
+        lPos += 8;
+        rPos += 8;
+        n -= 8;
+      }
+      while (n-- != 0) {
+        byte leftByte = PlatformDependent.getByte(lPos);
+        byte rightByte = PlatformDependent.getByte(rPos);
+        if (leftByte != rightByte) {
+          return 0;
+        }
+        lPos++;
+        rPos++;
+      }
+      return 1;
+    } else {
+      return 0;
     }
   }
 
@@ -1103,50 +1146,72 @@ public final class TestFilter {
     }
   }
 
-  public boolean doEvalRewritten(int paramInt1, int paramInt2)
-      throws SchemaChangeException
+
+
+public boolean doEvalRewritten2(int paramInt1, int paramInt2)
+    throws SchemaChangeException
+  {
+    int i = 0; int j = 0; int k = 0; DrillBuf localDrillBuf = null;
+    i = this.vv0.getAccessor().isSet(paramInt1);
+    if (i == 1)
     {
-      int i = 0; int j = 0; int k = 0; DrillBuf localDrillBuf = null;
-      i = this.vv0.getAccessor().isSet(paramInt1);
-      if (i == 1)
-      {
-        localDrillBuf = this.vv0.getData();
-        long l = this.vv0.getAccessor().getStartEnd(paramInt1);
-        j = (int)(l >> 32);
-        k = (int)l;
-      }
-
-      int m = 0; int n = 0;
-
-      if (i == 0) {
-        m = 0;
-      } else {
-        int i1 = 0; int i2 = 0;
-
-        VarCharHolder localVarCharHolder = this.constant5;
-
-        if (k - j == localVarCharHolder.end - localVarCharHolder.start) {
-          int i3 = k - j;
-          int i4 = j;
-          int i5 = localVarCharHolder.start;
-          while (i3-- != 0) {
-            int i6 = localDrillBuf.getByte(i4++);
-            int i7 = localVarCharHolder.buffer.getByte(i5++);
-            if (i6 != i7) {
-              i2 = 0;
-              break;
-            }
-          }
-          i2 = 1;
-        } else {
-          i2 = 0;
-        }
-
-        i1 = 1;
-        m = i1; n = i2;
-        m = 1;
-      }
-
-      return n == 1;
+      localDrillBuf = this.vv0.getData();
+      long l = this.vv0.getAccessor().getStartEnd(paramInt1);
+      j = (int)(l >> 32);
+      k = (int)l;
     }
+
+    int m = 0; int n = 0;
+
+    if (i == 0) {
+      m = 0;
+    } else {
+      int i1 = 0; int i2 = 0;
+
+      VarCharHolder localVarCharHolder = this.constant5;
+
+      if (k - j == localVarCharHolder.end - localVarCharHolder.start) {
+        int i3 = k - j;
+        int i4 = j;
+        int i5 = localVarCharHolder.start;
+        while (i3-- != 0) {
+          int i6 = localDrillBuf.getByte(i4++);
+          int i7 = localVarCharHolder.buffer.getByte(i5++);
+          if (i6 != i7) {
+            i2 = 0;
+            break;
+          }
+        }
+        i2 = 1;
+      } else {
+        i2 = 0;
+      }
+
+      i1 = 1;
+      m = i1; n = i2;
+      m = 1;
+    }
+
+    return n == 1;
   }
+
+public boolean doEvalRewritten(int paramInt1, int paramInt2) throws SchemaChangeException {
+    int i = 0; int j = 0; int k = 0; DrillBuf localDrillBuf = null;
+    i = this.vv0.getAccessor().isSet(paramInt1);
+//    System.out.print(i);
+    if (i == 1) {
+      localDrillBuf = this.vv0.getData();
+      long l = this.vv0.getAccessor().getStartEnd(paramInt1);
+      j = (int)(l >> 32);
+      k = (int)l;
+    }
+
+    int m = 0; int n = 0;
+
+    if (i != 0) {
+      n = compare2i(j, k, constant5.start, constant5.end, localDrillBuf.memoryAddress(), constant5.buffer.memoryAddress());
+    }
+
+    return n == 1;
+  }
+}
