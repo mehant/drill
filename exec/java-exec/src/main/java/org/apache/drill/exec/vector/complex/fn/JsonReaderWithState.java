@@ -21,6 +21,7 @@ package org.apache.drill.exec.vector.complex.fn;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -35,10 +36,10 @@ public class JsonReaderWithState {
   private JsonRecordSplitter splitter;
   private JsonReader jsonReader;
 
-  public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
+  public JsonReaderWithState(JsonRecordSplitter splitter, OperatorContext context) throws IOException{
     this.splitter = splitter;
     reader = splitter.getNextReader();
-    jsonReader = new JsonReader();
+    jsonReader = new JsonReader(context);
   }
 
   public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
@@ -50,7 +51,7 @@ public class JsonReaderWithState {
     }
 
     jsonReader.write(reader, writer);
-    
+
     if (!writer.ok()) {
       reader.reset();
       return WriteState.WRITE_FAILED;

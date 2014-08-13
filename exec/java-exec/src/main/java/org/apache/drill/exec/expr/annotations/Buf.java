@@ -15,22 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill;
+package org.apache.drill.exec.expr.annotations;
 
-public final class Loaders {
-  private Loaders(){}
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  public static interface VarCharLoader {
-    public long getStartEnd();
-    public long getDataAddr();
-  }
-
-  public static interface NullableVarCharLoader extends VarCharLoader {
-    public int getIsSet();
-  }
-
-  public static interface VarCharStorer {
-    public void set(int isSet, )
-  }
-
+/**
+ * A field that will populated by Drill to provide a chunk of managed resizeable memory.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD})
+public @interface Buf {
 }

@@ -25,12 +25,21 @@ public class ReplacingBasicValue extends BasicValue{
   ValueHolderIden iden;
   int index;
   Type type;
+  boolean isFunctionReturn = false;
 
   public ReplacingBasicValue(Type type, ValueHolderIden iden, int index) {
     super(type);
     this.index = index;
     this.iden = iden;
     this.type = type;
+  }
+
+  public void markFunctionReturn(){
+    this.isFunctionReturn = true;
+  }
+
+  public void disableFunctionReturn(){
+    this.isFunctionReturn = false;
   }
 
   public ValueHolderIden getIden() {

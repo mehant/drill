@@ -22,17 +22,16 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.Frame;
 
+import com.carrotsearch.hppc.IntIntOpenHashMap;
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 
 public class InstructionModifier extends MethodVisitor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InstructionModifier.class);
 
   private final IntObjectOpenHashMap<ValueHolderIden.ValueHolderSub> oldToNew = new IntObjectOpenHashMap<>();
-  private final IntObjectOpenHashMap<ValueHolderIden.ValueHolderSub> initLocalVar = new IntObjectOpenHashMap<>();
+  private final IntIntOpenHashMap oldLocalToFirst = new IntIntOpenHashMap();
+
   private DirectSorter adder;
   int lastLineNumber = 0;
   private TrackingInstructionList list;
@@ -54,12 +53,22 @@ public class InstructionModifier extends MethodVisitor {
     }
     return null;
   }
+
   private ReplacingBasicValue popCurrent(){
+    return popCurrent(false);
+  }
+
+  private ReplacingBasicValue popCurrent(boolean includeReturnVals){
     // for vararg, we could try to pop an empty stack.  TODO: handle this better.
     if(list.currentFrame.getStackSize() == 0) return null;
 
     Object o = list.currentFrame.pop();
-    if(o instanceof ReplacingBasicValue) return (ReplacingBasicValue) o;
+    if(o instanceof ReplacingBasicValue){
+      ReplacingBasicValue v = (ReplacingBasicValue) o;
+      if(!v.isFunctionReturn || includeReturnVals){
+        return v;
+      }
+    }
     return null;
   }
 
@@ -83,7 +92,6 @@ public class InstructionModifier extends MethodVisitor {
   public void visitTypeInsn(int opcode, String type) {
     ReplacingBasicValue r = getReturn();
     if(r != null){
-//      super.visitTypeInsn(opcode, type);
       ValueHolderSub sub = r.getIden().getHolderSub(adder);
       oldToNew.put(r.getIndex(), sub);
     }else{
@@ -100,25 +108,39 @@ public class InstructionModifier extends MethodVisitor {
   @Override
   public void visitVarInsn(int opcode, int var) {
     ReplacingBasicValue v;
-    if(opcode == Opcodes.ASTORE && (v = popCurrent()) != null){
-      ValueHolderSub from = oldToNew.get(v.getIndex());
+    if(opcode == Opcodes.ASTORE && (v = popCurrent(true)) != null){
+      if(!v.isFunctionReturn){
+        ValueHolderSub from = oldToNew.get(v.getIndex());
 
-      ReplacingBasicValue current = local(var);
-      ValueHolderSub to;
-      if(current == null){
-        if(this.initLocalVar.containsKey(var)){
-          to = initLocalVar.lget();
+        ReplacingBasicValue current = local(var);
+        // if local var is set, then transfer to it to the existing holders in the local position.
+        if(current != null){
+          int targetFirst = oldToNew.get(current.index).first();
+          from.transfer(this, targetFirst);
+          return;
+        }
+
+        // if local var is not set, then check map to see if existing holders are mapped to local var.
+        if(oldLocalToFirst.containsKey(var)){
+          // if they are, then transfer to that.
+          from.transfer(this, oldToNew.get(oldLocalToFirst.lget()).first());
         }else{
-          current = new ReplacingBasicValue(v.type, from.iden(), oldToNew.size());
-          to = current.iden.getHolderSub(adder);
-          oldToNew.put(current.index, to);
-          initLocalVar.put(var, to);
+          // map from variables to global space for future use.
+          oldLocalToFirst.put(var, v.getIndex());
         }
       }else{
-        to = oldToNew.get(current.index);
+        // this is storage of a function return, we need to map the fields to the holder spots.
+        int first;
+        if(oldLocalToFirst.containsKey(var)){
+          first = oldToNew.get(oldLocalToFirst.lget()).first();
+          v.iden.transferToLocal(adder, first);
+        }else{
+          first = v.iden.createLocalAndTrasfer(adder);
+        }
+        ValueHolderSub from = v.iden.getHolderSubWithDefinedLocals(first);
+        oldToNew.put(v.getIndex(), from);
+        v.disableFunctionReturn();
       }
-      // we're cross assigning.
-      from.transfer(this, to.first());
 
     }else if(opcode == Opcodes.ALOAD && (v = getReturn()) != null){
 
@@ -175,6 +197,14 @@ public class InstructionModifier extends MethodVisitor {
       if("<init>".equals(name)){
         oldToNew.get(obj.getIndex()).init(adder);
       }
+      return;
+    }
+
+    obj = getReturn();
+
+    if(obj != null){
+      // the return of this method is an actual instance of the object we're escaping.  Update so that it get's mapped correctly.
+      obj.markFunctionReturn();
       return;
     }
 

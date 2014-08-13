@@ -33,21 +33,26 @@ class ValueHolderIden {
 
   final ObjectIntOpenHashMap<String> fieldMap;
   final Type[] types;
+  final String[] names;
+  final Type type;
 
   public ValueHolderIden(Class<?> c) {
     Field[] fields = c.getFields();
+
     List<Field> fldList = Lists.newArrayList();
     for(Field f : fields){
       if(!Modifier.isStatic(f.getModifiers())) {
         fldList.add(f);
       }
     }
-
+    this.type = Type.getType(c);
     this.types = new Type[fldList.size()];
+    this.names = new String[fldList.size()];
     fieldMap = new ObjectIntOpenHashMap<String>();
     int i =0;
     for(Field f : fldList){
       types[i] = Type.getType(f.getType());
+      names[i] = f.getName();
       fieldMap.put(f.getName(), i);
       i++;
     }
@@ -97,8 +102,38 @@ class ValueHolderIden {
 
   }
 
+  public ValueHolderSub getHolderSubWithDefinedLocals(int first){
+    return new ValueHolderSub(first);
+  }
+
+  private int dup(Type t){
+    return t.getSize() == 1 ? Opcodes.DUP : Opcodes.DUP2;
+  }
+
+  public void transferToLocal(DirectSorter adder, int localVariable){
+    for (int i = 0; i < types.length; i++) {
+      Type t = types[i];
+      if(i + 1 < types.length) adder.visitInsn(dup(t)); // don't dup for last value.
+      adder.visitFieldInsn(Opcodes.GETFIELD, type.getInternalName(), names[i], t.getDescriptor());
+      adder.directVarInsn(t.getOpcode(Opcodes.ISTORE), localVariable+i);
+    }
+  }
+
+  public int createLocalAndTrasfer(DirectSorter adder){
+    int first = 0;
+    for (int i = 0; i < types.length; i++) {
+      Type t = types[i];
+      int varIndex = adder.newLocal(t);
+      if (i == 0) {
+        first = varIndex;
+      }
+    }
+    transferToLocal(adder, first);
+    return first;
+  }
+
   public class ValueHolderSub {
-    private final int first;
+    private int first;
 
     public ValueHolderSub(int first) {
       assert first != -1 : "Create Holder for sub that doesn't have any fields.";
@@ -122,6 +157,10 @@ class ValueHolderIden {
       return first;
     }
 
+    public void updateFirst(int newFirst){
+      this.first = newFirst;
+    }
+
     private int field(String name, InstructionModifier mv) {
       if (!fieldMap.containsKey(name)) throw new IllegalArgumentException(String.format("Unknown name '%s' on line %d.", name, mv.lastLineNumber));
       return fieldMap.lget();
@@ -140,11 +179,11 @@ class ValueHolderIden {
 
     public void transfer(InstructionModifier mv, int newStart){
       if(first == newStart) return;
-
       for(int i =0; i < types.length; i++){
         mv.directVarInsn(types[i].getOpcode(Opcodes.ILOAD), first + i);
         mv.directVarInsn(types[i].getOpcode(Opcodes.ISTORE), newStart + i);
       }
+      this.first = newStart;
     }
 
     private void addKnownInsn(String name, InstructionModifier mv, int analogOpcode) {

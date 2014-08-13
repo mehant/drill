@@ -49,7 +49,7 @@ public class ReplaceMethodInvoke {
   public static void main(String[] args) throws Exception{
     String e = "org/apache/drill/ExampleReplaceable.class";
     String r = "org/apache/drill/exec/test/generated/FiltererGen0.class";
-    URL url = Resources.getResource(e);
+    URL url = Resources.getResource(r);
     byte[] clazz = Resources.toByteArray(url);
     ClassReader cr = new ClassReader(clazz);
 

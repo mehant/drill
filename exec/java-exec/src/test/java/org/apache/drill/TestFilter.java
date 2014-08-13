@@ -110,6 +110,27 @@ public final class TestFilter {
     }
     {
       int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "original-bytecode");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.unrewrite(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+    {
+      int x = 0;
+      TimeHolder h = new TimeHolder(INNER_LOOP, "bytecode-rewritten");
+      for (int z = 0; z < INNER_LOOP; z++) {
+        h.start();
+        x = f.rewrite(x);
+        h.stop(x);
+      }
+      h.print();
+    }
+
+    {
+      int x = 0;
       TimeHolder h = new TimeHolder(INNER_LOOP, "separate compare method with indirect addressing");
       for (int z = 0; z < INNER_LOOP; z++) {
         h.start();
@@ -1001,4 +1022,131 @@ public final class TestFilter {
     return x;
 
   }
-}
+
+  public int unrewrite(int x) throws SchemaChangeException {
+    int svIndex = 0;
+    for (int i = 0; i < MAX; i++) {
+      if (doEvalUnrewrite(i, 0)) {
+        x += i;
+      } else {
+        x -= i;
+
+      }
+    }
+    return x;
+
+  }
+
+  public int rewrite(int x) throws SchemaChangeException {
+    int svIndex = 0;
+    for (int i = 0; i < MAX; i++) {
+      if (doEvalRewritten(i, 0)) {
+        x += i;
+      } else {
+        x -= i;
+
+      }
+    }
+    return x;
+
+  }
+
+  public boolean doEvalUnrewrite(int inIndex, int outIndex) throws SchemaChangeException {
+    {
+      NullableVarCharHolder out3 = new NullableVarCharHolder();
+      out3.isSet = vv0.getAccessor().isSet((inIndex));
+      if (out3.isSet == 1) {
+        {
+          out3.buffer = vv0.getData();
+          long startEnd = vv0.getAccessor().getStartEnd(inIndex);
+          out3.start = (int) (startEnd >> 32);
+          out3.end = (int) (startEnd);
+//          vv0.getAccessor().get((inIndex), out3);
+        }
+      }
+      // ---- start of eval portion of equal function. ----//
+      NullableBitHolder out6 = new NullableBitHolder();
+      {
+        if (out3.isSet == 0) {
+          out6.isSet = 0;
+        } else {
+          final NullableBitHolder out = new NullableBitHolder();
+          NullableVarCharHolder left = out3;
+          VarCharHolder right = constant5;
+          GCompareVarCharVarChar$EqualsVarCharVarChar_eval: {
+            outside: {
+              if (left.end - left.start == right.end - right.start) {
+                int n = left.end - left.start;
+                int l = left.start;
+                int r = right.start;
+                while (n-- != 0) {
+                  byte leftByte = left.buffer.getByte(l++);
+                  byte rightByte = right.buffer.getByte(r++);
+                  if (leftByte != rightByte) {
+                    out.value = 0;
+                    break outside;
+                  }
+                }
+                out.value = 1;
+              } else {
+                out.value = 0;
+              }
+            }
+          }
+          out.isSet = 1;
+          out6 = out;
+          out.isSet = 1;
+        }
+      }
+      // ---- end of eval portion of equal function. ----//
+      return (out6.value == 1);
+    }
+  }
+
+  public boolean doEvalRewritten(int paramInt1, int paramInt2)
+      throws SchemaChangeException
+    {
+      int i = 0; int j = 0; int k = 0; DrillBuf localDrillBuf = null;
+      i = this.vv0.getAccessor().isSet(paramInt1);
+      if (i == 1)
+      {
+        localDrillBuf = this.vv0.getData();
+        long l = this.vv0.getAccessor().getStartEnd(paramInt1);
+        j = (int)(l >> 32);
+        k = (int)l;
+      }
+
+      int m = 0; int n = 0;
+
+      if (i == 0) {
+        m = 0;
+      } else {
+        int i1 = 0; int i2 = 0;
+
+        VarCharHolder localVarCharHolder = this.constant5;
+
+        if (k - j == localVarCharHolder.end - localVarCharHolder.start) {
+          int i3 = k - j;
+          int i4 = j;
+          int i5 = localVarCharHolder.start;
+          while (i3-- != 0) {
+            int i6 = localDrillBuf.getByte(i4++);
+            int i7 = localVarCharHolder.buffer.getByte(i5++);
+            if (i6 != i7) {
+              i2 = 0;
+              break;
+            }
+          }
+          i2 = 1;
+        } else {
+          i2 = 0;
+        }
+
+        i1 = 1;
+        m = i1; n = i2;
+        m = 1;
+      }
+
+      return n == 1;
+    }
+  }

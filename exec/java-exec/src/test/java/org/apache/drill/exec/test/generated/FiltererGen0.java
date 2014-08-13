@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.test.generated;
 
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueHolderHelper;
@@ -31,27 +33,28 @@ public class FiltererGen0 {
   VarCharHolder string4;
   VarCharHolder constant5;
 
-//  public void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException {
-//    {
-//      int[] fieldIds1 = new int[1];
-//      fieldIds1[0] = 0;
-//      Object tmp2 = (incoming).getValueAccessorById(NullableVarCharVector.class, fieldIds1).getValueVector();
-//      if (tmp2 == null) {
-//        throw new SchemaChangeException(
-//            "Failure while loading vector vv0 with id: org.apache.drill.exec.record.TypedFieldId@283c3e27.");
-//      }
-//      vv0 = ((NullableVarCharVector) tmp2);
-//      string4 = ValueHolderHelper.getVarCharHolder("James Compagno");
-//      constant5 = string4;
-//      /** start SETUP for function equal **/
-//      {
-//        VarCharHolder right = constant5;
-//        {
-//        }
-//      }
-//      /** end SETUP for function equal **/
-//    }
-//  }
+  public void doSetup(OperatorContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException {
+    {
+      int[] fieldIds1 = new int[1];
+      fieldIds1[0] = 0;
+      Object tmp2 = (incoming).getValueAccessorById(NullableVarCharVector.class, fieldIds1).getValueVector();
+      if (tmp2 == null) {
+        throw new SchemaChangeException(
+            "Failure while loading vector vv0 with id: org.apache.drill.exec.record.TypedFieldId@283c3e27.");
+      }
+      vv0 = ((NullableVarCharVector) tmp2);
+
+      string4 = ValueHolderHelper.getVarCharHolder(context.getManagedBuffer(), "James Compagno");
+      constant5 = string4;
+      /** start SETUP for function equal **/
+      {
+        VarCharHolder right = constant5;
+        {
+        }
+      }
+      /** end SETUP for function equal **/
+    }
+  }
 
   public boolean doEval(int inIndex, int outIndex) throws SchemaChangeException {
     {
