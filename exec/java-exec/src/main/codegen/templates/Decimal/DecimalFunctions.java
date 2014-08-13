@@ -23,7 +23,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 <#macro compareBlock holderType left right absCompare output>
 
         outside:{
-            ${output} = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.getSign(),
+            ${output} = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.getSign(),
                             left.scale, left.precision, right.buffer,
                             right.start, right.getSign(), right.precision,
                             right.scale, left.WIDTH, left.nDecimalDigits, ${absCompare});
@@ -33,12 +33,12 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#macro subtractBlock holderType in1 in2 result>
 
-            int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
+            int resultScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
             int resultIndex = result.nDecimalDigits- 1;
 
-            int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.scale);
-            int leftIntRoundedUp    = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.precision - ${in1}.scale);
-            int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(${in2}.scale);
+            int leftScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.scale);
+            int leftIntRoundedUp    = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.precision - ${in1}.scale);
+            int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(${in2}.scale);
 
             int leftIndex  = ${in1}.nDecimalDigits - 1;
             int rightIndex = ${in2}.nDecimalDigits - 1;
@@ -60,7 +60,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
                 if (difference < 0) {
                     carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 } else {
                     result.setInteger(resultIndex, difference);
                     carry = 0;
@@ -81,7 +81,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
                 if (difference < 0) {
                     carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 } else {
                     result.setInteger(resultIndex, difference);
                     carry = 0;
@@ -107,7 +107,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
                 if (difference < 0) {
                     carry = 1;
-                    result.setInteger(resultIndex, (difference + org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+                    result.setInteger(resultIndex, (difference + org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 } else {
                     carry = 0;
                     result.setInteger(resultIndex, difference);
@@ -120,10 +120,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#macro addBlock holderType in1 in2 result>
 
-        int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
+        int resultScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
 
-        int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.scale);
-        int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(${in2}.scale);
+        int leftScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(${in1}.scale);
+        int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(${in2}.scale);
 
         /* starting index for each decimal */
         int leftIndex  = ${in1}.nDecimalDigits - 1;
@@ -159,8 +159,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             leftIndex--;
             rightIndex--;
 
-            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
                 result.setInteger(resultIndex, sum);
@@ -177,8 +177,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             leftIndex--;
             rightIndex--;
 
-            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
                 result.setInteger(resultIndex, sum);
@@ -191,8 +191,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             sum += ${in1}.getInteger(leftIndex);
             leftIndex--;
 
-            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
                 result.setInteger(resultIndex, sum);
@@ -204,8 +204,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             sum += ${in2}.getInteger(rightIndex);
             rightIndex--;
 
-            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+            if (sum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                result.setInteger(resultIndex, (sum - org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
                 result.setInteger(resultIndex, sum);
@@ -227,10 +227,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             int adjustment = 0;
 
             if (left.scale < right.scale) {
-                left.value = (${javaType}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.scale - left.scale)));
+                left.value = (${javaType}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.scale - left.scale)));
                 left.scale = right.scale;
             } else if (right.scale < left.scale) {
-                right.value = (${javaType}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(right.value, (int) (left.scale - right.scale)));
+                right.value = (${javaType}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(right.value, (int) (left.scale - right.scale)));
                 right.scale = left.scale;
             }
 </#macro>
@@ -272,15 +272,15 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
-            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -289,13 +289,13 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
-            java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
+            java.math.BigDecimal leftInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
+            java.math.BigDecimal rightInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.subtract(rightInput);
 
             // set the scale
             addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
-            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+            org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
@@ -310,15 +310,15 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
-            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -327,13 +327,13 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
-            java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
+            java.math.BigDecimal leftInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
+            java.math.BigDecimal rightInput = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.add(rightInput);
 
             // set the scale
             addResult.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
-            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+            org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(addResult, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
@@ -349,7 +349,7 @@ public class ${type.name}Functions {
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
-            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
             buffer = buffer.reallocIfNeeded(size);
             tempResult = new int[${type.storage} * ${type.storage}];
             outputPrecision = Integer.MIN_VALUE;
@@ -357,8 +357,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionMulFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionMulFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -375,7 +375,7 @@ public class ${type.name}Functions {
 
             // Remove the leading zeroes from the integer part of the input
             int leftIndex = 0;
-            int leftStopIndex = left.nDecimalDigits - org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
+            int leftStopIndex = left.nDecimalDigits - org.apache.drill.exec.util.DecimalUtility.roundUp(left.scale);
 
             while (leftIndex < leftStopIndex) {
                 if (left.getInteger(leftIndex) > 0)
@@ -387,7 +387,7 @@ public class ${type.name}Functions {
 
             /* Remove the leaing zeroes from the integer part of the input */
             int rightIndex = 0;
-            int rightStopIndex = right.nDecimalDigits - org.apache.drill.common.util.DecimalUtility.roundUp(right.scale);
+            int rightStopIndex = right.nDecimalDigits - org.apache.drill.exec.util.DecimalUtility.roundUp(right.scale);
 
             while(rightIndex < rightStopIndex) {
                 if (right.getInteger(rightIndex) > 0)
@@ -398,7 +398,7 @@ public class ${type.name}Functions {
             int rightIntegerSize = rightStopIndex - rightIndex;
 
             int resultIntegerSize = leftIntegerSize + rightIntegerSize;
-            int resultScaleSize = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale + right.scale);
+            int resultScaleSize = org.apache.drill.exec.util.DecimalUtility.roundUp(left.scale + right.scale);
 
             int leftSize  = left.nDecimalDigits - 1;
             int rightSize = right.nDecimalDigits - 1;
@@ -417,9 +417,9 @@ public class ${type.name}Functions {
 
                     long tempSum = tempResult[currentIndex] + mulResult + carry;
 
-                    if (tempSum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                        tempResult[currentIndex] = (int) (tempSum % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-                        carry = (int) (tempSum / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                    if (tempSum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                        tempResult[currentIndex] = (int) (tempSum % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                        carry = (int) (tempSum / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
                     } else {
                         tempResult[currentIndex] = (int) tempSum;
                         carry = 0;
@@ -437,7 +437,7 @@ public class ${type.name}Functions {
             /* We have computed the result of the multiplication; check if we need to
              * round a portion of the fractional part
              */
-            resultScaleSize = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
+            resultScaleSize = org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale);
 
             if (result.scale < (left.scale + right.scale)) {
               /* The scale of the output data type is lesser than the scale
@@ -447,11 +447,11 @@ public class ${type.name}Functions {
               int lastScaleIndex = currentIndex + resultIntegerSize + resultScaleSize - 1;
 
               // compute the power of 10 necessary to find if we need to round up
-              int roundFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
-                                        org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ((result.scale + 1) % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
+              int roundFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(
+                                        org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - ((result.scale + 1) % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)));
 
               // index of rounding digit
-              int roundIndex = currentIndex + resultIntegerSize + org.apache.drill.common.util.DecimalUtility.roundUp(result.scale + 1) - 1;
+              int roundIndex = currentIndex + resultIntegerSize + org.apache.drill.exec.util.DecimalUtility.roundUp(result.scale + 1) - 1;
 
               // Check the first chopped digit to see if we need to round up
               int carry = ((tempResult[roundIndex] / roundFactor) % 10) > 4 ? 1 : 0;
@@ -459,8 +459,8 @@ public class ${type.name}Functions {
               if (result.scale > 0) {
 
                 // Compute the power of 10 necessary to chop of the fractional part
-                int scaleFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
-                                         org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
+                int scaleFactor = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(
+                                         org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)));
                 // Chop the unwanted fractional part
                 tempResult[lastScaleIndex] /=  scaleFactor;
                 tempResult[lastScaleIndex] *= scaleFactor;
@@ -472,9 +472,9 @@ public class ${type.name}Functions {
               // propogate the carry
               while (carry > 0 && lastScaleIndex >= 0) {
                 int tempSum = tempResult[lastScaleIndex] + carry;
-                if (tempSum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                  tempResult[lastScaleIndex] = (tempSum % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-                  carry = (int) (tempSum / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                if (tempSum >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                  tempResult[lastScaleIndex] = (tempSum % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                  carry = (int) (tempSum / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
                 } else {
                   tempResult[lastScaleIndex] = tempSum;
                   carry = 0;
@@ -518,15 +518,15 @@ public class ${type.name}Functions {
         @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
-            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -535,12 +535,12 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
-            java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
+            java.math.BigDecimal numerator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+            java.math.BigDecimal denominator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
             java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
-            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+            org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
@@ -555,15 +555,15 @@ public class ${type.name}Functions {
         @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
-            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            int size = (${type.storage} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
             buffer = buffer.reallocIfNeeded(size);
             outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -572,13 +572,13 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
-            java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
+            java.math.BigDecimal numerator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+            java.math.BigDecimal denominator = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
             output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
-            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+            org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
 
@@ -647,7 +647,7 @@ public class ${type.name}Functions {
           // Indicates whether we need to add 1 to the integer part, while performing ceil
           int carry = 0;
 
-          int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          int scaleStartIndex = ${type.storage} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
           int srcIntIndex = scaleStartIndex - 1;
 
           if (sign == false) {
@@ -680,9 +680,9 @@ public class ${type.name}Functions {
               int intValue = out.getInteger(destIndex);
               intValue += carry;
 
-              if (intValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                out.setInteger(destIndex--, intValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-                carry = intValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              if (intValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(destIndex--, intValue % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                carry = intValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
               } else {
                 out.setInteger(destIndex--, intValue);
                 break;
@@ -713,7 +713,7 @@ public class ${type.name}Functions {
           // Indicates whether we need to decrement 1 from the integer part, while performing floor, done for -ve values
           int carry = 0;
 
-          int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          int scaleStartIndex = ${type.storage} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
           int srcIntIndex = scaleStartIndex - 1;
 
           if (sign == true) {
@@ -745,9 +745,9 @@ public class ${type.name}Functions {
               int intValue = out.getInteger(destIndex);
               intValue += carry;
 
-              if (intValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                out.setInteger(destIndex--, intValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-                carry = intValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              if (intValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(destIndex--, intValue % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                carry = intValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
               } else {
                 out.setInteger(destIndex--, intValue);
                 break;
@@ -776,7 +776,7 @@ public class ${type.name}Functions {
           boolean sign = in.getSign();
 
           // Integer part's src index
-          int srcIntIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale) - 1;
+          int srcIntIndex = ${type.storage} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale) - 1;
 
           // Truncate the fractional part, move the integer part
           int destIndex = ${type.storage} - 1;
@@ -810,8 +810,8 @@ public class ${type.name}Functions {
           result.start = left.start;
           boolean sign = left.getSign();
 
-          int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(right.value);
-          int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
+          int newScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(right.value);
+          int origScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(left.scale);
 
           if (right.value < left.scale) {
             // Get the source index beyond which we will truncate
@@ -832,9 +832,9 @@ public class ${type.name}Functions {
             }
 
             // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
-            int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (right.value % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
-            if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
-              truncateFactor = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(truncateFactor);
+            int truncateFactor = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - (right.value % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
+            if (truncateFactor != org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
+              truncateFactor = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(truncateFactor);
               int fractionalDigits = result.getInteger(${type.storage} - 1);
               fractionalDigits /= truncateFactor;
               result.setInteger(${type.storage} - 1, fractionalDigits * truncateFactor);
@@ -889,10 +889,10 @@ public class ${type.name}Functions {
           boolean roundUp = false;
 
           // Get the first fractional digit to see if want to round up or not
-          int scaleIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          int scaleIndex = ${type.storage} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
           if (scaleIndex < ${type.storage}) {
             int fractionalPart = out.getInteger(scaleIndex);
-            int digit = fractionalPart / (org.apache.drill.common.util.DecimalUtility.DIGITS_BASE / 10);
+            int digit = fractionalPart / (org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE / 10);
 
             if (digit > 4) {
               roundUp = true;
@@ -918,9 +918,9 @@ public class ${type.name}Functions {
           if (roundUp == true) {
             while (srcIntIndex >= 0) {
               int value = out.getInteger(srcIntIndex) + 1;
-              if (value >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                out.setInteger(srcIntIndex--, value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-                value = value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              if (value >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(srcIntIndex--, value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+                value = value / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
               } else {
                 out.setInteger(srcIntIndex--, value);
                 break;
@@ -949,7 +949,7 @@ public class ${type.name}Functions {
           result.start = left.start;
           boolean sign = left.getSign();
 
-          org.apache.drill.common.util.DecimalUtility.roundDecimal(result.buffer, result.start, result.nDecimalDigits, result.scale, left.scale);
+          org.apache.drill.exec.util.DecimalUtility.roundDecimal(result.buffer, result.start, result.nDecimalDigits, result.scale, left.scale);
           // set the sign
           result.setSign(sign);
         }
@@ -1097,7 +1097,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            out.value = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            out.value = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
         }
     }
 
@@ -1110,7 +1110,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp  = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp  = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == -1 ? 1 : 0;
         }
     }
@@ -1124,7 +1124,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp < 1 ? 1 : 0;
         }
     }
@@ -1138,7 +1138,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == 1 ? 1 : 0;
         }
     }
@@ -1152,7 +1152,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp > -1 ? 1 : 0;
         }
     }
@@ -1166,7 +1166,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == 0 ? 1 : 0;
         }
     }
@@ -1182,7 +1182,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
+            int cmp = org.apache.drill.exec.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp != 0 ? 1 : 0;
         }
     }
@@ -1232,8 +1232,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1260,8 +1260,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionAddFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionAddFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionAddFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1287,8 +1287,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionMulFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionMulFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1334,8 +1334,8 @@ public class ${type.name}Functions {
         public void eval() {
 
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1366,8 +1366,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.exec.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.exec.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1407,7 +1407,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            out.value =(${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale));
+            out.value =(${type.storage}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale));
             out.precision = out.maxPrecision;
             out.scale = 0;
         }
@@ -1424,7 +1424,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            out.value = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(left.value, (int) (left.scale - right.value)));
+            out.value = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(left.value, (int) (left.scale - right.value)));
             out.precision = out.maxPrecision;
             out.scale = right.value;
         }
@@ -1441,7 +1441,7 @@ public class ${type.name}Functions {
         }
 
         public void eval() {
-          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale));
 
           // Get the integer part
           ${type.storage} integerPart = in.value / scaleFactor;
@@ -1468,7 +1468,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale));
           out.scale = 0;
           out.value = (in.value / scaleFactor);
 
@@ -1493,7 +1493,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale));
           ${type.storage} extractDigit = scaleFactor / 10;
 
           out.scale = 0;
@@ -1528,14 +1528,14 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) left.scale));
-          ${type.storage} newScaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) right.value));
-          ${type.storage} truncScaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen( Math.abs(left.scale - right.value)));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) left.scale));
+          ${type.storage} newScaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) right.value));
+          ${type.storage} truncScaleFactor = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen( Math.abs(left.scale - right.value)));
           int truncFactor = (int) (left.scale - right.value);
 
           // If rounding scale is >= current scale
           if (right.value >= left.scale) {
-            out.value = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.value - left.scale)));
+            out.value = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.value - left.scale)));
           }
           else {
             out.scale = right.value;
@@ -1546,12 +1546,12 @@ public class ${type.name}Functions {
             ${type.storage} fractionalPart = left.value % scaleFactor;
 
             // From the entire fractional part extract the digits upto which rounding is needed
-            ${type.storage} newFractionalPart = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(fractionalPart, truncFactor));
+            ${type.storage} newFractionalPart = (${type.storage}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(fractionalPart, truncFactor));
             ${type.storage} truncatedFraction = fractionalPart % truncScaleFactor;
 
 
             // Get the truncated fractional part and extract the first digit to see if we need to add 1
-            int digit = Math.abs((int) org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(truncatedFraction, truncFactor - 1));
+            int digit = Math.abs((int) org.apache.drill.exec.util.DecimalUtility.adjustScaleDivide(truncatedFraction, truncFactor - 1));
 
             if (digit > 4) {
               if (left.value > 0) {

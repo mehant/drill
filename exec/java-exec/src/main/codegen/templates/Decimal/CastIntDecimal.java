@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -54,7 +54,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void setup(RecordBatch incoming) {
         <#if type.to.startsWith("Decimal28") || type.to.startsWith("Decimal38")>
-        int size = ${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
         buffer = buffer.reallocIfNeeded(size);
         </#if>
 
@@ -68,7 +68,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = (${type.javatype}) in.value;
 
         // converting from integer to decimal, pad zeroes if scale is non zero
-        out.value = (${type.javatype}) org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) scale.value);
+        out.value = (${type.javatype}) org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) scale.value);
 
         <#else>
         out.start = 0;
@@ -85,12 +85,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         }
 
         // Figure out how many array positions to be left for the scale part
-        int scaleSize = org.apache.drill.common.util.DecimalUtility.roundUp((int) scale.value);
+        int scaleSize = org.apache.drill.exec.util.DecimalUtility.roundUp((int) scale.value);
         int integerIndex = (${type.arraySize} - scaleSize - 1);
 
         while (in.value != 0 && integerIndex >= 0) {
-            out.setInteger(integerIndex--, (int) Math.abs((in.value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE)));
-            in.value = in.value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(integerIndex--, (int) Math.abs((in.value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE)));
+            in.value = in.value / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
         }
 
         </#if>

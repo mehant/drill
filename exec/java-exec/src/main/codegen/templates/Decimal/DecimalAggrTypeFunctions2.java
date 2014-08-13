@@ -80,9 +80,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  </#if>
     count.value++;
    <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
-    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
+    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
     <#else>
-    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
     </#if>
     value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
     if (outputScale.value == Integer.MIN_VALUE) {
@@ -102,7 +102,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.scale = outputScale.value;
     out.precision = 38;
     java.math.BigDecimal average = ((java.math.BigDecimal)(value.obj)).divide(java.math.BigDecimal.valueOf(count.value, 0), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
-    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+    org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
   }
 
   @Override

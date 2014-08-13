@@ -33,7 +33,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -155,7 +155,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Pad the number with zeroes if number of fractional digits is less than scale
         if (fractionalDigits < scale.value) {
-            out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (scale.value - fractionalDigits)));
+            out.value = (${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (scale.value - fractionalDigits)));
         }
 
         // Negate the number if we saw a -ve sign
@@ -180,7 +180,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -198,7 +198,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = ${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -300,8 +300,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 
         // Compute the number of slots needed in the ByteBuf to store the integer and fractional part
-        int scaleRoundedUp   = org.apache.drill.common.util.DecimalUtility.roundUp(out.scale);
-        int integerRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(integerDigits);
+        int scaleRoundedUp   = org.apache.drill.exec.util.DecimalUtility.roundUp(out.scale);
+        int integerRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(integerDigits);
 
         int ndigits = 0;
 
@@ -319,7 +319,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
             next = (byte) Character.digit(next, radix);
 
-            int value = (((int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex));
+            int value = (((int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex));
             out.setInteger(decimalBufferIndex, value);
 
             ndigits++;
@@ -327,7 +327,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             /* We store the entire decimal as base 1 billion values, which has maximum of 9 digits (MAX_DIGITS)
              * Once we have stored MAX_DIGITS in a given slot move to the next slot.
              */
-            if (ndigits >= org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+            if (ndigits >= org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
                 ndigits = 0;
                 decimalBufferIndex--;
             }
@@ -341,7 +341,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             while (scaleIndex < scaleEndIndex) {
 
                 // check if we have scanned MAX_DIGITS and we need to move to the next index
-                if (ndigits >= org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+                if (ndigits >= org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
                     ndigits = 0;
                     decimalBufferIndex++;
                 }
@@ -384,7 +384,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
             if (out.scale > 0) {
-              int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
+              int padding = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - ndigits));
               out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
             }
 
@@ -392,9 +392,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             do {
                 // propogate the carry
                 int tempValue = out.getInteger(decimalBufferIndex) + carry;
-                if (tempValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                    carry = tempValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
-                    tempValue = (tempValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                if (tempValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+                    carry = tempValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
+                    tempValue = (tempValue % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
                 } else {
                     carry = 0;
                 }

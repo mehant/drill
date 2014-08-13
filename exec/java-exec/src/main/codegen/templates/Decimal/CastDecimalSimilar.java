@@ -53,7 +53,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -79,7 +79,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // round up or down the scale
         if (in.scale != out.scale) {
-          org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
         out.setSign(sign);
     }
