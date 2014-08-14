@@ -33,6 +33,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -72,11 +74,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     init = new UInt1Holder();
     init.value = 0;
     value = new ObjectHolder();
-    ${type.runningType}Holder data = new ${type.runningType}Holder();
+    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     tmp.start = 0;
     tmp.end = 0;
     tmp.buffer = null;
-    value.obj = data;
+    value.obj = tmp;
 
     <#else>
     value = new ${type.runningType}Holder();
@@ -113,6 +115,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       </#if>
     }
     if (swap) {
+      int length = in.end - in.start;
       this.buf = tmp.buffer = buf.reallocIfNeeded(in.end - in.start);
       in.buffer.getBytes(in.start, tmp.buffer, 0, length);
       tmp.end = length;

@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -172,6 +174,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -212,7 +215,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Initialize the output buffer
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         int startIndex;
@@ -319,8 +322,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
             next = (byte) Character.digit(next, radix);
 
-            int value = (((int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex));
-            out.setInteger(decimalBufferIndex, value);
+            int value = (((int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex, out.start, out.buffer));
+            out.setInteger(decimalBufferIndex, value, out.start, out.buffer);
 
             ndigits++;
 
@@ -357,8 +360,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
                     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
                 }
-                int value = (out.getInteger(decimalBufferIndex) * radix) + next;
-                out.setInteger(decimalBufferIndex, value);
+                int value = (out.getInteger(decimalBufferIndex, out.start, out.buffer) * radix) + next;
+                out.setInteger(decimalBufferIndex, value, out.start, out.buffer);
 
                 // added another digit to the current index
                 ndigits++;
@@ -379,29 +382,29 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 }
                 if (next > 4) {
                     // Need to round up
-                    out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex)+1);
+                    out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex, out.start, out.buffer)+1, out.start, out.buffer);
                 }
             }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
             if (out.scale > 0) {
               int padding = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - ndigits));
-              out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
+              out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex, out.start, out.buffer) * padding, out.start, out.buffer);
             }
 
             int carry = 0;
             do {
                 // propogate the carry
-                int tempValue = out.getInteger(decimalBufferIndex) + carry;
+                int tempValue = out.getInteger(decimalBufferIndex, out.start, out.buffer) + carry;
                 if (tempValue >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
                     carry = tempValue / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
                     tempValue = (tempValue % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
                 } else {
                     carry = 0;
                 }
-                out.setInteger(decimalBufferIndex--, tempValue);
+                out.setInteger(decimalBufferIndex--, tempValue, out.start, out.buffer);
             } while (carry > 0 && decimalBufferIndex >= 0);
         }
-        out.setSign(sign);
+        out.setSign(sign, out.start, out.buffer);
     }
 }
 </#if> <#-- type.major -->

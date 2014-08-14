@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -109,7 +111,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
-
+<#include "/@includes/vv_imports.ftl" />
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -135,7 +137,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        buffer = buffer.reallocIfNeeded(type.bufferSize);
+        buffer = buffer.reallocIfNeeded((int) len.value);
     }
 
     public void eval() {
@@ -145,13 +147,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int fractionalStartIndex = ${type.arraySize} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
 
         // Find the first non-zero value in the integer part of the decimal
-        while (index < fractionalStartIndex && in.getInteger(index) == 0)  {
+        while (index < fractionalStartIndex && in.getInteger(index, in.start, in.buffer) == 0)  {
             index++;
         }
 
 
         // If we have valid digits print '-' sign
-        if ((in.getSign() == true) && index < ${type.arraySize}) {
+        if ((in.getSign(in.start, in.buffer) == true) && index < ${type.arraySize}) {
             str.append("-");
         }
 
@@ -164,7 +166,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // convert the integer part
         while (index < fractionalStartIndex) {
-            int value =  in.getInteger(index++);
+            int value =  in.getInteger(index++, in.start, in.buffer);
 
             if (fillZeroes == true) {
                 str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS));
@@ -183,7 +185,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
              * as it might have padding that needs to be stripped
              */
             while (fractionalStartIndex < ${type.arraySize} - 1) {
-                int value = in.getInteger(fractionalStartIndex++);
+                int value = in.getInteger(fractionalStartIndex++, in.start, in.buffer);
 
                 // Fill zeroes at the beginning of the decimal digit
                 str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS));
@@ -192,7 +194,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             // Last decimal digit, strip the extra zeroes we may have padded
             int actualDigits = in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS;
 
-            int lastFractionalDigit = in.getInteger(${type.arraySize} - 1);
+            int lastFractionalDigit = in.getInteger(${type.arraySize} - 1, in.start, in.buffer);
 
             if (actualDigits != 0) {
 

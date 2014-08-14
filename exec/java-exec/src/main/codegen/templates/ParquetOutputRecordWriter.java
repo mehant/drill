@@ -191,7 +191,7 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
               holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
       byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
-      if (holder.getSign()) {
+      if (holder.getSign(holder.start, holder.buffer)) {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0xFF);
       } else {
         Arrays.fill(output, 0, output.length - bytes.length, (byte)0x0);

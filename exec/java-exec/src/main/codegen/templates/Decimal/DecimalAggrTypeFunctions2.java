@@ -36,6 +36,8 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -64,7 +66,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
-    buffer.reallocIfNeeded(tmp.WIDTH);
+    buffer.reallocIfNeeded(${type.outputType}Holder.WIDTH);
     value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();

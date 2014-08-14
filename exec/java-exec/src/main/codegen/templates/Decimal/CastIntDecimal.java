@@ -25,6 +25,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -76,12 +78,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Initialize the buffer
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         // check if input is a negative number and store the sign
         if (in.value < 0) {
-            out.setSign(true);
+            out.setSign(true, out.start, out.buffer);
         }
 
         // Figure out how many array positions to be left for the scale part
@@ -89,7 +91,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int integerIndex = (${type.arraySize} - scaleSize - 1);
 
         while (in.value != 0 && integerIndex >= 0) {
-            out.setInteger(integerIndex--, (int) Math.abs((in.value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE)));
+            out.setInteger(integerIndex--, (int) Math.abs((in.value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE)), out.start, out.buffer);
             in.value = in.value / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
         }
 

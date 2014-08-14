@@ -27,6 +27,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
@@ -100,9 +102,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
-
-
-
+<#include "/@includes/vv_imports.ftl" />
 
 import io.netty.buffer.ByteBuf;
 
@@ -130,7 +130,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-    buffer = buffer.reallocIfNeeded(${type.bufferLength});
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {
@@ -190,10 +190,10 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {
-    buffer = buffer.reallocIfNeeded(len.value);
       long millis = in.milliSeconds;
 
       long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);

@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -61,11 +63,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
-        out.setSign(in.getSign());
+        out.setSign(in.getSign(in.start, in.buffer), out.start, out.buffer);
 
         /* We store base 1 Billion integers in our representation, which requires
          * 30 bits, but a typical integer requires 32 bits. In our dense representation
@@ -141,20 +143,20 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
             int transferDigitMask = (int) (Math.pow(10, actualDigits));
 
             /* copy the remaining scale over to the last deciml digit */
-            out.setInteger(dstIndex, ((intermediate[srcIndex] % transferDigitMask) * (padding)));
+            out.setInteger(dstIndex, ((intermediate[srcIndex] % transferDigitMask) * (padding)), out.start, out.buffer);
             dstIndex--;
 
             while (srcIndex > 0) {
-                out.setInteger(dstIndex, ((intermediate[srcIndex]/transferDigitMask) + ((intermediate[srcIndex - 1] % transferDigitMask) * padding)));
+                out.setInteger(dstIndex, ((intermediate[srcIndex]/transferDigitMask) + ((intermediate[srcIndex - 1] % transferDigitMask) * padding)), out.start, out.buffer);
 
                 dstIndex--;
                 srcIndex--;
             }
 
-            out.setInteger(dstIndex, (intermediate[0]/transferDigitMask));
+            out.setInteger(dstIndex, (intermediate[0]/transferDigitMask), out.start, out.buffer);
         } else {
             for (; srcIndex >= 0; srcIndex--, dstIndex--)
-                out.setInteger(dstIndex, intermediate[srcIndex]);
+                out.setInteger(dstIndex, intermediate[srcIndex], out.start, out.buffer);
         }
     }
 }

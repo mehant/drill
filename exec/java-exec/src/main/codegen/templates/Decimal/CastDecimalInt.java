@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -99,12 +101,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         for (int i = 0 ; i < integerEndIndex; i++) {
             // We store values as base 1 billion integers, use this to compute the output (we don't care about overflows)
-            out.value = (${type.javatype}) ((out.value * org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i));
+            out.value = (${type.javatype}) ((out.value * org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i, in.start, in.buffer));
         }
 
         out.value += carry;
 
-        if (in.getSign() == true) {
+        if (in.getSign(in.start, in.buffer) == true) {
             out.value *= -1;
         }
     }

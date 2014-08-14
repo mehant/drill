@@ -55,7 +55,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
   }
 
   public void eval() {
-    buffer = buffer.reallocIfNeeded(len.value);
+    buffer = buffer.reallocIfNeeded((int) len.value);
     String istr = (new ${type.javaType}(in.value)).toString();
     out.buffer = buffer;
     out.start = 0;

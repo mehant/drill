@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -62,7 +64,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         out.scale = (int) scale.value;
@@ -90,16 +92,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
              * digit, so we have padded zeroes to it for ease of arithmetic
              * Truncate the extra zeroes added and move the digits to the right
              */
-            int temp = (in.getInteger(index)/paddedMask);
+            int temp = (in.getInteger(index, in.start, in.buffer)/paddedMask);
             index--;
 
             while(index >= 0) {
 
-                int transferDigits = (in.getInteger(index) % (paddedMask));
+                int transferDigits = (in.getInteger(index, in.start, in.buffer) % (paddedMask));
 
                 intermediate[index] = (int) (temp + (Math.pow(10, actualDigits) * transferDigits));
 
-                temp = (in.getInteger(index)/(paddedMask));
+                temp = (in.getInteger(index, in.start, in.buffer)/(paddedMask));
 
                 index--;
             }
@@ -110,7 +112,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
              * need only 5 decimal digit to be stored, simply copy over the integers
              */
             for (int i = 1; i < in.nDecimalDigits; i++)
-                intermediate[i - 1] = in.getInteger(i);
+                intermediate[i - 1] = in.getInteger(i, in.start, in.buffer);
 
         }
 
@@ -169,7 +171,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
           // Set the bytes in the buffer
           out.buffer.setBytes(dstIndex, intermediateBytes, 1, (size - 1));
-          out.setSign(in.getSign());
+          out.setSign(in.getSign(in.start, in.buffer), out.start, out.buffer);
     }
 }
 </#if>

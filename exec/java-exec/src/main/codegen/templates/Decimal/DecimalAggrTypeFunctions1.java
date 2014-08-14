@@ -35,6 +35,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -63,6 +65,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ObjectHolder value;
   @Workspace IntHolder outputScale;
   <#elseif type.outputType.endsWith("Sparse")>
+  @Inject DrillBuf buffer;
   @Workspace ObjectHolder value;
   <#else>
   @Workspace ${type.runningType}Holder value;
@@ -83,15 +86,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     tmp.start  = 0;
     <#if aggrtype.funcName == "max">
     for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0xFFFFFFFF);
+      tmp.setInteger(i, 0xFFFFFFFF, tmp.start, tmp.buffer);
     }
-    tmp.setSign(true);
+    tmp.setSign(true, tmp.start, tmp.buffer);
     <#elseif aggrtype.funcName == "min">
     for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0x7FFFFFFF);
+      tmp.setInteger(i, 0x7FFFFFFF, tmp.start, tmp.buffer);
     }
     // Set sign to be positive so initial value is maximum
-    tmp.setSign(false);
+    tmp.setSign(false, tmp.start, tmp.buffer);
     tmp.precision = ${type.runningType}Holder.maxPrecision;
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
@@ -99,7 +102,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
-    buffer = buffer.reallocIfNeeded(tmp.WIDTH);
+    buffer = buffer.reallocIfNeeded(${type.outputType}Holder.WIDTH);
     value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     outputScale = new IntHolder();
@@ -122,13 +125,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "max">
     <#if type.outputType.endsWith("Sparse")>
       ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-      int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
+      int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(in.start, in.buffer),
       in.scale, in.precision, tmp.buffer,
-      tmp.start, tmp.getSign(), tmp.precision,
+      tmp.start, tmp.getSign(tmp.start, tmp.buffer), tmp.precision,
       tmp.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == 1) {
       in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
-      tmp.setSign(in.getSign());
+      tmp.setSign(in.getSign(in.start, in.buffer), tmp.start, tmp.buffer);
       tmp.scale = in.scale;
       tmp.precision = in.precision;
     }
@@ -138,13 +141,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
     ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-    int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
+    int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(in.start, in.buffer),
       in.scale, in.precision, tmp.buffer,
-      tmp.start, tmp.getSign(), tmp.precision,
+      tmp.start, tmp.getSign(tmp.start, tmp.buffer), tmp.precision,
       tmp.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == -1) {
       in.buffer.getBytes(in.start, tmp.buffer, 0, tmp.WIDTH);
-      tmp.setSign(in.getSign());
+      tmp.setSign(in.getSign(in.start, in.buffer), tmp.start, tmp.buffer);
       tmp.scale = in.scale;
       tmp.precision = in.precision;
     }
@@ -183,7 +186,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
     out.buffer = tmp.buffer;
     out.start = tmp.start;
-    out.setSign(tmp.getSign());
+    out.setSign(tmp.getSign(tmp.start, tmp.buffer), out.start, out.buffer);
     out.scale = tmp.scale;
     out.precision = tmp.precision;
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
@@ -205,13 +208,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     value.obj = tmp;
     for (int i = 0; i < tmp.nDecimalDigits; i++) {
-      tmp.setInteger(i, 0xFFFFFFFF);
+      tmp.setInteger(i, 0xFFFFFFFF, tmp.start, tmp.buffer);
     }
     <#if aggrtype.funcName == "min">
     // Set sign to be positive so initial value is maximum
-    tmp.setSign(false);
+    tmp.setSign(false, tmp.start, tmp.buffer);
     <#elseif aggrtype.funcName == "max">
-    tmp.setSign(true);
+    tmp.setSign(true, tmp.start, tmp.buffer);
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value = new ${type.runningType}Holder();

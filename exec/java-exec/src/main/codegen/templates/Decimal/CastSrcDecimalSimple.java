@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -66,7 +68,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
 
         out.scale = (int) scale.value;
@@ -74,7 +76,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         out.buffer = buffer;
         out.start = 0;
-        out.setSign((in.value < 0));
+        out.setSign((in.value < 0), out.start, out.buffer);
 
         /* Since we will be dividing the decimal value with base 1 billion
          * we don't want negative results if the decimal is negative.
@@ -86,7 +88,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         // store the decimal value as sequence of integers of base 1 billion.
         while (value > 0) {
 
-            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
             value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
@@ -131,7 +133,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
-
+<#include "/@includes/vv_imports.ftl" />
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -167,7 +169,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
@@ -198,7 +200,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
             int mask = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(power);
 
-            out.setInteger(index, (int) ((value % mask) * padding));
+            out.setInteger(index, (int) ((value % mask) * padding), out.start, out.buffer);
 
             value = value/mask;
 
@@ -208,7 +210,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         }
 
         while (value > 0) {
-            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE), out.start, out.buffer);
             value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
@@ -218,7 +220,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
           org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
         // Set the sign
-        out.setSign((in.value < 0));
+        out.setSign((in.value < 0), out.start, out.buffer);
     }
 }
 
@@ -231,7 +233,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
-
+<#include "/@includes/vv_imports.ftl" />
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
