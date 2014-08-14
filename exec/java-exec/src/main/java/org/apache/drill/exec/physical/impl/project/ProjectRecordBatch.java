@@ -320,7 +320,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
                 continue;
               }
               FieldReference ref = new FieldReference(name);
-              ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vvIn.getField().getType()));
+              ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vvIn.getField().getType()), callBack);
               TransferPair tp = vvIn.makeTransferPair(vvOut);
               transfers.add(tp);
             }
@@ -343,7 +343,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
               }
 
               MaterializedField outputField = MaterializedField.create(name, expr.getMajorType());
-              ValueVector vv = container.addOrGet(outputField);
+              ValueVector vv = container.addOrGet(outputField, callBack);
               allocationVectors.add(vv);
               TypedFieldId fid = container.getValueVectorId(outputField.getPath());
               ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
@@ -384,7 +384,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         Preconditions.checkNotNull(incoming);
 
         FieldReference ref = getRef(namedExpression);
-        ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vectorRead.getMajorType()));
+        ValueVector vvOut = container.addOrGet(MaterializedField.create(ref, vectorRead.getMajorType()), callBack);
         TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
         transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
@@ -403,11 +403,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         if (buildingSchema) {
           buildingSchema = false;
           MaterializedField f = MaterializedField.create(outputField.getPath().getAsUnescapedPath(), Types.required(MinorType.MAP));
-          container.addOrGet(f);
+          container.addOrGet(f, callBack);
         }
       } else{
         // need to do evaluation.
-        ValueVector vector = container.addOrGet(outputField);
+        ValueVector vector = container.addOrGet(outputField, callBack);
         allocationVectors.add(vector);
         TypedFieldId fid = container.getValueVectorId(outputField.getPath());
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);

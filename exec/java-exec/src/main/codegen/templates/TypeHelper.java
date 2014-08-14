@@ -31,6 +31,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.*;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.util.CallBack;
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
@@ -75,11 +76,16 @@ public class TypeHelper {
     }
     throw new UnsupportedOperationException("Unable to find sql accessor for minor type [" + vector.getField().getType().getMinorType() + "] and mode [" + vector.getField().getType().getMode() + "]");
   }
-  
+
   public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type){
+    return getNewVector(parentPath, name, allocator, type, null);
+  }
+
+
+  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type, CallBack callBack){
     SchemaPath child = parentPath.getChild(name);
     MaterializedField field = MaterializedField.create(child, type);
-    return getNewVector(field, allocator);
+    return getNewVector(field, allocator, callBack);
   }
   
   
@@ -258,6 +264,9 @@ public class TypeHelper {
   }
 
   public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
+    return getNewVector(field, allocator, null);
+  }
+  public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     MajorType type = field.getType();
 
     switch (type.getMinorType()) {
@@ -266,14 +275,14 @@ public class TypeHelper {
     case MAP:
       switch (type.getMode()) {
       case REQUIRED:
-        return new MapVector(field, allocator);
+        return new MapVector(field, allocator, callBack);
       case REPEATED:
-        return new RepeatedMapVector(field, allocator);
+        return new RepeatedMapVector(field, allocator, callBack);
       }
     case LIST:
       switch (type.getMode()) {
       case REPEATED:
-        return new RepeatedListVector(field, allocator);
+        return new RepeatedListVector(field, allocator, callBack);
       }    
 <#list vv.  types as type>
   <#list type.minor as minor>

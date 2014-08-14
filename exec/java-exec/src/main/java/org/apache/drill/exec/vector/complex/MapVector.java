@@ -40,6 +40,7 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
@@ -66,15 +67,16 @@ public class MapVector extends AbstractContainerVector {
   private MaterializedField field;
   private int valueCount;
 
-  public MapVector(String path, BufferAllocator allocator) {
+  public MapVector(String path, BufferAllocator allocator, CallBack callBack){
     this.field = MaterializedField.create(SchemaPath.getSimplePath(path), TYPE);
     this.allocator = allocator;
+    this.callBack = callBack;
   }
-  public MapVector(MaterializedField field, BufferAllocator allocator) {
+  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack){
     this.field = field;
     this.allocator = allocator;
+    this.callBack = callBack;
   }
-
   @Override
   public int size() {
     return vectors.size();
@@ -117,9 +119,12 @@ public class MapVector extends AbstractContainerVector {
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     ValueVector v = vectors.get(name);
     if (v == null) {
-      v = TypeHelper.getNewVector(field.getPath(), name, allocator, type);
+      v = TypeHelper.getNewVector(field.getPath(), name, allocator, type, callBack);
       Preconditions.checkNotNull(v, String.format("Failure to create vector of type %s.", type));
       put(name, v);
+      if (callBack != null) {
+        callBack.doWork();
+      }
     }
     return typeify(v, clazz);
 
@@ -222,7 +227,7 @@ public class MapVector extends AbstractContainerVector {
     private MapVector to;
 
     public MapTransferPair(SchemaPath path) {
-      MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator);
+      MapVector v = new MapVector(MaterializedField.create(path, TYPE), allocator, callBack);
       pairs = new TransferPair[vectors.size()];
       int i =0;
       for (Map.Entry<String, ValueVector> e : vectors.entrySet()) {
@@ -326,7 +331,7 @@ public class MapVector extends AbstractContainerVector {
       ValueVector v = vectors.get(fieldDef.getLastName());
       if (v == null) {
         // if we arrive here, we didn't have a matching vector.
-        v = TypeHelper.getNewVector(fieldDef, allocator);
+        v = TypeHelper.getNewVector(fieldDef, allocator, callBack);
         put(fieldDef.getLastName(), v);
       }
       if (fmd.getValueCount() == 0) {

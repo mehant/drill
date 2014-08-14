@@ -24,6 +24,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 public abstract class AbstractContainerVector implements ValueVector{
@@ -32,6 +33,7 @@ public abstract class AbstractContainerVector implements ValueVector{
   public abstract <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz);
   public abstract <T extends ValueVector> T get(String name, Class<T> clazz);
   public abstract int size();
+  protected CallBack callBack;
 
   protected <T extends ValueVector> T typeify(ValueVector v, Class<T> clazz) {
     if (clazz.isAssignableFrom(v.getClass())) {
