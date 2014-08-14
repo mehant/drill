@@ -294,7 +294,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
               }              
 
               MaterializedField outputField = MaterializedField.create(name, expr.getMajorType());
-              ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+              ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator(), callBack);
               allocationVectors.add(vv);
               TypedFieldId fid = container.add(vv);
               ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
@@ -349,7 +349,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         cg.addExpr(expr);
       } else{
         // need to do evaluation.
-        ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+        ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator(), callBack);
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
