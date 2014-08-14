@@ -38,6 +38,8 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 
@@ -47,12 +49,12 @@ public class G${type}ToChar implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
     @Param  VarCharHolder right;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Workspace java.text.NumberFormat outputFormat;
     @Output VarCharHolder out;
 
     public void setup(RecordBatch b) {
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[100]);
+        buffer = buffer.reallocIfNeeded(100);
         byte[] buf = new byte[right.end - right.start];
         right.buffer.getBytes(right.start, buf, 0, right.end - right.start);
         String inputFormat = new String(buf);

@@ -99,6 +99,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -219,27 +220,8 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        
           <#if type.mode == "var" >
-outside: 
-        {          
-          if (left.end - left.start == right.end - right.start) {
-            int n = left.end - left.start;
-            int l = left.start;
-            int r = right.start;
-            while (n-- !=0) {
-              byte leftByte = left.buffer.getByte(l++);
-              byte rightByte = right.buffer.getByte(r++);
-              if (leftByte != rightByte) {
-                out.value = 0;
-                break outside;
-              }
-            }
-            out.value = 1;
-          } else {
-            out.value = 0;
-          }
-        } 
+          out.value = ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end);
           <#else>
           out.value = left.value == right.value ? 1 : 0;
           </#if>
