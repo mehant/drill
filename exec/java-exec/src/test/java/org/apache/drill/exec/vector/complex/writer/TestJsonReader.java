@@ -83,7 +83,7 @@ public class TestJsonReader {
 //        "{ \"integer\" : -2002,\n" +
 //        "  \"float\"   : -1.2 \n" +
 //        "}";
-    MapVector v = new MapVector("", allocator);
+    MapVector v = new MapVector("", allocator, null);
     ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
     writer.allocate();
 

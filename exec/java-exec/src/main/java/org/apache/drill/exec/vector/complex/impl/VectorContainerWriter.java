@@ -78,7 +78,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
   private class SpecialMapVector extends MapVector {
 
     public SpecialMapVector() {
-      super("", null);
+      super("", null, null);
     }
 
     @Override
