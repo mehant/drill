@@ -36,7 +36,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
 
 import io.netty.buffer.ByteBuf;
@@ -58,7 +58,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void setup(RecordBatch incoming) {
         <#if type.major == "FloatDecimalComplex" || type.major == "DoubleDecimalComplex">
-        int size = ${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize);
+        int size = ${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize);
         buffer = buffer.reallocIfNeeded(size);
         </#if>
     }
@@ -73,12 +73,12 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.buffer = buffer;
 
        // Assign the integer part of the decimal to the output holder
-        org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+        org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
 
         <#elseif type.to.endsWith("Decimal9")>
-        out.value = org.apache.drill.common.util.DecimalUtility.getDecimal9FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
+        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal9FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
         <#elseif type.to.endsWith("Decimal18")>
-        out.value = org.apache.drill.common.util.DecimalUtility.getDecimal18FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
+        out.value = org.apache.drill.exec.util.DecimalUtility.getDecimal18FromBigDecimal(new java.math.BigDecimal(String.valueOf(in.value)), out.scale, out.precision);
         </#if>
     }
 }

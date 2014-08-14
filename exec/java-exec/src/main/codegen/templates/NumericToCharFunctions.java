@@ -67,10 +67,10 @@ public class G${type}ToChar implements DrillSimpleFunc {
         java.math.BigDecimal bigDecimal = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
         String str = outputFormat.format(bigDecimal);
         <#elseif type == "Decimal28Sparse" || type == "Decimal38Sparse">
-        java.math.BigDecimal bigDecimal = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
         String str = outputFormat.format(bigDecimal);
         <#elseif type == "Decimal28Dense" || type == "Decimal38Dense">
-        java.math.BigDecimal bigDecimal = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(left.buffer, left.start, left.nDecimalDigits, left.scale, left.maxPrecision, left.WIDTH);
+        java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(left.buffer, left.start, left.nDecimalDigits, left.scale, left.maxPrecision, left.WIDTH);
         String str = outputFormat.format(bigDecimal);
         <#else>
         String str =  outputFormat.format(left.value);

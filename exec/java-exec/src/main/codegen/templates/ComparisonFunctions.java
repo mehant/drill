@@ -102,6 +102,8 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 public class GCompare${left}${right}{

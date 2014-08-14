@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
 
@@ -42,6 +41,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
@@ -121,7 +122,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "max">
     <#if type.outputType.endsWith("Sparse")>
       ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-      int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
+      int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
       in.scale, in.precision, tmp.buffer,
       tmp.start, tmp.getSign(), tmp.precision,
       tmp.scale, in.WIDTH, in.nDecimalDigits, false);
@@ -137,7 +138,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
     ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
+    int cmp = org.apache.drill.exec.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
       in.scale, in.precision, tmp.buffer,
       tmp.start, tmp.getSign(), tmp.precision,
       tmp.scale, in.WIDTH, in.nDecimalDigits, false);
@@ -152,9 +153,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
     <#elseif aggrtype.funcName == "sum">
    <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
-    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
+    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
     <#else>
-    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    java.math.BigDecimal currentValue = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
     </#if>
     value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
     if (outputScale.value == Integer.MIN_VALUE) {
@@ -176,7 +177,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.scale = outputScale.value;
     out.precision = 38;
     value.obj = ((java.math.BigDecimal) (value.obj)).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
-    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+    org.apache.drill.exec.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
    <#else>
     <#if type.outputType.endsWith("Sparse")>
     ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;

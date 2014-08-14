@@ -55,7 +55,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -86,8 +86,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         // store the decimal value as sequence of integers of base 1 billion.
         while (value > 0) {
 
-            out.setInteger(index, (int) (value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
-            value = value/org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
+            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
@@ -100,7 +100,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int shiftOrder = 2;
 
         // Start shifting bits just after the first integer
-        int byteIndex = in.WIDTH - (org.apache.drill.common.util.DecimalUtility.integerSize + 1);
+        int byteIndex = in.WIDTH - (org.apache.drill.exec.util.DecimalUtility.integerSize + 1);
 
         while (byteIndex >= 0) {
 
@@ -157,7 +157,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
         buffer = buffer.reallocIfNeeded(size);
     }
 
@@ -187,16 +187,16 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         while(remainingScale > 0) {
 
-            int power = (remainingScale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+            int power = (remainingScale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
             int padding = 1;
 
             if (power == 0) {
                 power = 9;
             } else {
-                padding = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - power)));
+                padding = (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - power)));
             }
 
-            int mask = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(power);
+            int mask = (int) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen(power);
 
             out.setInteger(index, (int) ((value % mask) * padding));
 
@@ -208,14 +208,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         }
 
         while (value > 0) {
-            out.setInteger(index, (int) (value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
-            value = value/org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+            out.setInteger(index, (int) (value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE));
+            value = value/org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
             index--;
         }
 
         // Round up or down the scale
         if (in.scale != out.scale) {
-          org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+          org.apache.drill.exec.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
         // Set the sign
         out.setSign((in.value < 0));
@@ -264,7 +264,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = in.value;
 
         // Truncate or pad additional zeroes if the output scale is different from input scale
-        out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
+        out.value = (${type.javatype}) (org.apache.drill.exec.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
     }
 }
 </#if>

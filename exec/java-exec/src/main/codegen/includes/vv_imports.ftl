@@ -45,6 +45,8 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JCodeModel;
 
+import javax.inject.Inject;
+
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;

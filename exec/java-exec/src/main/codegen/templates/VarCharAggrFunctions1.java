@@ -41,6 +41,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
+import javax.inject.Inject;
 import org.apache.drill.exec.record.RecordBatch;
 
 import io.netty.buffer.ByteBuf;
