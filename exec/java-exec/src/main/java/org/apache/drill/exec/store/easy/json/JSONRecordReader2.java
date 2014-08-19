@@ -30,6 +30,7 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
@@ -41,7 +42,7 @@ import org.apache.hadoop.fs.Path;
 
 import com.google.common.collect.Lists;
 
-public class JSONRecordReader2 implements RecordReader{
+public class JSONRecordReader2 extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader2.class);
 
   private OutputMutator mutator;

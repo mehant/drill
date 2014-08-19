@@ -34,6 +34,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.RepeatedVarCharVector;
@@ -48,7 +49,7 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class DrillTextRecordReader implements RecordReader {
+public class DrillTextRecordReader extends AbstractRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
 
   static final String COL_NAME = "columns";
@@ -129,8 +130,8 @@ public class DrillTextRecordReader implements RecordReader {
 
   @Override
   public int next() {
-    logger.debug("vector value capacity {}", vector.getValueCapacity());
-    logger.debug("vector byte capacity {}", vector.getByteCapacity());
+//    logger.debug("vector value capacity {}", vector.getValueCapacity());
+//    logger.debug("vector byte capacity {}", vector.getByteCapacity());
     int batchSize = 0;
     try {
       int recordCount = 0;

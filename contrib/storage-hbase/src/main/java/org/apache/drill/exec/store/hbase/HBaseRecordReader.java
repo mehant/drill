@@ -36,6 +36,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -53,7 +54,7 @@ import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
-public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
+public class HBaseRecordReader extends AbstractRecordReader implements DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
   private static final int TARGET_RECORD_COUNT = 4000;

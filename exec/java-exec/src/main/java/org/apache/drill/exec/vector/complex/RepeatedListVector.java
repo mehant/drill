@@ -354,8 +354,8 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public DrillBuf[] getBuffers() {
-    return ArrayUtils.addAll(offsets.getBuffers(), vector.getBuffers());
+  public DrillBuf[] getBuffers(boolean clear) {
+    return ArrayUtils.addAll(offsets.getBuffers(clear), vector.getBuffers(clear));
   }
 
   private void setVector(ValueVector v){

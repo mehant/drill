@@ -37,6 +37,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
@@ -78,7 +79,7 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Lists;
 
-public class HiveRecordReader implements RecordReader {
+public class HiveRecordReader extends AbstractRecordReader {
 
   protected Table table;
   protected Partition partition;

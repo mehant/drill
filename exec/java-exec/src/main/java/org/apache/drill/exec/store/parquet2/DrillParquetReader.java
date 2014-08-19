@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -52,7 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DrillParquetReader implements RecordReader {
+public class DrillParquetReader extends AbstractRecordReader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
 
