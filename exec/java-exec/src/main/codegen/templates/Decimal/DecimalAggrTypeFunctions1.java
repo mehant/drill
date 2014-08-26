@@ -204,9 +204,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Sparse")>
-  	value = new ObjectHolder();
-    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
-    value.obj = tmp;
+  	//value = new ObjectHolder();
+    ${type.runningType}Holder tmp = (${type.runningType}Holder) value.obj;
+    //value.obj = tmp;
     for (int i = 0; i < tmp.nDecimalDigits; i++) {
       tmp.setInteger(i, 0xFFFFFFFF, tmp.start, tmp.buffer);
     }
