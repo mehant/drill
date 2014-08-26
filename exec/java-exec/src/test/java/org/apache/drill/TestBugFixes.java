@@ -56,6 +56,7 @@ public class TestBugFixes extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void DRILL1126() throws Exception {
     String query = "select sum(cast(employee_id as decimal(38, 18))), avg(cast(employee_id as decimal(38, 18))) from cp.`employee.json` group by (department_id)";
     test(query);

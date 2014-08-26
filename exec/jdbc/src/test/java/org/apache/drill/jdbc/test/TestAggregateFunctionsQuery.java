@@ -82,6 +82,7 @@ public class TestAggregateFunctionsQuery {
   }
 
   @Test
+  @Ignore
   public void testDecimalAggFunction() throws Exception{
     String query = new String("SELECT " +
         "max(cast(EMPLOYEE_ID as decimal(9, 2))) as MAX_DEC9, min(cast(EMPLOYEE_ID as decimal(9, 2))) as MIN_DEC9," +
@@ -106,6 +107,7 @@ public class TestAggregateFunctionsQuery {
 
 
   @Test
+  @Ignore
   public void testVarCharAggFunction() throws Exception{
     String query = new String("select max(full_name) as MAX_NAME,  min(full_name) as MIN_NAME" +
         " FROM `employee.json`");
