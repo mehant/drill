@@ -140,6 +140,14 @@
                   <goal>shade</goal>
                 </goals>
                 <configuration>
+                  <filters>
+                    <filter>
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>**/FSDataInputStream*</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
                   <artifactSet>
                     <includes>
                       <include>org.apache.hbase:hbase</include>
