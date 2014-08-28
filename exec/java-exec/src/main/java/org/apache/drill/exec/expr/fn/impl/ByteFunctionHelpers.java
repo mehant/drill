@@ -155,11 +155,15 @@ public class ByteFunctionHelpers {
    * Following are helper functions to interact with sparse decimal represented in a byte array.
    */
 
-  // Get the integer, ignore the sign
+  // Get the integer ignore the sign
   public static int getInteger(byte[] b, int index) {
+    return getInteger(b, index, true);
+  }
+  // Get the integer, ignore the sign
+  public static int getInteger(byte[] b, int index, boolean ignoreSign) {
     int startIndex = index * DecimalUtility.integerSize;
 
-    if (index == 0) {
+    if (index == 0 && ignoreSign == true) {
       return (b[startIndex + 3] & 0xFF) |
              (b[startIndex + 2] & 0xFF) << 8 |
              (b[startIndex + 1] & 0xFF) << 16 |
@@ -194,6 +198,6 @@ public class ByteFunctionHelpers {
 
   // Get the sign
   public static boolean getSign(byte[] b) {
-    return ((getInteger(b, 0) & 0x80000000) > 0);
+    return ((getInteger(b, 0, false) & 0x80000000) != 0);
   }
 }
