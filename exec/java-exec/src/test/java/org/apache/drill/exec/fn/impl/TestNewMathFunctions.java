@@ -140,4 +140,17 @@ public class TestNewMathFunctions {
     runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
   }
 
+	  @Test
+	  public void testTruncDivMod(@Injectable final DrillbitContext bitContext,
+	                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+	    Object [] expected = new Object[] {101.0, 0, 101, 1010.0, 101, 481.0, 0.001099999999931267};
+	    runTest(bitContext, connection, expected, "functions/testDivModTruncFunctions.json");
+	  }
+
+	  @Test
+	  public void testIsNumeric(@Injectable final DrillbitContext bitContext,
+	                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+	    Object [] expected = new Object[] {1, 1, 1, 0};
+	    runTest(bitContext, connection, expected, "functions/testIsNumericFunction.json");
+	  }
 }
