@@ -37,7 +37,7 @@ public class DrillPushPartitionFilterIntoScan extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillPushPartitionFilterIntoScan();
 
   private DrillPushPartitionFilterIntoScan() {
-    super(RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)), "DrillPushPartitionFilterIntoScan");
+    super(RelOptHelper.some(DrillFilterRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))), "DrillPushPartitionFilterIntoScan");
   }
 
   private FormatSelection splitFilter(FormatSelection origSelection, DirPathBuilder builder) {
@@ -80,17 +80,18 @@ public class DrillPushPartitionFilterIntoScan extends RelOptRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final DrillScanRel scan = (DrillScanRel) call.rel(1);
+    final DrillScanRel scan = (DrillScanRel) call.rel(2);
     return scan.getGroupScan().supportsPartitionFilterPushdown();
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-    final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+    final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
+    final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
 
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    DirPathBuilder builder = new DirPathBuilder(filterRel, scanRel, filterRel.getCluster().getRexBuilder(), settings.getFsPartitionColumnLabel());
+    DirPathBuilder builder = new DirPathBuilder(filterRel, projectRel, filterRel.getCluster().getRexBuilder(), settings.getFsPartitionColumnLabel());
 
     FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
     FormatSelection newSelection = splitFilter(origSelection, builder);
@@ -106,19 +107,23 @@ public class DrillPushPartitionFilterIntoScan extends RelOptRule {
 
       if (newFilterCondition.isAlwaysTrue()) {
         // TODO: temporarily keep the original filter until we resolve bugs
-        newFilterCondition = filterRel.getCondition();
-      }
-        /*
+        // newFilterCondition = filterRel.getCondition();
+      // }
+
         final DrillScanRel newScanRel =
             new DrillScanRel(scanRel.getCluster(),
                 scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
                 scanRel.getTable(),
                 fgscan,
-                filterRel.getRowType(),
+                scanRel.getRowType(),
                 scanRel.getColumns());
-        call.transformTo(newScanRel);
+
+        final DrillProjectRel newProjectRel = new DrillProjectRel(projectRel.getCluster(), projectRel.getTraitSet(),
+            newScanRel, projectRel.getProjects(), filterRel.getRowType());
+
+        call.transformTo(newProjectRel);
       } else {
-      */
+
       final DrillScanRel newScanRel =
           new DrillScanRel(scanRel.getCluster(),
               scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
@@ -126,9 +131,12 @@ public class DrillPushPartitionFilterIntoScan extends RelOptRule {
               fgscan,
               scanRel.getRowType(),
               scanRel.getColumns());
-      final DrillFilterRel newFilterRel = new DrillFilterRel(filterRel.getCluster(), filterRel.getTraitSet(), newScanRel, newFilterCondition);
+      final DrillProjectRel newProjectRel = new DrillProjectRel(projectRel.getCluster(), projectRel.getTraitSet(),
+          newScanRel, projectRel.getProjects(), projectRel.getRowType());
+      final DrillFilterRel newFilterRel = new DrillFilterRel(filterRel.getCluster(), filterRel.getTraitSet(), newProjectRel, newFilterCondition);
+
       call.transformTo(newFilterRel);
-      // }
+      }
     } catch (IOException e) {
       throw new DrillRuntimeException(e) ;
     }
