@@ -116,6 +116,18 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
   }
 
+
+  public PhysicalPlan getPlanFromOptiqLogical(RelNode rel) throws ValidationException, RelConversionException, IOException {
+    log("Optiq Logical", rel);
+    DrillRel drel = convertToDrel(rel);
+    log("Drill Logical", drel);
+    Prel prel = convertToPrel(drel);
+    log("Drill Physical", prel);
+    PhysicalOperator pop = convertToPop(prel);
+    PhysicalPlan plan = convertToPlan(pop);
+    log("Drill Plan", plan);
+    return plan;
+  }
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
 

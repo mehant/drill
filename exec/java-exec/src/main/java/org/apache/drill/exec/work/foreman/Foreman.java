@@ -53,6 +53,7 @@ import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.planner.sql.HiveSqlWorker;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -420,7 +421,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   private void runSQL(String sql) {
     try{
-      DrillSqlWorker sqlWorker = new DrillSqlWorker(context);
+      HiveSqlWorker sqlWorker = new HiveSqlWorker(context);
       Pointer<String> textPlan = new Pointer<>();
       PhysicalPlan plan = sqlWorker.getPlan(sql, textPlan);
       fragmentManager.getStatus().setPlanText(textPlan.value);

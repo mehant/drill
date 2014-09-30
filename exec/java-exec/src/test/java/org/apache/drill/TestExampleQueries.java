@@ -481,4 +481,9 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where cast(t1.department_id as double) = t2.department_id and cast(t1.position_id as bigint) = t2.department_id");
     test("select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 where t1.department_id = t2.department_id and t1.position_id = t2.department_id");
   }
+
+  @Test
+  public void testHiveQL() throws Exception {
+    test("select * from kv");
+  }
 }

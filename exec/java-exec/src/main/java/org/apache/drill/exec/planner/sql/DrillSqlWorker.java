@@ -132,4 +132,8 @@ public class DrillSqlWorker {
     return handler.getPlan(sqlNode);
   }
 
+  public SqlHandlerConfig getConfig() {
+    return new SqlHandlerConfig(hepPlanner, planner, context);
+  }
+
 }
