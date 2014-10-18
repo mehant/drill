@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.physical.base.FileGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.FileSystemPartitionDescriptor;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -44,7 +46,9 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
     @Override
       public boolean matches(RelOptRuleCall call) {
         final DrillScanRel scan = (DrillScanRel) call.rel(2);
-        return scan.getGroupScan().supportsPartitionFilterPushdown();
+        GroupScan groupScan = scan.getGroupScan();
+        // this rule is applicable only for dfs based partition pruning
+        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
       }
 
     @Override
@@ -64,7 +68,9 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
       @Override
         public boolean matches(RelOptRuleCall call) {
           final DrillScanRel scan = (DrillScanRel) call.rel(1);
-          return scan.getGroupScan().supportsPartitionFilterPushdown();
+          GroupScan groupScan = scan.getGroupScan();
+          // this rule is applicable only for dfs based partition pruning
+          return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
         }
 
       @Override
@@ -120,7 +126,7 @@ public abstract class DrillPushPartitionFilterIntoScan extends RelOptRule {
     DrillRel inputRel = projectRel != null ? projectRel : scanRel;
 
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), settings.getFsPartitionColumnLabel());
+    DirPathBuilder builder = new DirPathBuilder(filterRel, inputRel, filterRel.getCluster().getRexBuilder(), new FileSystemPartitionDescriptor(settings.getFsPartitionColumnLabel()));
 
     FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
     FormatSelection newSelection = splitFilter(origSelection, builder);
