@@ -109,6 +109,7 @@ public class HiveScan extends AbstractGroupScan {
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
+    this.storagePlugin = storagePlugin;
     getSplits();
     endpoints = storagePlugin.getContext().getBits();
     this.storagePluginName = storagePlugin.getName();
@@ -305,7 +306,8 @@ public class HiveScan extends AbstractGroupScan {
   public String toString() {
     return "HiveScan [table=" + table
         + ", inputSplits=" + inputSplits
-        + ", columns=" + columns + "]";
+        + ", columns=" + columns
+        + ", partitions= " + partitions +"]";
   }
 
   @Override
@@ -319,5 +321,7 @@ public class HiveScan extends AbstractGroupScan {
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }
-
+  public boolean supportsPartitionFilterPushdown() {
+    return true;
+  }
 }
