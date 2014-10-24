@@ -122,12 +122,7 @@ public final class XXHash {
       p++;
     }
 
-    h64 ^= h64 >> 33;
-    h64 *= PRIME64_2;
-    h64 ^= h64 >> 29;
-    h64 *= PRIME64_3;
-    h64 ^= h64 >> 32;
-    return h64;
+    return applyFinalHashComputation(h64);
   }
 
   public static int hash32(int start, int end, DrillBuf buffer){
@@ -137,14 +132,11 @@ public final class XXHash {
   }
 
   public static int hash32(int val, int seed){
-    long h64 = val * PRIME64_1;
+    long h64 = seed + PRIME64_5;
+    h64 += 4; // add length (4 bytes) to hash value
+    h64 ^= val * PRIME64_1;
     h64 = Long.rotateLeft(h64, 23) * PRIME64_2 + PRIME64_3;
-    h64 ^= h64 >> 33;
-    h64 *= PRIME64_2;
-    h64 ^= h64 >> 29;
-    h64 *= PRIME64_3;
-    h64 ^= h64 >> 32;
-    return (int) h64;
+    return (int) applyFinalHashComputation(h64);
   }
 
   public static int hash32(float val, int seed){
@@ -156,22 +148,26 @@ public final class XXHash {
   }
 
   public static int hash32(long val, int seed){
+    long h64 = seed + PRIME64_5;
+    h64 += 8; // add length (8 bytes) to hash value
     long k1 = val* PRIME64_2;
     k1 = Long.rotateLeft(k1, 31);
     k1 *= PRIME64_1;
-    long h64 = 0;
     h64 ^= k1;
     h64 = Long.rotateLeft(h64, 27) * PRIME64_1 + PRIME64_4;
+    return (int) applyFinalHashComputation(h64);
+  }
+
+  public static int hash32(long start, long bEnd, long seed){
+    return (int) hash64(start, bEnd, seed);
+  }
+
+  private static long applyFinalHashComputation(long h64) {
     h64 ^= h64 >> 33;
     h64 *= PRIME64_2;
     h64 ^= h64 >> 29;
     h64 *= PRIME64_3;
     h64 ^= h64 >> 32;
-    return (int) h64;
-  }
-
-
-  public static int hash32(long start, long bEnd, long seed){
-    return (int) hash64(start, bEnd, seed);
+    return h64;
   }
 }
