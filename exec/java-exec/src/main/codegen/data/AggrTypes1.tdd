@@ -98,10 +98,10 @@
      ]
    },
    {className: "Count", funcName: "count", types: [
-      {inputType: "Bit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
+      {inputType: "Bit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
-      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit", major: "Numeric"},
+      {inputType: "NullableBit", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "NullableInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Float4", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
