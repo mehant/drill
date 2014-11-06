@@ -512,4 +512,12 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testTextQueries() throws Exception {
     test("select cast('285572516' as int) from cp.`tpch/nation.parquet` limit 1");
   }
+
+  @Test
+  public void testCast() throws Exception {
+    int actualRecordCount = testSql("select o_totalprice from cp.`tpch/orders.parquet` where o_orderkey=60000 and o_totalprice=299402");
+    int expectedRecordCount = 0;
+    assertEquals(String.format("Received unexepcted number of rows in output: expected=%d, received=%s",
+        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
+  }
 }
