@@ -108,7 +108,11 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   public void kill(FragmentContext context) {
     while (!buffer.isEmpty()) {
       RawFragmentBatch batch = buffer.poll();
-      batch.getBody().release();
+
+      // Make sure body is not null
+      if (batch.getBody() != null) {
+        batch.getBody().release();
+      }
     }
   }
 
