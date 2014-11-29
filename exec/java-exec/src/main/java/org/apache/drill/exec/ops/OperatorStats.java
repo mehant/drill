@@ -17,16 +17,23 @@
  */
 package org.apache.drill.exec.ops;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
+import org.apache.drill.exec.util.AssertionUtil;
 
 import com.carrotsearch.hppc.IntDoubleOpenHashMap;
 import com.carrotsearch.hppc.IntLongOpenHashMap;
 
 public class OperatorStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
+
+
+  private final Wait wait = new Wait();
+  private final Setup setup = new Setup();
+  private final Processing processing = new Processing();
 
   protected final int operatorId;
   protected final int operatorType;
@@ -52,6 +59,8 @@ public class OperatorStats {
   private long setupMark;
   private long waitMark;
 
+  private boolean previouslyInSetup;
+
   private long schemas;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
@@ -71,43 +80,57 @@ public class OperatorStats {
   private String assertionError(String msg){
     return String.format("Failure while %s for operator id %d. Currently have states of processing:%s, setup:%s, waiting:%s.", msg, operatorId, inProcessing, inSetup, inWait);
   }
-  public void startSetup() {
+  public Setup startSetup() {
     assert !inSetup  : assertionError("starting setup");
     stopProcessing();
     inSetup = true;
     setupMark = System.nanoTime();
+    return setup;
   }
 
   public void stopSetup() {
     assert inSetup :  assertionError("stopping setup");
     startProcessing();
-    setupNanos += System.nanoTime() - setupMark;
+    setupNanos += elapsed(setupMark);
     inSetup = false;
   }
 
-  public void startProcessing() {
+  public Processing startProcessing() {
     assert !inProcessing : assertionError("starting processing");
     processingMark = System.nanoTime();
     inProcessing = true;
+    return processing;
   }
 
   public void stopProcessing() {
     assert inProcessing : assertionError("stopping processing");
-    processingNanos += System.nanoTime() - processingMark;
+    processingNanos += elapsed(processingMark);
     inProcessing = false;
   }
 
-  public void startWait() {
+  public Wait startWait() {
     assert !inWait : assertionError("starting waiting");
     stopProcessing();
     inWait = true;
     waitMark = System.nanoTime();
+    return wait;
+  }
+
+  private static long elapsed(long mark){
+    long val = System.nanoTime() - mark;
+    if(DrillConfig.ON_OSX && val < 0){
+      return 0;
+    }
+    if(val > 10000000000l){
+      System.out.println("");
+    }
+    return val;
   }
 
   public void stopWait() {
     assert inWait : assertionError("stopping waiting");
     startProcessing();
-    waitNanos += System.nanoTime() - waitMark;
+    waitNanos += elapsed(waitMark);
     inWait = false;
   }
 
@@ -181,6 +204,27 @@ public class OperatorStats {
 
   public void setDoubleStat(MetricDef metric, double value){
     doubleMetrics.put(metric.metricId(), value);
+  }
+
+  public class Setup implements AutoCloseable{
+    @Override
+    public void close(){
+      stopSetup();
+    }
+  }
+
+  public class Wait implements AutoCloseable{
+    @Override
+    public void close(){
+      stopWait();
+    }
+  }
+
+  public class Processing implements AutoCloseable{
+    @Override
+    public void close(){
+      stopProcessing();
+    }
   }
 
 }

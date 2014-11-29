@@ -18,6 +18,7 @@
 package org.apache.drill.exec.client;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -33,6 +34,8 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.util.VectorUtil;
 
+import com.google.common.base.Stopwatch;
+
 public class PrintingResultsListener implements UserResultsListener {
   AtomicInteger count = new AtomicInteger();
   private CountDownLatch latch = new CountDownLatch(1);
@@ -42,6 +45,7 @@ public class PrintingResultsListener implements UserResultsListener {
   BufferAllocator allocator;
   volatile Exception exception;
   QueryId queryId;
+  Stopwatch w = new Stopwatch();
 
   public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
     this.allocator = new TopLevelAllocator(config);
@@ -87,7 +91,7 @@ public class PrintingResultsListener implements UserResultsListener {
     if (isLastChunk) {
       allocator.close();
       latch.countDown();
-      System.out.println("Total rows returned : " + count.get());
+      System.out.println("Total rows returned : " + count.get() + ".  Returned in " + w.elapsed(TimeUnit.MILLISECONDS) + "ms.");
     }
 
   }
@@ -106,6 +110,7 @@ public class PrintingResultsListener implements UserResultsListener {
 
   @Override
   public void queryIdArrived(QueryId queryId) {
+    w.start();
     this.queryId = queryId;
   }
 

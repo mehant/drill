@@ -83,7 +83,8 @@ public class SystemOptionManager implements OptionManager {
       QueryClassLoader.JAVA_COMPILER_VALIDATOR,
       QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE,
       QueryClassLoader.JAVA_COMPILER_DEBUG,
-      ExecConstants.ENABLE_VERBOSE_ERRORS
+      ExecConstants.ENABLE_VERBOSE_ERRORS,
+      ExecConstants.ENABLE_NEW_TEXT_READER
   };
 
   public final PStoreConfig<OptionValue> config;

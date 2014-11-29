@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.schedule;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ public class BlockMapBuilder {
   static final MetricRegistry metrics = DrillMetrics.getInstance();
   static final String BLOCK_MAP_BUILDER_TIMER = MetricRegistry.name(BlockMapBuilder.class, "blockMapBuilderTimer");
 
+  private static final long MAX_BLOCK_SIZE = 128*1024*1024;
   private HashMap<Path,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = new HashMap<>();
   private Collection<DrillbitEndpoint> endpoints;
   private FileSystem fs;
@@ -72,9 +74,12 @@ public class BlockMapBuilder {
       if (blockify && !compressed(f)) {
         try {
           ImmutableRangeMap<Long, BlockLocation> rangeMap = getBlockMap(f);
+          List<CompleteFileWork> localWork = Lists.newArrayList();
           for (Entry<Range<Long>, BlockLocation> l : rangeMap.asMapOfRanges().entrySet()) {
-            work.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), l.getValue().getOffset(), l.getValue().getLength(), f.getPath().toString()));
+            localWork.add(new CompleteFileWork(getEndpointByteMap(new FileStatusWork(f)), l.getValue().getOffset(), l.getValue().getLength(), f.getPath().toString()));
           }
+          Collections.sort(localWork);
+          work.addAll(localWork);
         } catch (IOException e) {
           logger.warn("failure while generating file work.", e);
           error = true;
@@ -123,13 +128,44 @@ public class BlockMapBuilder {
   }
 
   /**
+   * Utility function that will return a list of block locations for a particular FileStatus.  This will also break large LocalFileSystem files into multiple blocks to improve parallelization/performance.
+   *
+   * @param fs FileSystem to use.
+   * @param status The FileStatus referencing the file that we want block locations for.
+   * @return The original blocks or the new set (in the case that the length is greater than MAX_BLOCK_SIZE and there was initially only one block location).
+   * @throws IOException
+   */
+  private BlockLocation[] getBlockLocations(FileSystem fs, FileStatus status) throws IOException{
+    BlockLocation[] blocks = fs.getFileBlockLocations(status, 0 , status.getLen());
+    if(blocks.length > 1 || status.getLen() < MAX_BLOCK_SIZE){
+      return blocks;
+    }
+
+    // we'll break up large files where we didn't more than one block location.
+    List<BlockLocation> locations = Lists.newArrayList();
+    BlockLocation ref = blocks[0];
+    long start = 0;
+    while(true){
+      long length = Math.min(ref.getLength() - start, MAX_BLOCK_SIZE);
+      BlockLocation loc = new BlockLocation(ref.getNames(), ref.getHosts(), start, length);
+      locations.add(loc);
+      start += length;
+      if(length < MAX_BLOCK_SIZE){
+        break;
+      }
+    }
+    blocks = locations.toArray(new BlockLocation[locations.size()]);
+    return blocks;
+
+  }
+  /**
    * Builds a mapping of block locations to file byte range
    */
   private ImmutableRangeMap<Long,BlockLocation> buildBlockMap(FileStatus status) throws IOException {
     final Timer.Context context = metrics.timer(BLOCK_MAP_BUILDER_TIMER).time();
     BlockLocation[] blocks;
     ImmutableRangeMap<Long,BlockLocation> blockMap;
-    blocks = fs.getFileBlockLocations(status, 0 , status.getLen());
+    blocks = getBlockLocations(fs, status);
     ImmutableRangeMap.Builder<Long, BlockLocation> blockMapBuilder = new ImmutableRangeMap.Builder<Long,BlockLocation>();
     for (BlockLocation block : blocks) {
       long start = block.getOffset();

@@ -149,6 +149,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     return offsetVector.getDataAddr();
   }
   
+  public UInt${type.width}Vector getOffsetVector(){
+    return offsetVector;
+  }
+  
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());
   }
@@ -285,16 +289,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     offsetVector.zeroVector();
   }
 
-    private void decrementAllocationMonitor() {
-      if (allocationMonitor > 0) {
-        allocationMonitor = 0;
-      }
-      --allocationMonitor;
+  public void decrementAllocationMonitor() {
+    if (allocationMonitor > 0) {
+      allocationMonitor = 0;
     }
+    --allocationMonitor;
+  }
 
-    private void incrementAllocationMonitor() {
-      ++allocationMonitor;
-    }
+  private void incrementAllocationMonitor() {
+    ++allocationMonitor;
+  }
 
   public Accessor getAccessor(){
     return accessor;
