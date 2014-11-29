@@ -32,6 +32,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.resolver.FunctionResolver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.apache.drill.exec.server.options.OptionManager;
 
@@ -42,29 +43,39 @@ public class FunctionImplementationRegistry {
   private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
   private OptionManager optionManager = null;
 
+  @VisibleForTesting
+  public static FunctionImplementationRegistry createEmptyRegistry(DrillConfig config){
+    return new FunctionImplementationRegistry(config, false);
+  }
+
   public FunctionImplementationRegistry(DrillConfig config){
+    this(config, true);
+  }
+
+  public FunctionImplementationRegistry(DrillConfig config, boolean load){
     drillFuncRegistry = new DrillFunctionRegistry(config);
+    if(load){
+      Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
+          PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
 
-    Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
-        PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
+      for (Class<? extends PluggableFunctionRegistry> clazz : registryClasses) {
+        for (Constructor<?> c : clazz.getConstructors()) {
+          Class<?>[] params = c.getParameterTypes();
+          if (params.length != 1 || params[0] != DrillConfig.class) {
+            logger.warn("Skipping PluggableFunctionRegistry constructor {} for class {} since it doesn't implement a " +
+                "[constructor(DrillConfig)]", c, clazz);
+            continue;
+          }
 
-    for (Class<? extends PluggableFunctionRegistry> clazz : registryClasses) {
-      for (Constructor<?> c : clazz.getConstructors()) {
-        Class<?>[] params = c.getParameterTypes();
-        if (params.length != 1 || params[0] != DrillConfig.class) {
-          logger.warn("Skipping PluggableFunctionRegistry constructor {} for class {} since it doesn't implement a " +
-              "[constructor(DrillConfig)]", c, clazz);
-          continue;
+          try {
+            PluggableFunctionRegistry registry = (PluggableFunctionRegistry)c.newInstance(config);
+            pluggableFuncRegistries.add(registry);
+          } catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            logger.warn("Unable to instantiate PluggableFunctionRegistry class '{}'. Skipping it.", clazz, e);
+          }
+
+          break;
         }
-
-        try {
-          PluggableFunctionRegistry registry = (PluggableFunctionRegistry)c.newInstance(config);
-          pluggableFuncRegistries.add(registry);
-        } catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          logger.warn("Unable to instantiate PluggableFunctionRegistry class '{}'. Skipping it.", clazz, e);
-        }
-
-        break;
       }
     }
   }

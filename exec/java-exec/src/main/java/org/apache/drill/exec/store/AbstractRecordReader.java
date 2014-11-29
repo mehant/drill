@@ -20,8 +20,11 @@ package org.apache.drill.exec.store;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField.Key;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -36,6 +39,10 @@ public abstract class AbstractRecordReader implements RecordReader {
 
   private Collection<SchemaPath> columns = null;
   private boolean isStarQuery = false;
+
+
+  @Override
+  public abstract void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException;
 
   protected final void setColumns(Collection<SchemaPath> projected) {
     assert Preconditions.checkNotNull(projected, COL_NULL_ERROR).size() > 0 : COL_EMPTY_ERROR;
