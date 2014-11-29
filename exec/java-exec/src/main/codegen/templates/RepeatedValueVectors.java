@@ -84,6 +84,14 @@ public final class Repeated${minor.class}Vector extends BaseValueVector implemen
     return offsets.getBufferSize() + values.getBufferSize();
   }
 
+  public UInt4Vector getOffsetVector(){
+    return offsets;
+  }
+  
+  public ${minor.class}Vector getValuesVector(){
+    return values;
+  }
+  
   public DrillBuf getData(){
       return values.getData();
   }

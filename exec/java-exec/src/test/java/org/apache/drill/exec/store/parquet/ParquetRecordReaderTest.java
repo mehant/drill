@@ -43,6 +43,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -54,6 +55,7 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.CachedSingleFileSystem;
 import org.apache.drill.exec.store.TestOutputMutator;
+import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
@@ -629,7 +631,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
       ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), columns);
       TestOutputMutator mutator = new TestOutputMutator(allocator);
-      rr.setup(mutator);
+      OperatorContext oc = new OperatorContext(new MockSubScanPOP(null, null), context, false);
+      rr.setup(oc, mutator);
       Stopwatch watch = new Stopwatch();
       watch.start();
 

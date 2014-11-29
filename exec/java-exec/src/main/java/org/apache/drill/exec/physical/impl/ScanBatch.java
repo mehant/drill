@@ -93,8 +93,7 @@ public class ScanBatch implements RecordBatch {
     this.currentReader = readers.next();
     // Scan Batch is not subject to fragment memory limit
     this.oContext = new OperatorContext(subScanConfig, context, false);
-    this.currentReader.setOperatorContext(this.oContext);
-    this.currentReader.setup(mutator);
+    this.currentReader.setup(oContext, mutator);
     this.partitionColumns = partitionColumns.iterator();
     this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
     this.selectedPartitionColumns = selectedPartitionColumns;
@@ -168,8 +167,7 @@ public class ScanBatch implements RecordBatch {
             currentReader.cleanup();
             currentReader = readers.next();
             partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
-            currentReader.setup(mutator);
-            currentReader.setOperatorContext(oContext);
+            currentReader.setup(oContext, mutator);
             try {
               currentReader.allocate(fieldVectorMap);
             } catch (OutOfMemoryException e) {
