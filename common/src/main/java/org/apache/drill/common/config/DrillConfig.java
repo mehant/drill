@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -41,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -50,6 +52,9 @@ public final class DrillConfig extends NestedConfig{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
   private final ObjectMapper mapper;
   private final ImmutableList<String> startupArguments;
+
+  public static final boolean ON_OSX = System.getProperty("os.name").contains("OS X");
+
   @SuppressWarnings("restriction")  private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
 
   @SuppressWarnings("unchecked")
@@ -58,7 +63,7 @@ public final class DrillConfig extends NestedConfig{
   @VisibleForTesting
   public DrillConfig(Config config, boolean enableServer) {
     super(config);
-
+    Stopwatch w = new Stopwatch().start();
     mapper = new ObjectMapper();
 
     if (enableServer) {
@@ -80,7 +85,7 @@ public final class DrillConfig extends NestedConfig{
 
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
-
+    logger.debug("Created Config in: {}ms", w.elapsed(TimeUnit.MILLISECONDS));
   };
 
   public List<String> getStartupArguments() {

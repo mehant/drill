@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.MaterializedField.Key;
@@ -67,9 +69,9 @@ import parquet.schema.MessageType;
 import parquet.schema.Type;
 import parquet.schema.PrimitiveType;
 
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import parquet.schema.Types;
 
 public class DrillParquetReader extends AbstractRecordReader {
@@ -204,9 +206,10 @@ public class DrillParquetReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
 
     try {
+      this.operatorContext = context;
       schema = footer.getFileMetaData().getSchema();
       MessageType projection = null;
 

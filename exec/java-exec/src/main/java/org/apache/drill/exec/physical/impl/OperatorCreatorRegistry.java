@@ -28,6 +28,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.PathScanner;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class OperatorCreatorRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorCreatorRegistry.class);
 
@@ -35,9 +37,20 @@ public class OperatorCreatorRegistry {
   private volatile Map<Class<?>, Object> instanceRegistry = new HashMap<Class<?>, Object>();
 
   public OperatorCreatorRegistry(DrillConfig config) {
-    addImplemntorsToMap(config, BatchCreator.class);
-    addImplemntorsToMap(config, RootCreator.class);
-    logger.debug("Adding Operator Creator map: {}", constructorRegistry);
+    this(config, true);
+  }
+
+  private OperatorCreatorRegistry(DrillConfig config, boolean load){
+    if(load){
+      addImplemntorsToMap(config, BatchCreator.class);
+      addImplemntorsToMap(config, RootCreator.class);
+      logger.debug("Adding Operator Creator map: {}", constructorRegistry);
+    }
+  }
+
+  @VisibleForTesting
+  public static OperatorCreatorRegistry createEmptyRegistry(DrillConfig config){
+    return new OperatorCreatorRegistry(config, false);
   }
 
   public synchronized Object getOperatorCreator(Class<?> operator) throws ExecutionSetupException {
