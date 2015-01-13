@@ -300,11 +300,7 @@ public final class TextInput {
 //          bufferPtr++;
 //        }
       }
-
-      streamMark = streamPos;
-      charMark = byteChar;
     }
-
     return byteChar;
   }
 
