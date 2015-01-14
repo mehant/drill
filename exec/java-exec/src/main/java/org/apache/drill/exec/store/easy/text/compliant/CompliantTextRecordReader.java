@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -44,6 +45,8 @@ import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileSplit;
 
 import com.google.common.base.Preconditions;
@@ -92,6 +95,15 @@ public class CompliantTextRecordReader extends AbstractRecordReader implements A
 
     try {
       FileSystem fs = split.getPath().getFileSystem(new Configuration());
+
+      // raise an error if the file is compressed, new text reader does not support reading from compressed files
+      CompressionCodecFactory factory = new CompressionCodecFactory(new Configuration());
+      CompressionCodec codec = factory.getCodec(split.getPath());
+      if (codec != null) {
+        throw new DrillRuntimeException("New text reader does not support reading from compressed files \n" +
+            "use option  `" + ExecConstants.ENABLE_NEW_TEXT_READER_KEY + "` to switch back the text reader");
+      }
+
       FSDataInputStream stream = fs.open(split.getPath());
 
       TextInput input = new TextInput(context.getStats(), settings.getNewLineDelimiter(), settings.getNormalizedNewLine(),  stream, readBuffer, split.getStart(), split.getStart() + split.getLength());
