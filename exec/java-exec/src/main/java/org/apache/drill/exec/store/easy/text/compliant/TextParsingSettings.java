@@ -37,7 +37,7 @@ public class TextParsingSettings {
   private byte[] newLineDelimiter = {normalizedNewLine};
   private boolean ignoreLeadingWhitespaces = false;
   private boolean ignoreTrailingWhitespaces = false;
-  private String lineSeparatorString;
+  private String lineSeparatorString = "\n";
   private boolean useRepeatedVarChar = true;
   private boolean skipFirstLine = false;
 

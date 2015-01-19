@@ -194,8 +194,10 @@ public final class TextReader {
     final TextOutput output = this.output;
     final TextInput input = this.input;
     final byte quote = this.quote;
+    final long initialLineNumber = input.lineCount();
 
     ch = input.nextChar();
+
 
     while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
       if (ch != quote) {
@@ -222,6 +224,11 @@ public final class TextReader {
         prev = ch;
       }
       ch = input.nextChar();
+    }
+
+    // check if the line number increased while within quotes
+    if (initialLineNumber != input.lineCount()) {
+      throw new TextParsingException(context, "Cannot use newline character within quoted string");
     }
 
     // handles whitespaces after quoted value: whitespaces are ignored. Content after whitespaces may be parsed if

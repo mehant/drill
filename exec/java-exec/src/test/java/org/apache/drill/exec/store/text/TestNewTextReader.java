@@ -32,4 +32,26 @@ public class TestNewTextReader extends BaseTestQuery {
         .baselineValues("foo,bar")
         .go();
   }
+
+  @Test
+  public void testNewLineDelimeterWithingQuotes() throws Exception {
+    try {
+    testBuilder()
+        .sqlQuery("select columns[1] as col1 from cp.`textinput/input2.csv`")
+        .unOrdered()
+        .optionSettingQueriesForTestQuery("alter session set `exec.storage.enable_new_text_reader` = true")
+        .baselineColumns("col1")
+        .baselineValues("foo,bar")
+        .go();
+    } catch (Exception e) {
+      assert e.getMessage().contains("Cannot use newline character within quoted string");
+      return;
+    }
+    throw new Exception("Test framework verification failed");
+  }
+
+  @Test
+  public void testNewLine() throws Exception {
+    test("alter session set `exec.storage.enable_new_text_reader` = true; select columns[1] as col1 from cp.`textinput/input2.csv`");
+  }
 }
