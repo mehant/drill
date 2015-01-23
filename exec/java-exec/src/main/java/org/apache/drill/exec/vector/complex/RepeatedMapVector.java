@@ -557,4 +557,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public ValueVector getOffsetVector() {
+    return offsets;
+  }
+
 }

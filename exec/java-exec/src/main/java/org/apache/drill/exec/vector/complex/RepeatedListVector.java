@@ -436,4 +436,9 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return new VectorWithOrdinal(vector, 0);
   }
 
+  @Override
+  public ValueVector getOffsetVector() {
+    return offsets;
+  }
+
 }
