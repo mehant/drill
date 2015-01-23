@@ -518,8 +518,4 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(expectedRecordCount, actualRecordCount);
   }
 
-  @Test
-  public void testRepeatedMap() throws Exception {
-    test("select t.a, 1 from dfs.`/tmp/b.json` t");
-  }
 }
