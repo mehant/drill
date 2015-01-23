@@ -518,4 +518,8 @@ public class TestExampleQueries extends BaseTestQuery{
     assertEquals(expectedRecordCount, actualRecordCount);
   }
 
+  @Test
+  public void test() throws Exception {
+    test("select flatten(a) from dfs.`/tmp/d.json`");
+  }
 }
