@@ -372,6 +372,11 @@ public abstract class AbstractContainerVector implements ValueVector {
         actualBufSize += buf.writerIndex();
       }
     }
+    // add the offset vector size
+    ValueVector offsetVector = getOffsetVector();
+    if (offsetVector != null) {
+      actualBufSize += offsetVector.getBufferSize();
+    }
 
     Preconditions.checkArgument(actualBufSize == expectedBufSize);
     return buffers.toArray(new DrillBuf[buffers.size()]);
@@ -382,4 +387,7 @@ public abstract class AbstractContainerVector implements ValueVector {
     return false;
   }
 
+  public ValueVector getOffsetVector() {
+    return null;
+  }
 }
