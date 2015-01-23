@@ -271,7 +271,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         }
         ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
         if (to.size() != preSize) {
-          newVector.allocateNew();
+          //newVector.allocateNew();
         }
         pairs[i++] = vector.makeTransferPair(newVector);
       }
