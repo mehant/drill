@@ -96,18 +96,6 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public int getBufferSize() {
-    if (accessor.getGroupCount() == 0) {
-      return 0;
-    }
-    long buffer = offsets.getBufferSize();
-    for (ValueVector v : this) {
-      buffer += v.getBufferSize();
-    }
-    return (int) buffer;
-  }
-
-  @Override
   public void close() {
     super.close();
     offsets.close();
@@ -357,12 +345,6 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public DrillBuf[] getBuffers(boolean clear) {
-    return ArrayUtils.addAll(offsets.getBuffers(clear), super.getBuffers(clear));
-  }
-
-
-  @Override
   public void load(SerializedField metadata, DrillBuf buf) {
     List<SerializedField> fields = metadata.getChildList();
 
@@ -557,4 +539,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public int load(int parentValueCount, int childValueCount, DrillBuf buf) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public ValueVector getOffsetVector() {
+    return offsets;
+  }
+
 }

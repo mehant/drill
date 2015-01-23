@@ -240,11 +240,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public int getBufferSize() {
-    return offsets.getBufferSize() + vector.getBufferSize();
-  }
-
-  @Override
   public void close() {
     offsets.close();
     super.close();
@@ -343,11 +338,6 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return accessor;
   }
 
-  @Override
-  public DrillBuf[] getBuffers(boolean clear) {
-    return ArrayUtils.addAll(offsets.getBuffers(clear), vector.getBuffers(clear));
-  }
-
   private void setVector(ValueVector v) {
     getField().addChild(v.getField());
     this.vector = v;
@@ -434,6 +424,11 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
       return null;
     }
     return new VectorWithOrdinal(vector, 0);
+  }
+
+  @Override
+  public ValueVector getOffsetVector() {
+    return offsets;
   }
 
 }

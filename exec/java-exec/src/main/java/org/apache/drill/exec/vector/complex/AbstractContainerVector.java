@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.netty.buffer.DrillBuf;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.collections.MapWithOrdinal;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -372,14 +373,33 @@ public abstract class AbstractContainerVector implements ValueVector {
         actualBufSize += buf.writerIndex();
       }
     }
+    // add the offset vector size
+    ValueVector offsetVector = getOffsetVector();
+    DrillBuf[] offsetBuffers = null;
+    if (offsetVector != null) {
+      actualBufSize += offsetVector.getBufferSize();
+      offsetBuffers = offsetVector.getBuffers(clear);
+    }
 
     Preconditions.checkArgument(actualBufSize == expectedBufSize);
-    return buffers.toArray(new DrillBuf[buffers.size()]);
+    return ArrayUtils.addAll(buffers.toArray(new DrillBuf[buffers.size()]), offsetBuffers);
   }
 
+  @Override
+  public int getBufferSize() {
+    ValueVector offsetVector = getOffsetVector();
+    int bufferSize = offsetVector == null ? 0 : offsetVector.getBufferSize();
+    for (ValueVector v: vectors.values()) {
+      bufferSize += v.getBufferSize();
+    }
+    return bufferSize;
+  }
 
   protected boolean supportsDirectRead() {
     return false;
   }
 
+  public ValueVector getOffsetVector() {
+    return null;
+  }
 }
