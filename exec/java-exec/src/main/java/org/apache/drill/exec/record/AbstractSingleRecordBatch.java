@@ -75,9 +75,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       }
       try {
         stats.startSetup();
-        if (!setupNewSchema()) {
-          upstream = IterOutcome.OK;
-        }
+        setupNewSchema();
       } catch (SchemaChangeException ex) {
         kill(false);
         logger.error("Failure during query", ex);
