@@ -42,7 +42,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   private BatchSchema schema;
   private int recordCount = -1;
   private OperatorContext oContext;
-  private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
 
   public VectorContainer() {
     this.oContext = null;
@@ -50,10 +49,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   public VectorContainer( OperatorContext oContext) {
     this.oContext = oContext;
-  }
-
-  public boolean isSchemaChanged() {
-    return schemaChanged;
   }
 
   public void addHyperList(List<ValueVector> vectors) {
@@ -161,7 +156,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public TypedFieldId add(ValueVector vv) {
-    schemaChanged = true;
     schema = null;
     int i = wrappers.size();
     wrappers.add(SimpleVectorWrapper.create(vv));
@@ -174,7 +168,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
-    schemaChanged = true;
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
     ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, hyperVector.length);
@@ -187,7 +180,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   public void remove(ValueVector v) {
     schema = null;
-    schemaChanged = true;
     for (Iterator<VectorWrapper<?>> iter = wrappers.iterator(); iter.hasNext();) {
       VectorWrapper<?> w = iter.next();
       if (!w.isHyper() && v == w.getValueVector()) {
@@ -201,7 +193,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   private void replace(ValueVector old, ValueVector newVector) {
     schema = null;
-    schemaChanged = true;
     int i = 0;
     for (VectorWrapper w : wrappers){
       if (!w.isHyper() && old == w.getValueVector()) {
@@ -268,7 +259,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       bldr.addField(v.getField());
     }
     this.schema = bldr.build();
-    this.schemaChanged = false;
   }
 
   @Override

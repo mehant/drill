@@ -60,7 +60,7 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
 
     try {
@@ -68,11 +68,6 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     } catch (ClassTransformationException | IOException ex) {
       throw new SchemaChangeException("Failed to create framer: " + ex);
     }
-    if (container.isSchemaChanged()) {
-      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      return true;
-    }
-    return false;
   }
 
   private void getIndex(ClassGenerator<StreamingWindowFramer> g) {

@@ -97,7 +97,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected void setupNewSchema() throws SchemaChangeException {
     if (sv2 != null) {
       sv2.clear();
     }
@@ -132,12 +132,6 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       default:
         throw new UnsupportedOperationException();
     }
-
-    if (container.isSchemaChanged()) {
-      container.buildSchema(SelectionVectorMode.TWO_BYTE);
-      return true;
-    }
-    return false;
   }
 
   protected Filterer generateSV4Filterer() throws SchemaChangeException {

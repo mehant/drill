@@ -58,7 +58,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected void setupNewSchema() throws SchemaChangeException {
     container.zeroVectors();
     transfers.clear();
 
@@ -79,13 +79,6 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       default:
         throw new UnsupportedOperationException();
     }
-
-    if (container.isSchemaChanged()) {
-      container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
-      return true;
-    }
-
-    return false;
   }
 
   @Override

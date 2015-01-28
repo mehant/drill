@@ -124,6 +124,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     return container.getSchema();
   }
 
-  protected abstract boolean setupNewSchema() throws SchemaChangeException;
+  protected abstract void setupNewSchema() throws SchemaChangeException;
   protected abstract IterOutcome doWork();
 }

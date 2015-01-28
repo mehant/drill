@@ -549,4 +549,8 @@ public class TestExampleQueries extends BaseTestQuery{
     .build().run();
   }
 
+  @Test
+  public void testSort() throws Exception {
+    test("select t.oooa.oa.oab.oabc from dfs.`/tmp/complex.json` t order by t.id limit 50");
+  }
 }

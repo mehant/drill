@@ -63,7 +63,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected void setupNewSchema() throws SchemaChangeException {
     container.zeroVectors();
     switch(incoming.getSchema().getSelectionVectorMode()){
     case NONE:
@@ -78,13 +78,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     default:
       throw new UnsupportedOperationException();
     }
-
-    if (container.isSchemaChanged()) {
-      container.buildSchema(SelectionVectorMode.NONE);
-      return true;
-    }
-
-    return false;
   }
 
   @Override
