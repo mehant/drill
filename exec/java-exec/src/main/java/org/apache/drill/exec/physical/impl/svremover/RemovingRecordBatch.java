@@ -78,6 +78,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     default:
       throw new UnsupportedOperationException();
     }
+    container.buildSchema(SelectionVectorMode.NONE);
   }
 
   @Override

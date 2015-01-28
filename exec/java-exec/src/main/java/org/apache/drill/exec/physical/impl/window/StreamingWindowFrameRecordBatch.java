@@ -68,6 +68,7 @@ public class StreamingWindowFrameRecordBatch extends AbstractSingleRecordBatch<W
     } catch (ClassTransformationException | IOException ex) {
       throw new SchemaChangeException("Failed to create framer: " + ex);
     }
+    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
   }
 
   private void getIndex(ClassGenerator<StreamingWindowFramer> g) {

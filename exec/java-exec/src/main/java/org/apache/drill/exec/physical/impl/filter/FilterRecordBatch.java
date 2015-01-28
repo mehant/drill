@@ -132,6 +132,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
       default:
         throw new UnsupportedOperationException();
     }
+    container.buildSchema(SelectionVectorMode.TWO_BYTE);
   }
 
   protected Filterer generateSV4Filterer() throws SchemaChangeException {

@@ -79,6 +79,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       default:
         throw new UnsupportedOperationException();
     }
+    container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
   }
 
   @Override

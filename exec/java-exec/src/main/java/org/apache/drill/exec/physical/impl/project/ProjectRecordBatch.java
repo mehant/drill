@@ -439,6 +439,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
+    container.buildSchema(SelectionVectorMode.NONE);
   }
 
   private List<NamedExpression> getExpressionList() {
