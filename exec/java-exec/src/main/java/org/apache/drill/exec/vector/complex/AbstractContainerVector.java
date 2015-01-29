@@ -59,6 +59,14 @@ public abstract class AbstractContainerVector implements ValueVector {
     this.field = Preconditions.checkNotNull(field);
     this.allocator = allocator;
     this.callBack = callBack;
+    for (MaterializedField children: field.getChildren()) {
+      String fieldName = children.getLastName();
+      ValueVector v = getChild(fieldName);
+      if (v == null) {
+        v = TypeHelper.getNewVector(children, allocator, callBack);
+        putChild(fieldName, v);
+      }
+    }
   }
 
   @Override
