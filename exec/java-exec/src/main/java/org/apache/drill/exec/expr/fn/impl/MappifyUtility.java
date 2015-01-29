@@ -75,7 +75,11 @@ public class MappifyUtility {
       mapWriter.varChar(fieldKey).write(vh);
 
       // Write the value to the map
-      MapUtility.writeToMapFromReader(fieldReader, mapWriter);
+      try {
+        MapUtility.writeToMapFromReader(fieldReader, mapWriter);
+      } catch (ClassCastException e) {
+        throw new DrillRuntimeException("Mappify/kvgen does not support heterogeneous value types. All values in the input map must be of the same type.");
+      }
 
       mapWriter.end();
     }
