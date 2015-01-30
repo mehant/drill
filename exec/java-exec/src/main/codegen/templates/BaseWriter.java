@@ -22,6 +22,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: BaseWriter.java
+ */
+
 package org.apache.drill.exec.vector.complex.writer;
 
 <#include "/@includes/vv_imports.ftl" />

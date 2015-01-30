@@ -24,11 +24,11 @@
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for covariance functions -->
-
 /*
- * This class is automatically generated from CovarType.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: CovarTypeFunctions.java
  */
+
+<#-- A utility class that is used to generate java code for covariance functions -->
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 

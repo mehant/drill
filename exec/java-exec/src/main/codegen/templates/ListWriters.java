@@ -24,6 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ListWriters.java
+ */
+
 package org.apache.drill.exec.vector.complex.impl;
 <#if mode == "Single">
   <#assign containerClass = "AbstractContainerVector" />

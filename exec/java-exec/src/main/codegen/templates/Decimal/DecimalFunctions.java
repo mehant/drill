@@ -242,6 +242,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: DecimalFunctions.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 <#include "/@includes/vv_imports.ftl" />
@@ -1066,6 +1070,10 @@ public class ${type.name}Functions {
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${type.name}Functions.java" />
 
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: DecimalFunctions.java
+ */
 
 package org.apache.drill.exec.expr.fn.impl;
 

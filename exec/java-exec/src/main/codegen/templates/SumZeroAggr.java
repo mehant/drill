@@ -24,8 +24,8 @@
 
 <#include "/@includes/license.ftl" />
 
-/* 
- * This class is automatically generated from SumZero.tdd using FreeMarker.
+/*
+ * NOTE: This class is generated using freemarker based on the template file: SumZeroAggr.java
  */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;

@@ -27,6 +27,10 @@ import java.lang.Override;
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/accessor/${name}Accessor.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: SqlAccessors.java
+ */
+
 package org.apache.drill.exec.vector.accessor;
 
 <#include "/@includes/vv_imports.ftl" />

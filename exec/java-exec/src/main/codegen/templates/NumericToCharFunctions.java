@@ -26,6 +26,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: NumericToCharFunctions.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 <#include "/@includes/vv_imports.ftl" />

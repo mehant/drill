@@ -24,6 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastVarCharDate.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 import io.netty.buffer.ByteBuf;

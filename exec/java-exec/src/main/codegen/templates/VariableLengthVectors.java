@@ -32,6 +32,10 @@ import org.apache.drill.exec.vector.VariableWidthVector;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: VariableLengthVectors.java
+ */
+
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
@@ -44,7 +48,6 @@ package org.apache.drill.exec.vector;
  *   The width of each element is ${type.width} byte(s)
  *   The equivalent Java primitive is '${minor.javaType!type.javaType}'
  *
- * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
 public final class ${minor.class}Vector extends BaseDataValueVector implements VariableWidthVector{

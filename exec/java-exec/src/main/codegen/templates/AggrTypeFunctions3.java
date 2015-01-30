@@ -24,11 +24,11 @@
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for aggr functions such as stddev, variance -->
-
 /*
- * This class is automatically generated from AggrTypeFunctions2.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: AggrTypeFunctions3.java
  */
+
+<#-- A utility class that is used to generate java code for aggr functions such as stddev, variance -->
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 

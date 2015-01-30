@@ -36,6 +36,10 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/${eName}WriterImpl.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ComplexWriters.java
+ */
+
 package org.apache.drill.exec.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
@@ -157,6 +161,10 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/writer/${eName}Writer.java" />
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ComplexWriters.java
+ */
 
 package org.apache.drill.exec.vector.complex.writer;
 

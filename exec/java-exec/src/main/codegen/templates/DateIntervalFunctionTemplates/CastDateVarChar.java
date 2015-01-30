@@ -17,19 +17,29 @@
  */
 <@pp.dropOutputFile />
 
+
+
 <#list cast.types as type>
-<#if type.major == "VarCharInterval">  <#-- Template to convert from VarChar to Interval, IntervalYear, IntervalDay -->
+<#if type.major == "DateVarChar">  <#-- Template to convert functions from Date, Time, TimeStamp, TimeStampTZ to VarChar -->
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastDateVarChar.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -40,48 +50,38 @@ import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import javax.inject.Inject;
-import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
+  costCategory = FunctionCostCategory.COMPLEX)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
+  @Param BigIntHolder len;
+  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {
 
-      byte[] buf = new byte[in.end - in.start];
-      in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-
-      // Parse the ISO format
-      org.joda.time.Period period = org.joda.time.Period.parse(input);
-
-      <#if type.to == "Interval">
-      out.months       = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
-
-      out.days         = period.getDays();
-
-      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
-                         (period.getMillis());
-
-      <#elseif type.to == "IntervalDay">
-      out.days         = period.getDays();
-
-      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
-                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
-                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
-                         (period.getMillis());
-      <#elseif type.to == "IntervalYear">
-      out.value = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
+      <#if type.from == "Time">
+      org.joda.time.LocalTime temp = new org.joda.time.LocalTime(in.value, org.joda.time.DateTimeZone.UTC);
+      String str = temp.toString();
+      <#else>
+      <#if type.from == "TimeStampTZ">
+      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[in.index]));
+      <#else>
+      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
       </#if>
+      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
+      </#if>
+      out.buffer = buffer;
+      out.start = 0;
+      out.end = Math.min((int)len.value, str.length()); // truncate if target type has length smaller than that of input's string
+      out.buffer.setBytes(0, str.substring(0,out.end).getBytes());
   }
 }
 </#if> <#-- type.major -->

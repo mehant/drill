@@ -26,6 +26,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ToDateTypeFunctions.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;

@@ -26,6 +26,10 @@ import java.lang.RuntimeException;
 <@pp.changeOutputFile name="org/apache/drill/exec/store/ParquetOutputRecordWriter.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ParquetOutputRecordWriter.java
+ */
+
 package org.apache.drill.exec.store;
 
 import com.google.common.collect.Lists;

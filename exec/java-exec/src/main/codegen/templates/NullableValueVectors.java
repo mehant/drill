@@ -32,6 +32,10 @@ import java.lang.UnsupportedOperationException;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: NullableValueVectors.java
+ */
+
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
@@ -41,7 +45,6 @@ package org.apache.drill.exec.vector;
  * are first checked against a fixed length vector of boolean values.  Then the element is retrieved
  * from the base class (if not null).
  *
- * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
 public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector{

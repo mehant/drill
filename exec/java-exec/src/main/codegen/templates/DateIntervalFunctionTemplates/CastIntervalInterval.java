@@ -17,25 +17,25 @@
  */
 <@pp.dropOutputFile />
 
-
-
 <#list cast.types as type>
-<#if type.major == "DateVarChar">  <#-- Template to convert functions from Date, Time, TimeStamp, TimeStampTZ to VarChar -->
 
+<#if type.major == "IntervalSimpleToComplex">   <#-- Template to convert from IntervalDay, IntervalYear to Interval and vice versa -->
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastIntervalInterval.java
+ */
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 <#include "/@includes/vv_imports.ftl" />
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -48,36 +48,62 @@ import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
-  costCategory = FunctionCostCategory.COMPLEX)
+@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
 public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
-  @Param BigIntHolder len;
-  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-    buffer = buffer.reallocIfNeeded((int) len.value);
+  }
+
+  public void eval() {
+        out.months       = ${type.months};
+        out.days         = ${type.days};
+        out.milliseconds = ${type.millis};
+  }
+}
+
+<#elseif type.major == "IntervalComplexToSimple">
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
+
+<#include "/@includes/license.ftl" />
+
+package org.apache.drill.exec.expr.fn.impl.gcast;
+
+import io.netty.buffer.ByteBuf;
+
+import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
+import org.joda.time.MutableDateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.DateMidnight;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+
+@SuppressWarnings("unused")
+@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
+
+  @Param ${type.from}Holder in;
+  @Output ${type.to}Holder out;
+
+  public void setup(RecordBatch incoming) {
   }
 
   public void eval() {
 
-      <#if type.from == "Time">
-      org.joda.time.LocalTime temp = new org.joda.time.LocalTime(in.value, org.joda.time.DateTimeZone.UTC);
-      String str = temp.toString();
-      <#else>
-      <#if type.from == "TimeStampTZ">
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[in.index]));
-      <#else>
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
+      <#if type.to == "IntervalYear">
+      out.value = in.months;
+      <#elseif type.to == "IntervalDay">
+      out.days = in.days;
+      out.milliseconds = in.milliseconds;
       </#if>
-      String str = org.apache.drill.exec.expr.fn.impl.DateUtility.format${type.from}.print(temp);
-      </#if>
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = Math.min((int)len.value, str.length()); // truncate if target type has length smaller than that of input's string
-      out.buffer.setBytes(0, str.substring(0,out.end).getBytes());
   }
 }
 </#if> <#-- type.major -->

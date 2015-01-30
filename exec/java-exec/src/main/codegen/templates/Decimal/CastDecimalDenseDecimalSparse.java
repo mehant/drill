@@ -24,6 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastDecimalDenseDecimalSparse.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 <#include "/@includes/vv_imports.ftl" />

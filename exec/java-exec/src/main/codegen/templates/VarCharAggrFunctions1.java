@@ -24,12 +24,12 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: VarCharAggrFunctions1.java
+ */
+
 <#-- A utility class that is used to generate java code for aggr functions that maintain a single -->
 <#-- running counter to hold the result.  This includes: MIN, MAX, COUNT. -->
-
-/*
- * This class is automatically generated from VarCharAggrFunctions1.java using FreeMarker.
- */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 

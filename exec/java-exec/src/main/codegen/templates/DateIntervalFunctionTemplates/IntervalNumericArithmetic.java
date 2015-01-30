@@ -24,6 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: IntervalNumericArithmetic.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.ByteBuf;

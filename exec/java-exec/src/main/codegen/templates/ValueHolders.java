@@ -25,6 +25,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ValueHolders.java
+ */
+
 package org.apache.drill.exec.expr.holders;
 
 <#include "/@includes/vv_imports.ftl" />

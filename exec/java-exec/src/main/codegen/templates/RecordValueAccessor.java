@@ -19,6 +19,10 @@
 <@pp.changeOutputFile name="org/apache/drill/exec/record/RecordValueAccessor.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: RecordValueAccessor.java
+ */
+
 package org.apache.drill.exec.record;
 
 import com.google.common.collect.Lists;

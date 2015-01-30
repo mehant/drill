@@ -26,6 +26,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: DateIntervalArithmeticFunctions.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.ByteBuf;
@@ -159,6 +163,10 @@ public class ${datetype}${intervaltype}Functions {
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/${datetype}${intervaltype}Functions.java" />
 
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: DateIntervalArithmeticFunctions.java
+ */
 
 package org.apache.drill.exec.expr.fn.impl;
 

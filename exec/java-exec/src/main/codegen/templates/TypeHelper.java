@@ -23,6 +23,10 @@ import org.apache.drill.common.types.MajorType;
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: TypeHelper.java
+ */
+
 package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />

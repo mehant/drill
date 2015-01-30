@@ -25,6 +25,10 @@ import parquet.schema.PrimitiveType.PrimitiveTypeName;
 <@pp.changeOutputFile name="org/apache/drill/exec/store/parquet/ParquetTypeHelper.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: ParquetTypeHelper.java
+ */
+
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;

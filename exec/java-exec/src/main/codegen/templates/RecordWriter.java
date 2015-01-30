@@ -19,6 +19,10 @@
 <@pp.changeOutputFile name="org/apache/drill/exec/store/RecordWriter.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: RecordWriter.java
+ */
+
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.expr.holders.*;

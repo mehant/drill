@@ -24,6 +24,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: AggrBitwiseLogicalTypeFunctions.java
+ */
+
 <#-- A utility class that is used to generate java code for aggr functions bit_and / bit_or -->
 
 /*

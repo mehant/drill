@@ -25,6 +25,10 @@
 
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastDecimalFloat.java
+ */
+
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -60,6 +64,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastDecimalFloat.java
+ */
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 

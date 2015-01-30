@@ -24,13 +24,12 @@
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for aggr functions for the interval data types. It maintains a running sum  -->
-<#-- and a running count.  For now, this includes: AVG. -->
-
 /*
- * This class is automatically generated from AggrTypeFunctions2.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: IntervalAggrTypeFunctions2.java
  */
 
+<#-- A utility class that is used to generate java code for aggr functions for the interval data types. It maintains a running sum  -->
+<#-- and a running count.  For now, this includes: AVG. -->
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 

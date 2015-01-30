@@ -24,11 +24,11 @@
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for corr/correlation aggr functions -->
-
 /*
- * This class is automatically generated from CorrelationTypes.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: CorrelationTypeFunctions.java
  */
+
+<#-- A utility class that is used to generate java code for corr/correlation aggr functions -->
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 

@@ -23,9 +23,8 @@
 <#include "/@includes/license.ftl" />
 
 /*
- * This class is automatically generated from AddTypes.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: MathFunctions.java
  */
-
 
 package org.apache.drill.exec.expr.fn.impl;
 
@@ -152,6 +151,11 @@ public class GMathFunctions{
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/ExtendedMathFunctions.java" />
 <#include "/@includes/license.ftl" />
 
+/*
+ * NOTE: This class is generated using freemarker based on the template file: MathFunctions.java
+ */
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions for Extended Math Functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,6 +257,10 @@ public static class ${func.className}${type.input} implements DrillSimpleFunc {
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/TrigoMathFunctions.java" />
 <#include "/@includes/license.ftl" />
+
+/*
+ * NOTE: This class is generated using freemarker based on the template file: MathFunctions.java
+ */
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions for Trigo Math Functions

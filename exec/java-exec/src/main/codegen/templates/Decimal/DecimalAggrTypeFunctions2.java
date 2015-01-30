@@ -31,7 +31,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 <#-- running counter to hold the result.  This includes: MIN, MAX, COUNT. -->
 
 /*
- * This class is automatically generated from AggrTypeFunctions1.tdd using FreeMarker.
+ * NOTE: This class is generated using freemarker based on the template file: DecimalAggrTypeFunctions2.java
  */
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;

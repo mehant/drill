@@ -18,52 +18,15 @@
 <@pp.dropOutputFile />
 
 <#list cast.types as type>
+<#if type.major == "VarCharInterval">  <#-- Template to convert from VarChar to Interval, IntervalYear, IntervalDay -->
 
-<#if type.major == "IntervalSimpleToComplex">   <#-- Template to convert from IntervalDay, IntervalYear to Interval and vice versa -->
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
 
 <#include "/@includes/license.ftl" />
 
-package org.apache.drill.exec.expr.fn.impl.gcast;
-
-<#include "/@includes/vv_imports.ftl" />
-
-import io.netty.buffer.ByteBuf;
-
-import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
-import org.apache.drill.exec.record.RecordBatch;
-import org.joda.time.MutableDateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.DateMidnight;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-
-@SuppressWarnings("unused")
-@FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
-public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
-
-  @Param ${type.from}Holder in;
-  @Output ${type.to}Holder out;
-
-  public void setup(RecordBatch incoming) {
-  }
-
-  public void eval() {
-        out.months       = ${type.months};
-        out.days         = ${type.days};
-        out.milliseconds = ${type.millis};
-  }
-}
-
-<#elseif type.major == "IntervalComplexToSimple">
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}To${type.to}.java" />
-
-<#include "/@includes/license.ftl" />
+/*
+ * NOTE: This class is generated using freemarker based on the template file: CastVarCharInterval.java
+ */
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
@@ -81,6 +44,8 @@ import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
@@ -94,11 +59,32 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   public void eval() {
 
-      <#if type.to == "IntervalYear">
-      out.value = in.months;
+      byte[] buf = new byte[in.end - in.start];
+      in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+
+      // Parse the ISO format
+      org.joda.time.Period period = org.joda.time.Period.parse(input);
+
+      <#if type.to == "Interval">
+      out.months       = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
+
+      out.days         = period.getDays();
+
+      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
+                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
+                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+                         (period.getMillis());
+
       <#elseif type.to == "IntervalDay">
-      out.days = in.days;
-      out.milliseconds = in.milliseconds;
+      out.days         = period.getDays();
+
+      out.milliseconds = (period.getHours() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
+                         (period.getMinutes() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
+                         (period.getSeconds() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
+                         (period.getMillis());
+      <#elseif type.to == "IntervalYear">
+      out.value = (period.getYears() * org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths) + period.getMonths();
       </#if>
   }
 }
