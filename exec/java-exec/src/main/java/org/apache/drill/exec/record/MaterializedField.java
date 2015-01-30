@@ -72,10 +72,15 @@ public class MaterializedField {
 
   public String getLastName(){
     PathSegment seg = key.path.getRootSegment();
+    String lastSeenLastName = "";
     while (seg.getChild() != null) {
       seg = seg.getChild();
+      if (seg.isNamed()) {
+        lastSeenLastName = seg.getNameSegment().getPath();
+      }
     }
-    return seg.getNameSegment().getPath();
+
+    return lastSeenLastName;
   }
 
 
