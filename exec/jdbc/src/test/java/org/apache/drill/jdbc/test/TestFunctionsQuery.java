@@ -253,16 +253,16 @@ public class TestFunctionsQuery {
   @Test
   public void testTruncateWithParamFunction() throws Exception {
     String query = String.format("SELECT " +
-      "trunc(1234.4567, 2) as T_1, " +
-      "trunc(-1234.4567, 2) as T_2, " +
-      "trunc(1234.4567, -2) as T_3, " +
-      "trunc(-1234.4567, -2) as T_4, " +
-      "trunc(1234, 4) as T_5, " +
-      "trunc(-1234, 4) as T_6, " +
-      "trunc(1234, -4) as T_7, " +
-      "trunc(-1234, -4) as T_8, " +
-      "trunc(8124674407369523212, 0) as T_9, " +
-      "trunc(81246744073695.395, 1) as T_10 " +
+      "trunc(cast('1234.4567' as double), 2) as T_1, " +
+      "trunc(cast('-1234.4567' as double), 2) as T_2, " +
+      "trunc(cast('1234.4567' as double), -2) as T_3, " +
+      "trunc(cast('-1234.4567' as double), -2) as T_4, " +
+      "trunc(cast('1234' as double), 4) as T_5, " +
+      "trunc(cast('-1234' as double), 4) as T_6, " +
+      "trunc(cast('1234' as double), -4) as T_7, " +
+      "trunc(cast('-1234' as double), -4) as T_8, " +
+      "trunc(cast('8124674407369523212' as double), 0) as T_9, " +
+      "trunc(cast('81246744073695.395' as double), 1) as T_10 " +
       "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
@@ -386,16 +386,16 @@ public class TestFunctionsQuery {
   @Test
   public void testRoundWithParamFunction() throws Exception {
     String query = String.format("SELECT " +
-      "round(1234.4567, 2) as T_1, " +
-      "round(-1234.4567, 2) as T_2, " +
-      "round(1234.4567, -2) as T_3, " +
-      "round(-1234.4567, -2) as T_4, " +
-      "round(1234, 4) as T_5, " +
-      "round(-1234, 4) as T_6, " +
-      "round(1234, -4) as T_7, " +
-      "round(-1234, -4) as T_8, " +
-      "round(8124674407369523212, -4) as T_9, " +
-      "round(81246744073695.395, 1) as T_10 " +
+      "round(cast('1234.4567' as double), 2) as T_1, " +
+      "round(cast('-1234.4567' as double), 2) as T_2, " +
+      "round(cast('1234.4567' as double), -2) as T_3, " +
+      "round(cast('-1234.4567' as double), -2) as T_4, " +
+      "round(cast('1234' as double), 4) as T_5, " +
+      "round(cast('-1234' as double), 4) as T_6, " +
+      "round(cast('1234' as double), -4) as T_7, " +
+      "round(cast('-1234' as double), -4) as T_8, " +
+      "round(cast('8124674407369523212' as double), -4) as T_9, " +
+      "round(cast('81246744073695.395' as double), 1) as T_10 " +
       "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()

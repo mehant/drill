@@ -258,39 +258,11 @@ public class ValueExpressions {
     public int getCumulativeCost() {
       return 0; // TODO
     }
-
-
   }
 
-  public static class Decimal9Expression extends LogicalExpressionBase {
-
-    private int decimal;
-    private int scale;
-    private int precision;
-
+  public static class Decimal9Expression extends DecimalExpressionBase {
     public Decimal9Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.scale = input.scale();
-      this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
-    }
-
-
-    public int getIntFromDecimal() {
-      return decimal;
-    }
-
-    public int getScale() {
-      return scale;
-    }
-
-    public int getPrecision() {
-      return precision;
-    }
-
-    @Override
-    public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      super(input, pos);
     }
 
     @Override
@@ -298,53 +270,14 @@ public class ValueExpressions {
       return visitor.visitDecimal9Constant(this, value);
     }
 
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+    public int getIntFromDecimal() {
+      return value.unscaledValue().intValue();
     }
-
-    @Override
-    public int getSelfCost() {
-      return 0;  // TODO
-    }
-
-    @Override
-    public int getCumulativeCost() {
-      return 0; // TODO
-    }
-
-
   }
 
-  public static class Decimal18Expression extends LogicalExpressionBase {
-
-    private long decimal;
-    private int scale;
-    private int precision;
-
+  public static class Decimal18Expression extends DecimalExpressionBase {
     public Decimal18Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.scale = input.scale();
-      this.precision = input.precision();
-      this.decimal = CoreDecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
-    }
-
-
-    public long getLongFromDecimal() {
-      return decimal;
-    }
-
-    public int getScale() {
-      return scale;
-    }
-
-    public int getPrecision() {
-      return precision;
-    }
-
-    @Override
-    public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+      super(input, pos);
     }
 
     @Override
@@ -352,101 +285,33 @@ public class ValueExpressions {
       return visitor.visitDecimal18Constant(this, value);
     }
 
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
+    public long getLongFromDecimal() {
+      return value.unscaledValue().longValue();
     }
-
-    @Override
-    public int getSelfCost() {
-      return 0;  // TODO
-    }
-
-    @Override
-    public int getCumulativeCost() {
-      return 0; // TODO
-    }
-
   }
 
-  public static class Decimal28Expression extends LogicalExpressionBase {
-
-    private BigDecimal bigDecimal;
+  public static class Decimal28Expression extends DecimalExpressionBase {
 
     public Decimal28Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.bigDecimal = input;
-    }
-
-
-    public BigDecimal getBigDecimal() {
-      return bigDecimal;
-    }
-
-    @Override
-    public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      super(input, pos);
     }
 
     @Override
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitDecimal28Constant(this, value);
     }
-
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
-    }
-
-    @Override
-    public int getSelfCost() {
-      return 0;  // TODO
-    }
-
-    @Override
-    public int getCumulativeCost() {
-      return 0; // TODO
-    }
   }
 
-  public static class Decimal38Expression extends LogicalExpressionBase {
-
-    private BigDecimal bigDecimal;
+  public static class Decimal38Expression extends DecimalExpressionBase {
 
     public Decimal38Expression(BigDecimal input, ExpressionPosition pos) {
-      super(pos);
-      this.bigDecimal = input;
-    }
-
-    public BigDecimal getBigDecimal() {
-      return bigDecimal;
-    }
-
-    @Override
-    public MajorType getMajorType() {
-      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+      super(input, pos);
     }
 
     @Override
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitDecimal38Constant(this, value);
     }
-
-    @Override
-    public Iterator<LogicalExpression> iterator() {
-      return Iterators.emptyIterator();
-    }
-
-    @Override
-    public int getSelfCost() {
-      return 0;  // TODO
-    }
-
-    @Override
-    public int getCumulativeCost() {
-      return 0; // TODO
-    }
-
   }
 
 
