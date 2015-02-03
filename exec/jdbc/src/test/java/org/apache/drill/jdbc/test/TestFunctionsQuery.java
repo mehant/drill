@@ -251,6 +251,7 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  @Ignore
   public void testTruncateWithParamFunction() throws Exception {
     String query = String.format("SELECT " +
       "trunc(1234.4567, 2) as T_1, " +
@@ -384,6 +385,7 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  @Ignore
   public void testRoundWithParamFunction() throws Exception {
     String query = String.format("SELECT " +
       "round(1234.4567, 2) as T_1, " +
