@@ -50,7 +50,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
   @Test
   public void testMaxWithZeroInput() throws Exception {
     testBuilder()
-        .sqlQuery("select max(employee_id * 0.0) as max_val from cp.`employee.json`")
+        .sqlQuery("select cast(max(employee_id * 0.0) as double) as max_val from cp.`employee.json`")
         .unOrdered()
         .baselineColumns("max_val")
         .baselineValues(0.0d)
