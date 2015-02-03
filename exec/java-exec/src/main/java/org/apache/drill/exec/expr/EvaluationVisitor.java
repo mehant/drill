@@ -560,7 +560,7 @@ public class EvaluationVisitor {
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec28", holderType);
-      JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
+      JExpression stringLiteral = JExpr.lit(e.getValue().toString());
       setup.assign(var,
           generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
@@ -573,7 +573,7 @@ public class EvaluationVisitor {
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec38", holderType);
-      JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
+      JExpression stringLiteral = JExpr.lit(e.getValue().toString());
       setup.assign(var,
           generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);

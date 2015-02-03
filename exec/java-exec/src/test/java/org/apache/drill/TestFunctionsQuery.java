@@ -349,16 +349,16 @@ public class TestFunctionsQuery extends BaseTestQuery {
   @Test
   public void testTruncateWithParamFunction() throws Exception {
     String query = "SELECT " +
-        "trunc(1234.4567, 2) as T_1, " +
-        "trunc(-1234.4567, 2) as T_2, " +
-        "trunc(1234.4567, -2) as T_3, " +
-        "trunc(-1234.4567, -2) as T_4, " +
-        "trunc(1234, 4) as T_5, " +
-        "trunc(-1234, 4) as T_6, " +
-        "trunc(1234, -4) as T_7, " +
-        "trunc(-1234, -4) as T_8, " +
-        "trunc(8124674407369523212, 0) as T_9, " +
-        "trunc(81246744073695.395, 1) as T_10 " +
+        "trunc(cast('1234.4567' as double), 2) as T_1, " +
+        "trunc(cast('-1234.4567' as double), 2) as T_2, " +
+        "trunc(cast('1234.4567' as double), -2) as T_3, " +
+        "trunc(cast('-1234.4567' as double), -2) as T_4, " +
+        "trunc(cast('1234' as double), 4) as T_5, " +
+        "trunc(cast('-1234' as double), 4) as T_6, " +
+        "trunc(cast('1234' as double), -4) as T_7, " +
+        "trunc(cast('-1234' as double), -4) as T_8, " +
+        "trunc(cast('8124674407369523212' as double), 0) as T_9, " +
+        "trunc(cast('81246744073695.395' as double), 1) as T_10 " +
         "FROM cp.`tpch/region.parquet` limit 1";
 
     testBuilder()
@@ -373,16 +373,16 @@ public class TestFunctionsQuery extends BaseTestQuery {
   @Test
   public void testRoundWithParamFunction() throws Exception {
     String query = "SELECT " +
-        "round(1234.4567, 2) as T_1, " +
-        "round(-1234.4567, 2) as T_2, " +
-        "round(1234.4567, -2) as T_3, " +
-        "round(-1234.4567, -2) as T_4, " +
-        "round(1234, 4) as T_5, " +
-        "round(-1234, 4) as T_6, " +
-        "round(1234, -4) as T_7, " +
-        "round(-1234, -4) as T_8, " +
-        "round(8124674407369523212, -4) as T_9, " +
-        "round(81246744073695.395, 1) as T_10 " +
+        "round(cast('1234.4567' as double), 2) as T_1, " +
+        "round(cast('-1234.4567' as double), 2) as T_2, " +
+        "round(cast('1234.4567' as double), -2) as T_3, " +
+        "round(cast('-1234.4567' as double), -2) as T_4, " +
+        "round(cast('1234' as double), 4) as T_5, " +
+        "round(cast('-1234' as double), 4) as T_6, " +
+        "round(cast('1234' as double), -4) as T_7, " +
+        "round(cast('-1234' as double), -4) as T_8, " +
+        "round(cast('8124674407369523212' as double), -4) as T_9, " +
+        "round(cast('81246744073695.395' as double), 1) as T_10 " +
         "FROM cp.`tpch/region.parquet` limit 1";
 
     testBuilder()
@@ -693,6 +693,16 @@ public class TestFunctionsQuery extends BaseTestQuery {
         .unOrdered()
         .baselineColumns("TIME1", "TIME2", "TS1", "TS2", "DATE1", "DATE2")
         .baselineValues(time1, time2, ts1, ts2, date1, date2)
+        .go();
+  }
+
+  @Test
+  public void testDecimalFloat4ImplicitCast() throws Exception {
+    testBuilder()
+        .sqlQuery("select (cast('1.0' as float) + cast('1.23' as decimal(8, 3))) as col1 from cp.`employee.json` limit 1")
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(new Double(2.23))
         .go();
   }
 }
