@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -175,27 +176,35 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitDecimal9Constant(Decimal9Expression decExpr, StringBuilder sb) throws RuntimeException {
-    BigDecimal value = new BigDecimal(decExpr.getIntFromDecimal());
-    sb.append((value.setScale(decExpr.getScale())).toString());
+    BigDecimal value = new BigDecimal(BigInteger.valueOf(decExpr.getIntFromDecimal()), decExpr.getScale());
+    sb.append("cast( '");
+    sb.append(value.toString());
+    sb.append("' as DECIMAL9(" + value.precision() + ", " + value.scale() + " ))");
     return null;
   }
 
   @Override
   public Void visitDecimal18Constant(Decimal18Expression decExpr, StringBuilder sb) throws RuntimeException {
-    BigDecimal value = new BigDecimal(decExpr.getLongFromDecimal());
-    sb.append((value.setScale(decExpr.getScale())).toString());
+    BigDecimal value = new BigDecimal(BigInteger.valueOf(decExpr.getLongFromDecimal()), decExpr.getScale());
+    sb.append("cast( '");
+    sb.append(value.toString());
+    sb.append("' as DECIMAL18(" + value.precision() + ", " + value.scale() + " ))");
     return null;
   }
 
   @Override
   public Void visitDecimal28Constant(Decimal28Expression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append("cast( '");
     sb.append(decExpr.toString());
+    sb.append("' as DECIMAL28(" + decExpr.getBigDecimal().precision() + ", " + decExpr.getBigDecimal().scale() + " ))");
     return null;
   }
 
   @Override
   public Void visitDecimal38Constant(Decimal38Expression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append("cast( '");
     sb.append(decExpr.getBigDecimal().toString());
+    sb.append("' as DECIMAL38(" + decExpr.getBigDecimal().precision() + ", " + decExpr.getBigDecimal().scale() + " ))");
     return null;
   }
 
