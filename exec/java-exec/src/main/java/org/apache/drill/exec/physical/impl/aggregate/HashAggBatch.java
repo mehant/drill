@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JExpr;
@@ -101,17 +102,15 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       state = BatchState.DONE;
     }
     for (VectorWrapper w : container) {
-      w.getValueVector().allocateNew();
+      //w.getValueVector().allocateNew();
+      AllocationHelper.allocateNew(w.getValueVector(), 0);
     }
   }
 
   @Override
   public IterOutcome innerNext() {
     // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null || state == BatchState.FIRST) {
-      if (aggregator != null) {
-        aggregator.cleanup();
-      }
+    if (aggregator == null) {
       IterOutcome outcome;
       if (state == BatchState.FIRST) {
         state = BatchState.NOT_FIRST;
@@ -119,9 +118,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       } else {
         outcome = next(incoming);
       }
-      if (outcome == IterOutcome.OK) {
-        outcome = IterOutcome.OK_NEW_SCHEMA;
-      }
+
       logger.debug("Next outcome of {}", outcome);
       switch (outcome) {
       case NONE:
@@ -132,6 +129,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         return outcome;
       case OK_NEW_SCHEMA:
         if (!createAggregator()) {
+          if (aggregator != null) {
+            aggregator.cleanup();
+          }
           state = BatchState.DONE;
           return IterOutcome.STOP;
         }

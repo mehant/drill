@@ -51,6 +51,7 @@ import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
 import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
+import org.eigenbase.rel.rules.SwapJoinRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 
@@ -77,7 +78,7 @@ public class DrillRuleSets {
       //Add back rules
 
       ExpandConversionRule.INSTANCE,
-//      SwapJoinRule.INSTANCE,
+      SwapJoinRule.INSTANCE,
       RemoveDistinctRule.INSTANCE,
 //      UnionToDistinctRule.INSTANCE,
       RemoveTrivialProjectRule.INSTANCE,
@@ -117,8 +118,8 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE,
-      DrillReduceAggregatesRule.INSTANCE
+      DrillUnionRule.INSTANCE
+      //DrillReduceAggregatesRule.INSTANCE
       ));
     }
     return DRILL_BASIC_RULES;

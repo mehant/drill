@@ -308,6 +308,7 @@ public abstract class HashAggTemplate implements HashAggregator {
               v.getValueVector().clear();
             }
             IterOutcome out = outgoing.next(0, incoming);
+
             if (EXTRA_DEBUG_1) {
               logger.debug("Received IterOutcome of {}", out);
             }
@@ -426,11 +427,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   private final AggOutcome setOkAndReturn() {
-    if (first) {
-      this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    } else {
-      this.outcome = IterOutcome.OK;
-    }
+    this.outcome = IterOutcome.OK;
     for (VectorWrapper<?> v : outgoing) {
       v.getValueVector().getMutator().setValueCount(outputCount);
     }
@@ -493,11 +490,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     outputCount += numOutputRecords;
 
-    if (first) {
-      this.outcome = IterOutcome.OK_NEW_SCHEMA;
-    } else {
-      this.outcome = IterOutcome.OK;
-    }
+    this.outcome = IterOutcome.OK;
 
     logger.debug("HashAggregate: Output current batch index {} with {} records.", outBatchIndex, numOutputRecords);
 
