@@ -78,7 +78,7 @@ public class DrillRuleSets {
       //Add back rules
 
       ExpandConversionRule.INSTANCE,
-      SwapJoinRule.INSTANCE,
+      //SwapJoinRule.INSTANCE,
       RemoveDistinctRule.INSTANCE,
 //      UnionToDistinctRule.INSTANCE,
       RemoveTrivialProjectRule.INSTANCE,

@@ -528,7 +528,6 @@ public class TestExampleQueries extends BaseTestQuery{
     testBuilder()
     .sqlQuery(query)
     .ordered()
-    .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1; alter session set `planner.enable_hashjoin` = false")
     .baselineColumns("l_suppkey", "avg_price")
     .baselineValues(4, 1374.47)
     .build().run();
@@ -545,29 +544,10 @@ public class TestExampleQueries extends BaseTestQuery{
     testBuilder()
     .sqlQuery(query)
     .ordered()
-    .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1; alter session set `planner.enable_hashjoin` = false")
+    .optionSettingQueriesForTestQuery("alter session set `planner.slice_target` = 1; alter session set `planner.enable_hashagg` = false; alter session set `planner.enable_streamagg` = true;")
     .baselineColumns("l_suppkey", "avg_price")
     .baselineValues(98, 1854.95)
     .build().run();
   }
 
-  @Test
-  public void testHashJoin() throws Exception {
-    test("alter session set  `planner.slice_target` = 10;" +
-        "select o.o_orderpriority from cp.`tpch/orders.parquet` o where exists (select * from cp.`tpch/lineitem.parquet` l where l.l_orderkey = o.o_orderkey)");
-  }
-
-  @Test
-  public void testSimpleAggregate() throws Exception {
-    test("select o_orderkey from cp.`tpch/orders.parquet` group by o_orderkey");
-  }
-  @Test
-  public void simpleProject() throws Exception {
-    test("select a + 1 from dfs.`/tmp/b.json`");
-  }
-
-  @Test
-  public void test() throws Exception {
-    test("select a + 10 from (select count(c + 1) as a from dfs.`/tmp/b.json` group by d)");
-  }
 }
