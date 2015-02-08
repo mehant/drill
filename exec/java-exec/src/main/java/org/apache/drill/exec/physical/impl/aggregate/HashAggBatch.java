@@ -107,41 +107,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public IterOutcome innerNext() {
-    // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null || state == BatchState.FIRST) {
-      if (aggregator != null) {
-        aggregator.cleanup();
-      }
-      IterOutcome outcome;
-      if (state == BatchState.FIRST) {
-        state = BatchState.NOT_FIRST;
-        outcome = IterOutcome.OK;
-      } else {
-        outcome = next(incoming);
-      }
-      if (outcome == IterOutcome.OK) {
-        outcome = IterOutcome.OK_NEW_SCHEMA;
-      }
-      logger.debug("Next outcome of {}", outcome);
-      switch (outcome) {
-      case NONE:
-        //        throw new UnsupportedOperationException("Received NONE on first batch");
-        return outcome;
-      case NOT_YET:
-      case STOP:
-        return outcome;
-      case OK_NEW_SCHEMA:
-        if (!createAggregator()) {
-          state = BatchState.DONE;
-          return IterOutcome.STOP;
-        }
-        break;
-      case OK:
-        break;
-      default:
-        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
-      }
-    }
 
     if (aggregator.allFlushed()) {
       return IterOutcome.NONE;
