@@ -549,4 +549,14 @@ public class TestExampleQueries extends BaseTestQuery{
     .build().run();
   }
 
+  @Test
+  public void testDecimalFloat() throws Exception {
+    testBuilder()
+        .sqlQuery("select (cast('1.0' as float) + cast('1.23' as decimal(8, 3))) as col1 from cp.`employee.json` limit 1")
+        .unOrdered()
+        .baselineColumns("col1")
+        .baselineValues(new Double(2.23))
+        .go();
+  }
+
 }
