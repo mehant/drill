@@ -241,6 +241,9 @@ public class ExpressionTreeMaterializer {
             argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.
+            if (parmType.getMinorType().name().startsWith("DECIMAL")) {
+              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).setScale(call.args.get(i).getMajorType().getScale()).setPrecision(call.args.get(i).getMajorType().getPrecision()).build();
+            }
             argsWithCast.add(addCastExpression(call.args.get(i), parmType, registry, errorCollector));
           }
         }
@@ -288,8 +291,10 @@ public class ExpressionTreeMaterializer {
       }
       else if (toType.getMinorType().name().startsWith("DECIMAL")) {
         // Add the scale and precision to the arguments of the implicit cast
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
-        castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
+        castArgs.add(new ValueExpressions.LongExpression(toType.getPrecision(), null));
+        castArgs.add(new ValueExpressions.LongExpression(toType.getScale(), null));
+        //castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getPrecision(), null));
+        //castArgs.add(new ValueExpressions.LongExpression(fromExpr.getMajorType().getScale(), null));
       }
 
       FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);

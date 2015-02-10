@@ -428,6 +428,7 @@ public class DrillOptiq {
         return ValueExpressions.getInt(a);
 
       case DECIMAL:
+
         int precision = ((BigDecimal) literal.getValue()).precision();
         if (precision <= 9) {
             return ValueExpressions.getDecimal9((BigDecimal)literal.getValue());
@@ -438,7 +439,11 @@ public class DrillOptiq {
         } else if (precision <= 38) {
             return ValueExpressions.getDecimal38((BigDecimal)literal.getValue());
         }
-      case VARCHAR:
+
+        double dbl = ((BigDecimal) literal.getValue()).doubleValue();
+        logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
+        return ValueExpressions.getFloat8(dbl);
+        case VARCHAR:
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.VARCHAR);
         }
