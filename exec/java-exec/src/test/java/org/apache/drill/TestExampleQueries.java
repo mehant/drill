@@ -549,4 +549,49 @@ public class TestExampleQueries extends BaseTestQuery{
     .build().run();
   }
 
+  @Test
+  public void testDecimal() throws Exception {
+    //test("select cast(case columns[12] when '' then cast(0.0 as float) else columns[12] end as float) as sales from dfs.`/tmp/a.csv`");
+
+    test("use dfs.tmp");
+    //test("use dfs.tmp; create view part as select cast(columns[0] as int) p_partkey, columns[1] p_name, columns[2] p_mfgr, columns[3] p_brand, columns[4] p_type, cast(columns[5] as int) p_size, columns[6] p_container, cast(columns[7] as decimal(15,2)) p_retailprice, columns[8] p_comment from dfs.`/Users/mbaid/data/tpchtbl/part.tbl`");
+    //test("create view lineitem as select cast(columns[0] as int) l_orderkey, cast(columns[1] as int) l_partkey, cast(columns[2] as int) l_suppkey, cast(columns[3] as int) l_linenumber, cast(columns[4] as decimal(15,2)) l_quantity, cast(columns[5] as decimal(15,2)) l_extendedprice, cast(columns[6] as decimal(15,2)) l_discount, cast(columns[7] as decimal(15,2)) l_tax, columns[8] l_returnflag, columns[9] l_linestatus, cast(columns[10] as date) l_shipdate, cast(columns[11] as date) l_commitdate, cast(columns[12] as date) l_receiptdate, columns[13] l_shipinstruct, columns[14] l_shipmode, columns[15] l_comment from dfs.`/Users/mbaid/data/tpchtbl/lineitem.tbl`");
+
+
+
+    /*
+    test("select\n" +
+        "  100.00 * sum(case\n" +
+        "    when p.p_type like 'PROMO%'\n" +
+        "      then l.l_extendedprice * (1 - l.l_discount)\n" +
+        "    else 0\n" +
+        "  end) / sum(l.l_extendedprice * (1 - l.l_discount)) as promo_revenue\n" +
+        "from\n" +
+        "  lineitem l,\n" +
+        "  part p\n" +
+        "where\n" +
+        "  l.l_partkey = p.p_partkey\n" +
+        "  and l.l_shipdate >= date '1994-08-01'\n" +
+        "  and l.l_shipdate < date '1994-08-01' + interval '1' month");
+    */
+
+
+
+    //test("select 100.00 * sum(case when p.p_type like 'PROMO%' then l.l_extendedprice * (1 - l.l_discount) else cast('0.0' as decimal(15, 2)) end) from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-08-01' + interval '1' month");
+
+    /* -- Most useful test case -- */
+    //test("select (case when true then l.l_extendedprice else 0.0 end) from lineitem l where l_orderkey = 1 and l_partkey = 1552");
+
+    //test("select case when true then cast(columns[0] as decimal(15, 2)) else 0.0 end from dfs.`/tmp/b.csv`");
+    //test("select 100.00 * sum(cast(columns[0] as decimal(15, 2))) from dfs.`/tmp/b.csv`");
+
+
+    //test("select cast(columns[0] as decimal(15, 2)) + 0.0 from dfs.`/tmp/b.csv`");
+
+    //test("select cast(l_extendedprice as decimal(15, 2)) from lineitem where l_orderkey = 1 and l_partkey = 1552");
+    //test("select l.l_extendedprice from lineitem l where l_orderkey = 1 and l_partkey = 1552");
+    //test("select sum(l.l_extendedprice * (1 - l.l_discount)) from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-08-01' + interval '1' month");
+    //test("select count(1) from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-08-01' + interval '1' month");
+    //test("select sum(l.l_extendedprice * (1 - l.l_discount)) from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-08-01' + interval '1' month");
+  }
 }
