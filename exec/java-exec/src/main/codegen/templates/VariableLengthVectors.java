@@ -277,7 +277,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     assert totalBytes >= 0;
     data = allocator.buffer(totalBytes);
     data.readerIndex(0);
-    allocationTotalByteCount = totalBytes;
     offsetVector.allocateNew(valueCount+1);
     offsetVector.zeroVector();
   }

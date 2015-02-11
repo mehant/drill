@@ -93,7 +93,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     clear();
     this.data = allocator.buffer(valueCount * ${type.width});
     this.data.readerIndex(0);
-    this.allocationValueCount = valueCount;
   }
 
 /**
