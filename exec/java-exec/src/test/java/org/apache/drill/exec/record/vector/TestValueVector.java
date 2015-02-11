@@ -36,6 +36,8 @@ import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableUInt4Vector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.Float4Vector;
+
 import org.junit.Test;
 
 public class TestValueVector extends ExecTest {
@@ -313,6 +315,7 @@ public class TestValueVector extends ExecTest {
   @Test
   public void testReAllocNullableFixedWidthVector() throws Exception {
     // Build an optional float field definition
+    int initialSize = Float4Vector.INITIAL_VALUE_ALLOCATION;
     MajorType floatType = MajorType.newBuilder()
         .setMinorType(MinorType.FLOAT4)
         .setMode(DataMode.OPTIONAL)
@@ -323,12 +326,12 @@ public class TestValueVector extends ExecTest {
             .setMajorType(floatType)
             .build());
 
-    // Create a new value vector for 1024 integers
+    // Create a new value vector for 'initialSize' integers
     NullableFloat4Vector v = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator);
     NullableFloat4Vector.Mutator m = v.getMutator();
-    v.allocateNew(1024);
+    v.allocateNew();
 
-    assertEquals(1024, v.getValueCapacity());
+    assertEquals(initialSize, v.getValueCapacity());
 
     // Put values in indexes that fall within the initial allocation
     m.setSafe(0, 100.1f);
@@ -336,15 +339,15 @@ public class TestValueVector extends ExecTest {
     m.setSafe(1023, 104.5f);
 
     // Now try to put values in space that falls beyond the initial allocation
-    m.setSafe(2000, 105.5f);
+    m.setSafe(initialSize + 100, 105.5f);
 
     // Check valueCapacity is more than initial allocation
-    assertEquals(1024*2, v.getValueCapacity());
+    assertEquals(initialSize*2, v.getValueCapacity());
 
     assertEquals(100.1f, v.getAccessor().get(0), 0);
     assertEquals(102.3f, v.getAccessor().get(100), 0);
     assertEquals(104.5f, v.getAccessor().get(1023), 0);
-    assertEquals(105.5f, v.getAccessor().get(2000), 0);
+    assertEquals(105.5f, v.getAccessor().get(initialSize + 100), 0);
 
 
     // Set the valueCount to be more than valueCapacity of current allocation. This is possible for NullableValueVectors
