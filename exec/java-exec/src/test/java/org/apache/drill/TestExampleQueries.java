@@ -581,4 +581,33 @@ public class TestExampleQueries extends BaseTestQuery{
         .run();
   }
 
+  @Test
+  public void testJoinWithDifferentDecimalType() throws Exception {
+    String query = "select t1.first_name from " +
+        "cp.`parquetinput/employee_decimal.parquet` t1, cp.`parquetinput/department_decimal.parquet` t2 " +
+        "where t1.department_id = t2.department_id and t1.employee_id = 1";
+
+    // test with hash join
+    testBuilder()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("first_name")
+        .baselineValues("Sheri")
+        .go();
+
+    // test with merge join
+    testBuilder()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("first_name")
+        .baselineValues("Sheri")
+        .go();
+
+    // reset default
+    test("alter session set `planner.enable_hashjoin` = true");
+  }
 }

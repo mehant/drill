@@ -46,6 +46,7 @@ import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -165,12 +166,6 @@ public class ChainedHashTable {
         continue;
       }
       keyExprsBuild[i] = expr;
-
-      final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      // create a type-specific ValueVector for this key
-      ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
-      htKeyFieldIds[i] = htContainerOrig.add(vv);
-
       i++;
     }
 
@@ -189,6 +184,24 @@ public class ChainedHashTable {
       }
     }
 
+    /* Check if both sides of the expression have a similar type for comparison and hash functions
+     * to work as expected, if they are not inject casts to ensure they are of the same type.
+     */
+    JoinUtils.addLeastRestrictiveCasts(keyExprsBuild, incomingBuild, keyExprsProbe, incomingProbe, context);
+
+    i = 0;
+    /*
+     * Once the implicit casts have been added, create the value vectors for the corresponding
+     * type and add it to the hash table's container.
+     */
+    for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
+      LogicalExpression expr = keyExprsBuild[i];
+      final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
+      ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
+      htKeyFieldIds[i] = htContainerOrig.add(vv);
+      i++;
+    }
+
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild, htKeyFieldIds);
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe,
@@ -202,16 +215,6 @@ public class ChainedHashTable {
       }
     }
     setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);
-
-    /* Before generating the code for hashing the build and probe expressions
-     * examine the expressions to make sure they are of the same type, add casts if necessary.
-     * If they are not of the same type, hashing the same value of different types will yield different hash values.
-     * NOTE: We add the cast only for the hash function, comparator function can handle the case
-     * when expressions are different (for eg we have comparator functions that compare bigint and float8)
-     * However for the hash to work correctly we would need to apply the cast.
-     */
-    addLeastRestrictiveCasts(keyExprsBuild, keyExprsProbe);
-
     setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingBuildMapping, keyExprsBuild, false);
     setupGetHash(cg /* use top level code generator for getHash */, GetHashIncomingProbeMapping, keyExprsProbe, true);
 
@@ -290,52 +293,6 @@ public class ChainedHashTable {
         cg.addExpr(vvwExpr);
       }
 
-    }
-  }
-
-  private void addLeastRestrictiveCasts(LogicalExpression[] keyExprsBuild, LogicalExpression[] keyExprsProbe) {
-
-    // If we don't have probe expressions then nothing to do get out
-    if (keyExprsProbe == null) {
-      return;
-    }
-
-    assert keyExprsBuild.length == keyExprsProbe.length;
-
-    for (int i = 0; i < keyExprsBuild.length; i++) {
-      LogicalExpression buildExpr = keyExprsBuild[i];
-      LogicalExpression probeExpr = keyExprsProbe[i];
-      MinorType buildType = buildExpr.getMajorType().getMinorType();
-      MinorType probeType = probeExpr.getMajorType().getMinorType();
-
-      if (buildType != probeType) {
-        // We need to add a cast to one of the expressions
-        List<MinorType> types = new LinkedList<>();
-        types.add(buildType);
-        types.add(probeType);
-        MinorType result = TypeCastRules.getLeastRestrictiveType(types);
-        ErrorCollector errorCollector = new ErrorCollectorImpl();
-
-        if (result == null) {
-          throw new DrillRuntimeException(String.format("Join conditions cannot be compared failing build " +
-                  "expression:" + " %s failing probe expression: %s", buildExpr.getMajorType().toString(),
-              probeExpr.getMajorType().toString()));
-        } else if (result != buildType) {
-          // Add a cast expression on top of the build expression
-          LogicalExpression castExpr = ExpressionTreeMaterializer.addCastExpression(buildExpr, probeExpr.getMajorType(), context.getFunctionRegistry(), errorCollector);
-          // Store the newly casted expression
-          keyExprsBuild[i] =
-              ExpressionTreeMaterializer.materialize(castExpr, incomingBuild, errorCollector,
-                  context.getFunctionRegistry());
-        } else if (result != probeType) {
-          // Add a cast expression on top of the probe expression
-          LogicalExpression castExpr = ExpressionTreeMaterializer.addCastExpression(probeExpr, buildExpr.getMajorType(), context.getFunctionRegistry(), errorCollector);
-          // store the newly casted expression
-          keyExprsProbe[i] =
-              ExpressionTreeMaterializer.materialize(castExpr, incomingProbe, errorCollector,
-                  context.getFunctionRegistry());
-        }
-      }
     }
   }
 
