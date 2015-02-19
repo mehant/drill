@@ -61,12 +61,17 @@ public class FunctionCallFactory {
     opToFuncTable.put("u-", "negative");
   }
 
-  private static String replaceOpWithFuncName(String op) {
+  /*
+   * Helper function to go from Optiq's function name to Drill's function name
+   * Also replaces operator's with function name
+   */
+  private static String transformToDrillFunctionName(String op) {
+    op = op.replace(' ', '_');
     return (opToFuncTable.containsKey(op)) ? (opToFuncTable.get(op)) : op;
   }
 
   public static boolean isBooleanOperator(String funcName) {
-    String opName  = replaceOpWithFuncName(funcName);
+    String opName  = transformToDrillFunctionName(funcName);
     return opName.equals("booleanAnd") || opName.equals("booleanOr");
   }
 
@@ -89,7 +94,7 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
-    String name = replaceOpWithFuncName(functionName);
+    String name = transformToDrillFunctionName(functionName);
     if (isBooleanOperator(name)) {
       return new BooleanOperator(name, args, ep);
     } else {
@@ -106,7 +111,7 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createBooleanOperator(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
-    return new BooleanOperator(replaceOpWithFuncName(functionName), args, ep);
+    return new BooleanOperator(transformToDrillFunctionName(functionName), args, ep);
   }
 
   public static LogicalExpression createByOp(List<LogicalExpression> args, ExpressionPosition ep, List<String> opTypes) {
