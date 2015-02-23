@@ -17,24 +17,79 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JVar;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.record.AbstractRecordBatch;
-import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.ExpandableHyperContainer;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
+import org.eigenbase.rel.JoinRelType;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> {
 
   RecordBatch left;
   RecordBatch right;
   IterOutcome outcome = IterOutcome.OK_NEW_SCHEMA;
+  IterOutcome leftUpstream = IterOutcome.NONE;
+  IterOutcome rightUpstream = IterOutcome.NONE;
+  ExpandableHyperContainer rightContainer;
+  List<Integer> rightRecordCounts = new LinkedList<>();
+  int rightBatchCount = 0;
+  NestedLoopJoin nljWorker = null;
+  BatchSchema leftSchema = null;
+  BatchSchema rightSchema = null;
+
+  private static final GeneratorMapping EMIT_RIGHT =
+      GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,
+          null /* cleanup */);
+  // Generator mapping for the build side : constant
+  private static final GeneratorMapping EMIT_RIGHT_CONSTANT = GeneratorMapping.create("doSetup"/* setup method */,
+      "doSetup" /* eval method */,
+      null /* reset */, null /* cleanup */);
+
+  // Generator mapping for the probe side : scalar
+  private static final GeneratorMapping EMIT_LEFT =
+      GeneratorMapping.create("doSetup" /* setup method */, "emitLeft" /* eval method */, null /* reset */,
+          null /* cleanup */);
+  // Generator mapping for the probe side : constant
+  private static final GeneratorMapping EMIT_LEFT_CONSTANT = GeneratorMapping.create("doSetup" /* setup method */,
+      "doSetup" /* eval method */,
+      null /* reset */, null /* cleanup */);
+
+
+  // Mapping set for the build side
+  private final MappingSet emitRightMapping =
+      new MappingSet("rightCompositeIndex" /* read index */, "outIndex" /* write index */, "rightContainer" /* read container */,
+          "outgoing" /* write container */, EMIT_RIGHT_CONSTANT, EMIT_RIGHT);
+
+  // Mapping set for the probe side
+  private final MappingSet emitLeftMapping = new MappingSet("leftIndex" /* read index */, "outIndex" /* write index */,
+      "leftBatch" /* read container */,
+      "outgoing" /* write container */,
+      EMIT_LEFT_CONSTANT, EMIT_LEFT);
+
   NullableBigIntVector vector;
 
   protected NestedLoopJoinBatch(NestedLoopJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
@@ -46,18 +101,37 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   @Override
   public IterOutcome innerNext() {
     if (outcome == IterOutcome.OK_NEW_SCHEMA) {
-      // Simply exhaust the two sides
-      while (left.next() != IterOutcome.NONE) {
-      }
-      while (right.next() != IterOutcome.NONE){
+
+      // Accumulate the record batch on the right in a hyper container
+      boolean getRight = true;
+      while (getRight == true) {
+        rightUpstream = next(right);
+        switch (rightUpstream) {
+          case OK:
+          case OK_NEW_SCHEMA:
+            rightRecordCounts.add(rightBatchCount++, right.getRecordCount());
+            rightContainer.addBatch(right);
+            break;
+          case NONE:
+          case STOP:
+            getRight = false;
+            break;
+        }
       }
 
-      // Set the schema for the output container
-      vector = container.addOrGet("foo", TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(TypeProtos.MinorType.BIGINT).build(), NullableBigIntVector.class);
-      vector.allocateNew(1);
+      // TODO hack to just test if current code gen works
+      if (left.getRecordCount() <= 0) {
+        next(left);
+      }
+
+      nljWorker.setupNestedLoopJoin(context, rightContainer, left, this);
+      nljWorker.outputRecords();
+
+      // Set the record count
+      for (VectorWrapper vw : container) {
+        vw.getValueVector().getMutator().setValueCount(1);
+      }
       container.setRecordCount(1);
-      vector.getMutator().set(0, 100);
-      vector.getMutator().setValueCount(1);
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       outcome = IterOutcome.NONE;
       return IterOutcome.OK;
@@ -74,12 +148,105 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     return 1;
   }
 
+  public NestedLoopJoin setupWorker() throws IOException, ClassTransformationException {
+    final CodeGenerator<NestedLoopJoin> cg = CodeGenerator.get(NestedLoopJoin.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    ClassGenerator<NestedLoopJoin> g = cg.getRoot();
+
+
+    g.setMappingSet(emitLeftMapping);
+    JExpression outIndex = JExpr.direct("outIndex");
+    JExpression leftIndex = JExpr.direct("leftIndex");
+
+
+    int fieldId = 0;
+    int outputFieldId = 0;
+    for (VectorWrapper<?> vv : left) {
+      TypeProtos.MajorType fieldType = vv.getField().getType();
+
+      ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getPath(), fieldType));
+      if (v instanceof AbstractContainerVector) {
+        vv.getValueVector().makeTransferPair(v);
+        v.clear();
+      }
+
+      JVar inVV = g.declareVectorValueSetupAndMember("leftBatch", new TypedFieldId(fieldType, false, fieldId));
+      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, outputFieldId));
+
+      g.getEvalBlock().add(outVV.invoke("copyFromSafe").arg(leftIndex).arg(outIndex).arg(inVV));
+
+      fieldId++;
+      outputFieldId++;
+    }
+
+    g.setMappingSet(emitRightMapping);
+    JExpression rightCompositeIndex = JExpr.direct("rightCompositeIndex");
+
+    for (MaterializedField field : rightSchema) {
+
+      TypeProtos.MajorType fieldType = field.getType();
+
+      // make sure to project field with children for children to show up in the schema
+      final MaterializedField projected = field.cloneWithType(fieldType);
+      // Add the vector to our output container
+      container.addOrGet(projected);
+
+      JVar inVV = g.declareVectorValueSetupAndMember("rightContainer", new TypedFieldId(field.getType(), true, fieldId));
+      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, fieldId));
+      g.getEvalBlock().add(outVV.invoke("copyFromSafe")
+          .arg(rightCompositeIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
+          .arg(outIndex)
+          .arg(inVV.component(rightCompositeIndex.shrz(JExpr.lit(16)))));
+
+      fieldId++;
+    }
+
+    return context.getImplementationClass(cg);
+  }
+
   @Override
   protected void buildSchema() throws SchemaChangeException {
+    /*
     vector = container.addOrGet("foo", TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(TypeProtos.MinorType.BIGINT).build(), NullableBigIntVector.class);
     vector.allocateNew();
     vector.getMutator().setValueCount(0);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     container.setRecordCount(0);
+    */
+    try {
+      leftUpstream = next(left);
+      rightUpstream = next(right);
+
+      // TODO check for Iteroutcome.NONE in the incoming schema
+      leftSchema = left.getSchema();
+      rightSchema = right.getSchema();
+
+      if (leftSchema != null) {
+        for (VectorWrapper vw : left) {
+          container.addOrGet(vw.getField());
+        }
+      }
+
+      if (rightSchema != null) {
+        for (VectorWrapper vw : right) {
+          container.addOrGet(vw.getField());
+        }
+      }
+
+      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+
+      // TODO do we need this?
+      for (VectorWrapper vw : container) {
+        vw.getValueVector().allocateNew();
+      }
+      container.setRecordCount(0);
+
+      if (rightContainer == null) {
+        rightContainer = new ExpandableHyperContainer(right);
+      }
+
+      nljWorker = setupWorker();
+    } catch (ClassTransformationException | IOException e) {
+      throw new SchemaChangeException("Cannot compile class");
+    }
   }
 }
