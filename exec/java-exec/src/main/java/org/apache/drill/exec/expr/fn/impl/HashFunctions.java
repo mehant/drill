@@ -71,7 +71,7 @@ public class HashFunctions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double)in.value, 0);
       }
     }
   }
@@ -86,7 +86,7 @@ public class HashFunctions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double)in.value, 0);
     }
   }
 
@@ -103,7 +103,7 @@ public class HashFunctions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double)in.value, 0);
       }
     }
   }
@@ -118,7 +118,7 @@ public class HashFunctions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double)in.value, 0);
     }
   }
 
@@ -190,7 +190,7 @@ public class HashFunctions {
         out.value = 0;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
       }
     }
   }
@@ -208,7 +208,7 @@ public class HashFunctions {
         out.value = 0;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
       }
     }
   }
@@ -265,7 +265,7 @@ public class HashFunctions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
     }
   }
 
@@ -279,7 +279,7 @@ public class HashFunctions {
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
     }
   }
   @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
@@ -553,7 +553,7 @@ public class HashFunctions {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
       }
     }
   }
@@ -568,7 +568,7 @@ public class HashFunctions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32(in.value, 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash32((double) in.value, 0);
     }
   }
 
