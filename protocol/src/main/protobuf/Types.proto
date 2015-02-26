@@ -64,6 +64,7 @@ enum MinorType {
     INTERVALDAY = 39; // Interval type specifying DAY to SECONDS
     LIST = 40;
     GENERIC_OBJECT = 41;
+    DECIMAL38 = 42; // dense decimal representation supporting max precision of 38
 }
 
 message MajorType {

@@ -176,7 +176,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.start,
                                                                                  holder.nDecimalDigits,
                                                                                  holder.scale);
-
+<#elseif minor.class == "Decimal38">
+     return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromVector();
 <#elseif minor.class == "Bit" >
       return new Boolean(holder.value != 0);
 <#else>
@@ -249,7 +250,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
                                                                                  holder.start,
                                                                                  holder.nDecimalDigits,
                                                                                  holder.scale);
-
+<#elseif minor.class == "Decimal38">
+     return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromVector();
 <#elseif minor.class == "Bit" >
       return new Boolean(holder.value != 0);
 <#else>

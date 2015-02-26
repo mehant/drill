@@ -387,7 +387,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
               append(millis));
     }
 
-    <#elseif (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
+    <#elseif (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense") || (minor.class == "Decimal38")>
 
     public void get(int index, ${minor.class}Holder holder) {
 
@@ -417,8 +417,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       <#if (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse")>
       // Get the BigDecimal object
       return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
-      <#else>
+      <#elseif (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
       return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
+      <#else> <#-- its  a decimal vector -->
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromVector();
       </#if>
     }
 
@@ -659,7 +661,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      setSafe(index, holder.days, holder.milliseconds);
    }
 
-   <#elseif (minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
+   <#elseif (minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense") || (minor.class == "Decimal38")>
 
    public void set(int index, ${minor.class}Holder holder){
      set(index, holder.start, holder.buffer);

@@ -57,7 +57,7 @@ public final class ${className} implements ValueHolder{
     
     <#if minor.class.startsWith("Decimal")>
     public static final int maxPrecision = ${minor.maxPrecisionDigits};
-    <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
+    <#if minor.class.startsWith("Decimal28Sparse") || minor.class.startsWith("Decimal38Sparse") || minor.class.startsWith("Decimal28Dense") || minor.class.startsWith("Decimal38Dense")>
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
     
     public static int getInteger(int index, int start, DrillBuf buffer) {

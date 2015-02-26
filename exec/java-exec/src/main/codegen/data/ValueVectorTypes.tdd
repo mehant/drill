@@ -100,7 +100,8 @@
       javaType: "DrillBuf"
       boxedType: "DrillBuf",      
       minor: [
-        { class: "Interval", daysOffset: 4, millisecondsOffset: 8, friendlyType: "Period", fields: [ {name: "months", type: "int"}, {name: "days", type:"int"}, {name: "milliseconds", type:"int"}] }
+        { class: "Interval", daysOffset: 4, millisecondsOffset: 8, friendlyType: "Period", fields: [ {name: "months", type: "int"}, {name: "days", type:"int"}, {name: "milliseconds", type:"int"}] } ,
+        { class: "Decimal38", maxPrecisionDigits: 38, friendlyType: "BigDecimal", fields: [ {name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {
