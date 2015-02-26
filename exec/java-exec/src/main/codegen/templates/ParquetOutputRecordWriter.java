@@ -91,6 +91,14 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
       super(fieldId, fieldName, reader);
     }
 
+    // HACK to pass scale and precision to the writers
+    <#if minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse">
+    public void setScalePrecision(int scale, int precision) {
+      holder.scale = scale;
+      holder.precision = precision;
+    }
+    </#if>
+
     @Override
     public void writeField() throws IOException {
   <#if mode.prefix == "Nullable" >

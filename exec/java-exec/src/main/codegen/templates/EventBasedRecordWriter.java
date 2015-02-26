@@ -75,6 +75,10 @@ public class EventBasedRecordWriter {
       for (VectorWrapper w : batch) {
         FieldReader reader = w.getValueVector().getAccessor().getReader();
         FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getLastName(), reader);
+        // TODO HACK to pass the scale, this would've never worked!
+        if (converter instanceof ParquetOutputRecordWriter.Decimal38SparseParquetConverter) {
+          ((ParquetOutputRecordWriter.Decimal38SparseParquetConverter) converter).setScalePrecision(w.getValueVector().getField().getScale(), w.getValueVector().getField().getPrecision());
+        }
         fieldConverters.add(converter);
       }
     } catch(Exception e) {
