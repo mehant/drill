@@ -718,5 +718,13 @@ public class DecimalUtility extends CoreDecimalUtility{
     }
     return cmp * invert;
   }
+
+  /**
+   * Stubbed out method for prototyping decimal38
+   * @return BigDecimal object given a start address and a DrillBuf
+   */
+  public static BigDecimal getBigDecimalFromVector() {
+    return null;
+  }
 }
 

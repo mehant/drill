@@ -136,6 +136,7 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
         minor.class == "Decimal28Dense" ||
         minor.class == "Decimal38Dense" ||
         minor.class == "Decimal28Sparse" ||
+        minor.class == "Decimal38" ||
         minor.class == "Decimal38Sparse">
 
     // TODO: error check
