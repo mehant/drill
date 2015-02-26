@@ -638,4 +638,9 @@ public class TestExampleQueries extends BaseTestQuery{
     test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
   }
 
+  @Test
+  public void test() throws Exception {
+    test("use dfs.tmp; select * from p");
+  }
+
 }

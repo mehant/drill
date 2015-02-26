@@ -31,7 +31,7 @@ import parquet.schema.PrimitiveType;
 public class ParquetToDrillTypeConverter {
 
   private static TypeProtos.MinorType getDecimalType(SchemaElement schemaElement) {
-    return schemaElement.getPrecision() <= 28 ? TypeProtos.MinorType.DECIMAL28SPARSE : MinorType.DECIMAL38SPARSE;
+    return MinorType.DECIMAL38;
   }
 
   public static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
