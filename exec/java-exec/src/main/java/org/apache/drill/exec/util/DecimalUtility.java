@@ -724,7 +724,7 @@ public class DecimalUtility extends CoreDecimalUtility{
    * @return BigDecimal object given a start address and a DrillBuf
    */
   public static BigDecimal getBigDecimalFromVector() {
-    return null;
+    return BigDecimal.TEN;
   }
 }
 

@@ -24,12 +24,14 @@ import java.math.BigDecimal;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal38Holder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
+import org.apache.drill.exec.vector.Decimal38Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.joda.time.DateTimeUtils;
@@ -146,41 +148,20 @@ class FixedByteAlignedReader extends ColumnReader {
     }
   }
 
-  public static class Decimal28Reader extends ConvertedReader {
-
-    Decimal28SparseVector decimal28Vector;
-
-    Decimal28Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                    boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      decimal28Vector = (Decimal28SparseVector) v;
-    }
-
-    @Override
-    void addNext(int start, int index) {
-      int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
-              schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
-    }
-  }
-
   public static class Decimal38Reader extends ConvertedReader {
 
-    Decimal38SparseVector decimal38Vector;
+    Decimal38Vector decimal38Vector;
 
     Decimal38Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      decimal38Vector = (Decimal38SparseVector) v;
+      decimal38Vector = (Decimal38Vector) v;
     }
 
     @Override
     void addNext(int start, int index) {
-      int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
-      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
-              schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
+      int width = Decimal38Holder.WIDTH;
+      decimal38Vector.getData().setBytes(index * width, bytebuf, start, dataTypeLengthInBytes);
     }
   }
 }
