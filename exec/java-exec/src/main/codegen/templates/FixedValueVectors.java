@@ -420,7 +420,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       <#elseif (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
       return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
       <#else> <#-- its  a decimal vector -->
-      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromVector();
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromVector(data, index * ${type.width}, getField().getScale());
       </#if>
     }
 

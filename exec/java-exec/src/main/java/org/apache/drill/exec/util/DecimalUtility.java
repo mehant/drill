@@ -723,8 +723,13 @@ public class DecimalUtility extends CoreDecimalUtility{
    * Stubbed out method for prototyping decimal38
    * @return BigDecimal object given a start address and a DrillBuf
    */
-  public static BigDecimal getBigDecimalFromVector() {
-    return BigDecimal.TEN;
+  public static BigDecimal getBigDecimalFromVector(DrillBuf bytebuf, int start, int scale) {
+    BigDecimal test = new BigDecimal("1.20");
+    byte[] value1 = test.unscaledValue().toByteArray();
+    byte[] value = new byte[16];
+    bytebuf.getBytes(start, value, 0, 16);
+    BigInteger unscaledValue = new BigInteger(value);
+    return new BigDecimal(unscaledValue, scale);
   }
 }
 
