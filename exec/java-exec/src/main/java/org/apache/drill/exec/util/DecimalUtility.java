@@ -731,5 +731,26 @@ public class DecimalUtility extends CoreDecimalUtility{
     BigInteger unscaledValue = new BigInteger(value);
     return new BigDecimal(unscaledValue, scale);
   }
+
+  public static void writeTwosComplement(BigDecimal input, DrillBuf bytebuf, int start, int width) {
+    // Get the unscaled value
+    byte[] value = input.unscaledValue().toByteArray();
+    int length = value.length;
+
+    // Fill the bytes
+    bytebuf.setBytes(start + (width - length), value, 0, length);
+
+    byte empty = 0x0;
+    if (input.signum() < 0) {
+      empty = (byte) 0xFF;
+    }
+
+    // TODO Add a method to DrillBuf to have custom setZero() method which accpets a custom byte instead of the standard null byte
+
+    // Fill the remaining empty bytes
+    for (int i = start; i < start + (width - length); i++) {
+      bytebuf.setByte(i, empty);
+    }
+  }
 }
 

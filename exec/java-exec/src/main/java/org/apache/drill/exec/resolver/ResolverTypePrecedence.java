@@ -68,6 +68,7 @@ public class ResolverTypePrecedence {
     precedenceMap.put(MinorType.DECIMAL28SPARSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
     precedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
+    precedenceMap.put(MinorType.DECIMAL38, i += 2);
     precedenceMap.put(MinorType.FLOAT8, i += 2);
     precedenceMap.put(MinorType.TIME, i += 2);
     precedenceMap.put(MinorType.DATE, i += 2);

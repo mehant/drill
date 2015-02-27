@@ -31,6 +31,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
     int bestcost = Integer.MAX_VALUE;
     int currcost = Integer.MAX_VALUE;
     DrillFuncHolder bestmatch = null;
+    int i = 0;
 
     for (DrillFuncHolder h : methods) {
 
@@ -38,6 +39,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
 
       // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
       if (currcost  < 0 ) {
+        i++;
         continue;
       }
 
@@ -45,6 +47,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
         bestcost = currcost;
         bestmatch = h;
       }
+      i++;
     }
 
     if (bestcost < 0) {

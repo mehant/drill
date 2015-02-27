@@ -38,7 +38,7 @@ public class CoreDecimalUtility {
       return 18;
     } else if (decimalType == TypeProtos.MinorType.DECIMAL28SPARSE) {
       return 28;
-    } else if (decimalType == TypeProtos.MinorType.DECIMAL38SPARSE) {
+    } else if (decimalType == TypeProtos.MinorType.DECIMAL38SPARSE || decimalType == TypeProtos.MinorType.DECIMAL38) {
       return 38;
     }
     return 0;
@@ -55,7 +55,7 @@ public class CoreDecimalUtility {
     } else if (precision <= 28) {
       return TypeProtos.MinorType.DECIMAL28SPARSE;
     } else {
-      return TypeProtos.MinorType.DECIMAL38SPARSE;
+      return TypeProtos.MinorType.DECIMAL38;
     }
   }
 
