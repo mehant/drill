@@ -35,7 +35,7 @@ import org.apache.drill.exec.record.RecordBatch;
  */
 public class BitFunctions {
 
-  @FunctionTemplate(names = {"booleanOr", "or", "||"},
+  @FunctionTemplate(names = {"booleanOr", "or"},
                     scope = FunctionScope.SC_BOOLEAN_OPERATOR,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {
@@ -51,7 +51,7 @@ public class BitFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"booleanAnd", "and", "&&"},
+  @FunctionTemplate(names = {"booleanAnd", "and"},
                     scope = FunctionScope.SC_BOOLEAN_OPERATOR,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitAnd implements DrillSimpleFunc {
@@ -68,7 +68,7 @@ public class BitFunctions {
   }
 
 
-  @FunctionTemplate(names = {"xor", "^"},
+  @FunctionTemplate(name = "xor",
                     scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class IntXor implements DrillSimpleFunc {
