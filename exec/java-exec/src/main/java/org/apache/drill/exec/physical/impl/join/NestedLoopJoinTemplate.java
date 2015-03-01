@@ -22,6 +22,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 
 import javax.inject.Named;
+import java.util.List;
 
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
@@ -29,20 +30,38 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   VectorContainer right = null;
   RecordBatch left = null;
   RecordBatch outgoing = null;
+  List<Integer> rightCounts = null;
+  int rightBatchCount = 0;
 
-  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, RecordBatch left, NestedLoopJoinBatch outgoing) {
+
+  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right,
+                                  /* todo */ List<Integer> rightCounts,
+                                  RecordBatch left, NestedLoopJoinBatch outgoing) {
     this.context = context;
     this.right = right;
     this.left = left;
     this.outgoing = outgoing;
+    this.rightBatchCount = rightCounts.size();
+    this.rightCounts = rightCounts;
 
     doSetup(context, right, left, outgoing);
   }
 
   public int outputRecords() {
-    emitLeft(0, 0);
-    emitRight(0, 0);
-    return 1;
+    int outIndex = 0;
+    for (int i = 0; i < left.getRecordCount(); i++) {
+      for (int j = 0; j < rightBatchCount; j++) {
+        int currentCount = rightCounts.get(j);
+        int compositeIndexPart = j << 16;
+        for (int k = 0; k < currentCount; k++) {
+          emitLeft(i, outIndex);
+          emitRight((j | (k & 0x0000FFFF)), outIndex);
+          outIndex++;
+        }
+      }
+
+    }
+    return outIndex;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("rightContainer") VectorContainer rightContainer, @Named("leftBatch") RecordBatch leftBatch,

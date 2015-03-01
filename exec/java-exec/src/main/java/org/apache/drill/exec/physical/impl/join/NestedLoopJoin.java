@@ -22,11 +22,13 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 
+import java.util.List;
+
 public interface NestedLoopJoin {
   public static TemplateClassDefinition<NestedLoopJoin> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(NestedLoopJoin.class, NestedLoopJoinTemplate.class);
 
-  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, RecordBatch left, NestedLoopJoinBatch outgoing);
+  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts, RecordBatch left, NestedLoopJoinBatch outgoing);
   public int outputRecords();
   public void emitRight(int rightCompositeIndex, int outIndex);
   public void emitLeft(int leftIndex, int outIndex);
