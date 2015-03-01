@@ -57,9 +57,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   ExpandableHyperContainer rightContainer;
   List<Integer> rightRecordCounts = new LinkedList<>();
   int rightBatchCount = 0;
+  int totalRightRecordCount = 0;
   NestedLoopJoin nljWorker = null;
   BatchSchema leftSchema = null;
   BatchSchema rightSchema = null;
+  int outputRecords = 0;
 
   private static final GeneratorMapping EMIT_RIGHT =
       GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,
@@ -110,6 +112,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
           case OK:
           case OK_NEW_SCHEMA:
             rightRecordCounts.add(rightBatchCount++, right.getRecordCount());
+            totalRightRecordCount += right.getRecordCount();
             rightContainer.addBatch(right);
             break;
           case NONE:
@@ -124,14 +127,14 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         next(left);
       }
 
-      nljWorker.setupNestedLoopJoin(context, rightContainer, left, this);
-      nljWorker.outputRecords();
+      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
+      outputRecords = nljWorker.outputRecords();
 
       // Set the record count
       for (VectorWrapper vw : container) {
-        vw.getValueVector().getMutator().setValueCount(1);
+        vw.getValueVector().getMutator().setValueCount(outputRecords);
       }
-      container.setRecordCount(1);
+      container.setRecordCount(outputRecords);
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       outcome = IterOutcome.NONE;
       return IterOutcome.OK;
@@ -145,7 +148,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
   @Override
   public int getRecordCount() {
-    return 1;
+    return outputRecords;
   }
 
   public NestedLoopJoin setupWorker() throws IOException, ClassTransformationException {
@@ -178,6 +181,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       outputFieldId++;
     }
 
+    fieldId = 0;
     g.setMappingSet(emitRightMapping);
     JExpression rightCompositeIndex = JExpr.direct("rightCompositeIndex");
 
@@ -205,13 +209,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
   @Override
   protected void buildSchema() throws SchemaChangeException {
-    /*
-    vector = container.addOrGet("foo", TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(TypeProtos.MinorType.BIGINT).build(), NullableBigIntVector.class);
-    vector.allocateNew();
-    vector.getMutator().setValueCount(0);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    container.setRecordCount(0);
-    */
+
     try {
       leftUpstream = next(left);
       rightUpstream = next(right);
@@ -241,6 +239,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       container.setRecordCount(0);
 
       if (rightContainer == null) {
+        rightRecordCounts.add(rightBatchCount++, right.getRecordCount());
         rightContainer = new ExpandableHyperContainer(right);
       }
 
@@ -248,5 +247,15 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Cannot compile class");
     }
+  }
+
+  @Override
+  public void cleanup() {
+    if (rightContainer != null) {
+      rightContainer.clear();
+    }
+    super.cleanup();
+    right.cleanup();
+    left.cleanup();
   }
 }
