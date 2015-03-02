@@ -20,8 +20,8 @@ package org.apache.drill.exec.physical.impl.join;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JVar;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -41,7 +41,6 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
-import org.eigenbase.rel.JoinRelType;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -55,13 +54,12 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   IterOutcome leftUpstream = IterOutcome.NONE;
   IterOutcome rightUpstream = IterOutcome.NONE;
   ExpandableHyperContainer rightContainer;
-  List<Integer> rightRecordCounts = new LinkedList<>();
-  int rightBatchCount = 0;
-  int totalRightRecordCount = 0;
+  LinkedList<Integer> rightRecordCounts = new LinkedList<>();
   NestedLoopJoin nljWorker = null;
   BatchSchema leftSchema = null;
   BatchSchema rightSchema = null;
   int outputRecords = 0;
+  boolean getRight = true;
 
   private static final GeneratorMapping EMIT_RIGHT =
       GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,
@@ -102,43 +100,35 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
   @Override
   public IterOutcome innerNext() {
-    if (outcome == IterOutcome.OK_NEW_SCHEMA) {
 
-      // Accumulate the record batch on the right in a hyper container
-      boolean getRight = true;
-      while (getRight == true) {
-        rightUpstream = next(right);
-        switch (rightUpstream) {
-          case OK:
-          case OK_NEW_SCHEMA:
-            rightRecordCounts.add(rightBatchCount++, right.getRecordCount());
-            totalRightRecordCount += right.getRecordCount();
-            rightContainer.addBatch(right);
-            break;
-          case NONE:
-          case STOP:
-            getRight = false;
-            break;
-        }
+    // Accumulate the record batch on the right in a hyper container
+    while (getRight == true) {
+      rightUpstream = next(right);
+      switch (rightUpstream) {
+        case OK:
+          rightRecordCounts.addLast(right.getRecordCount());
+          rightContainer.addBatch(right);
+          break;
+        case NONE:
+        case STOP:
+        case NOT_YET:
+          getRight = false;
+          break;
+        case OK_NEW_SCHEMA:
+          throw new DrillRuntimeException("Nested loop join does not support schema changes");
       }
-
-      // TODO hack to just test if current code gen works
-      if (left.getRecordCount() <= 0) {
-        next(left);
-      }
-
-      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
-      outputRecords = nljWorker.outputRecords();
-
-      // Set the record count
-      for (VectorWrapper vw : container) {
-        vw.getValueVector().getMutator().setValueCount(outputRecords);
-      }
-      container.setRecordCount(outputRecords);
-      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      outcome = IterOutcome.NONE;
-      return IterOutcome.OK;
     }
+
+    nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
+    outputRecords = nljWorker.outputRecords();
+
+    // Set the record count
+    for (VectorWrapper vw : container) {
+      vw.getValueVector().getMutator().setValueCount(outputRecords);
+    }
+    container.setRecordCount(outputRecords);
+    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    outcome = outputRecords > 0 ? IterOutcome.OK : IterOutcome.NONE;
     return outcome;
   }
 
@@ -239,7 +229,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       container.setRecordCount(0);
 
       if (rightContainer == null) {
-        rightRecordCounts.add(rightBatchCount++, right.getRecordCount());
+        rightRecordCounts.addLast(right.getRecordCount());
         rightContainer = new ExpandableHyperContainer(right);
       }
 
