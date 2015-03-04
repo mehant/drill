@@ -63,6 +63,12 @@ public class DrillFunctionRegistry {
         }
         for (String name : names) {
           String functionName = name.toLowerCase();
+
+          // Dont allow function names with spaces
+          if (functionName.contains(" ")) {
+            throw new AssertionError(String.format("Drill does not allow function with spaces. Func name: %s, " +
+                "Class name: %s ", functionName, clazz.getName()));
+          }
           methods.put(functionName, holder);
           String functionSignature = functionName + functionInput;
 
