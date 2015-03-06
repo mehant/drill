@@ -249,7 +249,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           for (VectorWrapper<?> wrapper : left) {
             wrapper.getValueVector().clear();
           }
-          left.kill(true);
+          left.kill(false);
         }
       }
 
