@@ -214,8 +214,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         updateStats(this.hashTable);
       }
 
-      // Store the number of records projected
-      if (hashTable != null || joinType != JoinRelType.INNER) {
+      /*
+       * If hash table is empty we can skip over the entire probe batch
+       * if we have an inner join. For outer joins we might still need to
+       * go over the probe batch and project records.
+       */
+      if (!hashTable.isEmpty()  || joinType != JoinRelType.INNER) {
 
         // Allocate the memory for the vectors in the output container
         allocateVectors();
