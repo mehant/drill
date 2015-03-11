@@ -35,7 +35,6 @@ import org.apache.drill.exec.expr.holders.IntervalHolder;
 import org.apache.drill.exec.expr.holders.IntervalYearHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
-import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -158,38 +157,6 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(name = "timestamptztype", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-    public static class TimeStampTZType implements DrillSimpleFunc {
-
-        @Param  BigIntHolder inputYears;
-        @Param  BigIntHolder inputMonths;
-        @Param  BigIntHolder inputDays;
-        @Param  BigIntHolder inputHours;
-        @Param  BigIntHolder inputMinutes;
-        @Param  BigIntHolder inputSeconds;
-        @Param  BigIntHolder inputMilliSeconds;
-        @Param  VarCharHolder inputTimeZone;
-        @Output TimeStampTZHolder out;
-
-        public void setup(RecordBatch b) {
-        }
-
-        public void eval() {
-
-            String timeZone = (org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(inputTimeZone.start, inputTimeZone.end, inputTimeZone.buffer));
-            out.value = ((new org.joda.time.MutableDateTime((int)inputYears.value,
-                                                            (int)inputMonths.value,
-                                                            (int)inputDays.value,
-                                                            (int)inputHours.value,
-                                                            (int)inputMinutes.value,
-                                                            (int)inputSeconds.value,
-                                                            (int)inputMilliSeconds.value,
-                                                            org.joda.time.DateTimeZone.forID(timeZone)))).getMillis();
-
-            out.index = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(timeZone);
-        }
-    }
-
     @FunctionTemplate(name = "timetype", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class TimeType implements DrillSimpleFunc {
 
@@ -230,45 +197,6 @@ public class DateTypeFunctions {
 
     }
 
-    @FunctionTemplate(names = {"current_timestamp", "now", "statement_timestamp", "transaction_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-    public static class CurrentTimeStamp implements DrillSimpleFunc {
-        @Workspace long queryStartDate;
-        @Workspace int timezoneIndex;
-        @Output TimeStampTZHolder out;
-
-        public void setup(RecordBatch incoming) {
-
-            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
-            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
-            queryStartDate = now.getMillis();
-            timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
-        }
-
-        public void eval() {
-            out.value = queryStartDate;
-            out.index = timezoneIndex;
-        }
-
-    }
-
-    @FunctionTemplate(name = "clock_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
-    public static class ClockTimeStamp implements DrillSimpleFunc {
-        @Workspace int timezoneIndex;
-        @Output TimeStampTZHolder out;
-
-        public void setup(RecordBatch incoming) {
-            org.joda.time.DateTime now = new org.joda.time.DateTime();
-            timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
-        }
-
-        public void eval() {
-            org.joda.time.DateTime now = new org.joda.time.DateTime();
-            out.value = now.getMillis();
-            out.index = timezoneIndex;
-        }
-    }
-
     @FunctionTemplate(name = "timeofday", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
     public static class TimeOfDay implements DrillSimpleFunc {
         @Inject DrillBuf buffer;
@@ -287,7 +215,7 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(name = "localtimestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"localtimestamp", "current_timestamp", "now", "statement_timestamp", "transaction_timestamp"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class LocalTimeStamp implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Output TimeStampHolder out;
