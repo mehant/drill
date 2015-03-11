@@ -81,12 +81,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
 	  <#if aggrtype.funcName == "min">
 
-    <#if type.outputType == "TimeStampTZ">
-    if (in.value < value.value) {
-      value.value = in.value;
-      value.index = in.index;
-    }
-    <#elseif type.outputType == "Interval">
+    <#if type.outputType == "Interval">
 
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
@@ -105,12 +100,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = Math.min(value.value, in.value);
     </#if>
 	  <#elseif aggrtype.funcName == "max">
-    <#if type.outputType == "TimeStampTZ">
-    if (in.value < value.value) {
-      value.value = in.value;
-      value.index = in.index;
-    }
-    <#elseif type.outputType == "Interval">
+    <#if type.outputType == "Interval">
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
