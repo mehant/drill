@@ -71,7 +71,7 @@ public class DrillMergeFilterRule extends RelOptRule {
 
     if(!RexUtil.isFlat(newCondition)){
       RexCall newCall = (RexCall) newCondition;
-      newCondition = rexBuilder.makeFlatCall( newCall.getOperator(), newCall.getOperands());
+//      newCondition = rexBuilder.makeFlatCall( newCall.getOperator(), newCall.getOperands());
     }
 
     FilterRel newFilterRel =
