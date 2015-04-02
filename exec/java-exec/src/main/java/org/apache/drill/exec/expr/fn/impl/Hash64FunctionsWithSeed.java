@@ -53,6 +53,14 @@ import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
+/*
+ * Class contains hash64 function definitions for different data types.
+ *
+ * NOTE: These functions are used internally by Drill to perform hash distribution and in hash join. For
+ * numeric data types we would like to apply implicit casts in the join method however for this to work
+ * as expected we would need to hash the same value represented in different data types (int, bigint, float etc)
+ * to hash to the same node, this is why we cast all numeric values to double before performing the actual hash.
+ */
 public class Hash64FunctionsWithSeed {
   @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableFloatHash implements DrillSimpleFunc {
@@ -69,7 +77,7 @@ public class Hash64FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
       }
     }
   }
@@ -86,7 +94,7 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
     }
   }
 
@@ -202,7 +210,7 @@ public class Hash64FunctionsWithSeed {
         out.value = 0;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
       }
     }
   }
@@ -222,7 +230,7 @@ public class Hash64FunctionsWithSeed {
         out.value = 0;
       }
       else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
       }
     }
   }
@@ -287,7 +295,7 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
     }
   }
 
@@ -303,7 +311,7 @@ public class Hash64FunctionsWithSeed {
 
     public void eval() {
       // TODO: implement hash function for other types
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64((double) in.value, seed.value);
     }
   }
   @FunctionTemplate(name = "hash64", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
@@ -419,7 +427,8 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+      java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
     }
   }
 
@@ -437,7 +446,8 @@ public class Hash64FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+        java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
       }
     }
   }
@@ -453,7 +463,8 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+      java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
     }
   }
 
@@ -471,7 +482,8 @@ public class Hash64FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.value, seed.value);
+        java.math.BigDecimal input = new java.math.BigDecimal(java.math.BigInteger.valueOf(in.value), in.scale);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), seed.value);
       }
     }
   }
@@ -487,7 +499,9 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + Decimal28SparseHolder.WIDTH, in.buffer, seed.value);
+      java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+          in.start, in.nDecimalDigits, in.scale);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), 0);
     }
   }
 
@@ -505,7 +519,9 @@ public class Hash64FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + NullableDecimal28SparseHolder.WIDTH, in.buffer, seed.value);
+        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+            in.start, in.nDecimalDigits, in.scale);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), 0);
       }
     }
   }
@@ -521,7 +537,9 @@ public class Hash64FunctionsWithSeed {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + Decimal38SparseHolder.WIDTH, in.buffer, seed.value);
+      java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+          in.start, in.nDecimalDigits, in.scale);
+      out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), 0);
     }
   }
 
@@ -539,7 +557,9 @@ public class Hash64FunctionsWithSeed {
       if (in.isSet == 0) {
         out.value = 0;
       } else {
-        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(in.start, in.start + NullableDecimal38SparseHolder.WIDTH, in.buffer, seed.value);
+        java.math.BigDecimal input = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(in.buffer,
+            in.start, in.nDecimalDigits, in.scale);
+        out.value = org.apache.drill.exec.expr.fn.impl.XXHash.hash64(input.doubleValue(), 0);
       }
     }
   }

@@ -309,6 +309,13 @@ public class ChainedHashTable {
       MinorType probeType = probeExpr.getMajorType().getMinorType();
 
       if (buildType != probeType) {
+
+        // currently we only support implicit casts if the input types are numeric
+        if (!TypeCastRules.isNumericType(buildType) || !TypeCastRules.isNumericType(probeType)) {
+          throw new DrillRuntimeException(String.format("Hash join only supports implicit casts between numeric data " +
+              "types. Build type: %s, Probe type: %s. Add explicit casts to avoid this error", buildType, probeType));
+        }
+
         // We need to add a cast to one of the expressions
         List<MinorType> types = new LinkedList<>();
         types.add(buildType);
