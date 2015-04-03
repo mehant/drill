@@ -108,7 +108,7 @@ public class View {
         break;
       case INTERVAL_YEAR_MONTH:
       case INTERVAL_DAY_TIME:
-        p = dataType.getIntervalQualifier().getStartPrecision();
+        p = dataType.getIntervalQualifier().getStartPrecisionPreservingDefault();
       default:
         break;
       }
@@ -182,7 +182,7 @@ public class View {
      * (<i>iff</i> interval type).
      */
     public Integer getFractionalSecondPrecision() {
-      return null == intervalQualifier ? null : intervalQualifier.getFractionalSecondPrecision();
+      return null == intervalQualifier ? null : intervalQualifier.getFractionalSecondPrecisionPreservingDefault();
     }
 
     /**
