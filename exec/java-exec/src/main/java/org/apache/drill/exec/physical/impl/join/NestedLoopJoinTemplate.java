@@ -40,9 +40,16 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   int nextRightBatchToProcess = 0;
   int nextRightRecordToProcess = 0;
   int nextLeftRecordToProcess = 0;
+  int outputIndex = 0;
+  // TODO: Make the left iteroutcome variable name same in nestedloopjoinbatch and in this template
+  RecordBatch.IterOutcome leftState = RecordBatch.IterOutcome.NONE;
+
+  // TODO REMOVE, added for debugging
+  int maxOutputRecords = 0;
+  int outputRecords = 0;
 
   public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts,
-                                  RecordBatch left, NestedLoopJoinBatch outgoing) {
+                                  RecordBatch left, RecordBatch.IterOutcome leftState, NestedLoopJoinBatch outgoing) {
     this.context = context;
     this.right = right;
     this.left = left;
@@ -53,10 +60,66 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     this.outgoing = outgoing;
     this.rightBatchCount = rightCounts.size();
     this.rightCounts = rightCounts;
+    this.leftState = leftState;
 
     doSetup(context, right, left, outgoing);
   }
 
+  // TODO: Implement
+  public int findMaxOutputRecordCount() {
+    int maxRecords = rightCounts.get(nextRightBatchToProcess) - nextRightRecordToProcess;
+    for (int i = nextRightBatchToProcess + 1; i < rightBatchCount; i++) {
+      maxRecords += rightCounts.get(i);
+    }
+
+    maxRecords *= (leftRecordCount - nextLeftRecordToProcess);
+
+    return maxRecords;
+  }
+
+  private int outputRecordsInternal() {
+    outputRecords = 0;
+    maxOutputRecords = findMaxOutputRecordCount();
+
+    // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
+    for (;nextRightBatchToProcess < rightBatchCount; nextRightBatchToProcess++) {
+      int compositeIndexPart = nextRightBatchToProcess << 16;
+
+      for (;nextRightRecordToProcess < rightCounts.get(nextRightBatchToProcess); nextRightRecordToProcess++) {
+        for (;nextLeftRecordToProcess < leftRecordCount; nextLeftRecordToProcess++) {
+
+          emitLeft(nextLeftRecordToProcess, outputIndex);
+          emitRight((compositeIndexPart | (nextRightRecordToProcess & 0x0000FFFF)), outputIndex);
+          outputIndex++;
+          outputRecords++;
+
+          if (outputRecords >= maxOutputRecords) {
+            return outputRecords;
+          }
+        }
+        nextLeftRecordToProcess = 0;
+      }
+      nextRightRecordToProcess = 0;
+    }
+    return outputRecords;
+  }
+
+  public int outputRecords() {
+    int outputRecords = 0;
+    while (leftState != RecordBatch.IterOutcome.NONE) {
+      outputRecords += outputRecordsInternal();
+
+      if (outputRecords == MAX_OUTPUT_RECORD) {
+        outputIndex = 0;
+        return outputRecords;
+      }
+
+      // reset state and get next left batch
+      resetAndGetNext();
+    }
+    return outputRecords;
+  }
+  /*
   public int outputRecords() {
     int outIndex = 0;
 
@@ -107,8 +170,14 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     }
     return outIndex;
   }
+  */
 
-  private boolean getNextLeftBatch() {
+  private void resetAndGetNext() {
+
+    for (VectorWrapper<?> vw : left) {
+      vw.getValueVector().clear();
+    }
+    nextRightBatchToProcess = nextRightRecordToProcess = nextLeftRecordToProcess = 0;
     RecordBatch.IterOutcome leftOutcome = left.next();
     switch (leftOutcome) {
       case OK_NEW_SCHEMA:
@@ -116,11 +185,12 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       case NONE:
       case NOT_YET:
       case STOP:
-        leftRecordCount = 0;
-        return false;
+        // TODO: Handle this more gracefully
+        leftState = RecordBatch.IterOutcome.NONE;
+        break;
       case OK:
         leftRecordCount = left.getRecordCount();
-        return true;
+        break;
       default:
         throw new UnsupportedOperationException("Incorrect state in nested loop join");
     }

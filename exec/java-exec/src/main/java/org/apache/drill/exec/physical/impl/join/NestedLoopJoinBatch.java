@@ -117,9 +117,9 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         case OK_NEW_SCHEMA:
           throw new DrillRuntimeException("Nested loop join does not support schema changes");
       }
+      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
     }
 
-    nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
     outputRecords = nljWorker.outputRecords();
 
     // Set the record count
@@ -185,13 +185,14 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       container.addOrGet(projected);
 
       JVar inVV = g.declareVectorValueSetupAndMember("rightContainer", new TypedFieldId(field.getType(), true, fieldId));
-      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, fieldId));
+      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, outputFieldId));
       g.getEvalBlock().add(outVV.invoke("copyFromSafe")
           .arg(rightCompositeIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
           .arg(outIndex)
           .arg(inVV.component(rightCompositeIndex.shrz(JExpr.lit(16)))));
 
       fieldId++;
+      outputFieldId++;
     }
 
     return context.getImplementationClass(cg);

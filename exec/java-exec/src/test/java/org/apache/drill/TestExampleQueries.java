@@ -755,4 +755,9 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues((long) 3, (long) 6)
         .build().run();
   }
+
+  @Test
+  public void testNLJ() throws Exception {
+    test("alter session set `planner.enable_nljoin_for_scalar_only` = false; select t1.employee_id from cp.`employee.json` t1, cp.`department.json` t2 where t1.department_id = t2.department_id");
+  }
 }
