@@ -1,0 +1,19 @@
+{
+  "department_id" : 1,
+  "department_description" : "HQ General Management"
+} {
+  "department_id" : 2,
+  "department_description" : "HQ Information Systems"
+} {
+  "department_id" : 3,
+  "department_description" : "HQ Marketing"
+} {
+  "department_id" : 4,
+  "department_description" : "HQ Human Resources"
+} {
+  "department_id" : 5,
+  "department_description" : "HQ Finance and Accounting"
+} {
+  "department_id" : 11,
+  "department_description" : "Store Management"
+}

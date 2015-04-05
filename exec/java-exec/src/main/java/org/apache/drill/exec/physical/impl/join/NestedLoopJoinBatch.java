@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
+import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
@@ -60,6 +62,12 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   BatchSchema rightSchema = null;
   int outputRecords = 0;
   boolean getRight = true;
+
+  // TODO revisit
+  boolean sendOKNEWSCHEMA = false;
+  boolean setupNLJ = true;
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
 
   private static final GeneratorMapping EMIT_RIGHT =
       GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,
@@ -105,22 +113,50 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     while (getRight == true) {
       rightUpstream = next(right);
       switch (rightUpstream) {
+        case OK_NEW_SCHEMA:
+          if (!right.getSchema().equals(rightSchema)) {
+            throw new DrillRuntimeException("Nested loop join does not support schema changes");
+          }
+          // TODO: Do we need to do this?
+          /*
+          for (VectorWrapper vw : container) {
+            //vw.getValueVector().allocateNew();
+            // TODO replace this with constant from template file
+            AllocationHelper.allocateNew(vw.getValueVector(), 4096);
+          }
+          */
+          sendOKNEWSCHEMA = true;
+          // fall through
         case OK:
           rightRecordCounts.addLast(right.getRecordCount());
-          rightContainer.addBatch(right);
+          RecordBatchData nextBatch = new RecordBatchData(right);
+          rightContainer.addBatch(nextBatch.getContainer());
           break;
         case NONE:
         case STOP:
         case NOT_YET:
           getRight = false;
           break;
-        case OK_NEW_SCHEMA:
-          throw new DrillRuntimeException("Nested loop join does not support schema changes");
+        default:
+          throw new DrillRuntimeException("Invalid state");
       }
-      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
+      //nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
     }
 
+    if (setupNLJ) {
+      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
+      setupNLJ = false;
+    }
+
+    // TODO: remove, figure out the right place
+    for (VectorWrapper vw : container) {
+      //vw.getValueVector().allocateNew();
+      // TODO replace this with constant from template file
+      AllocationHelper.allocateNew(vw.getValueVector(), 4096);
+    }
     outputRecords = nljWorker.outputRecords();
+
+    logger.debug("emitted " + outputRecords);
 
     // Set the record count
     for (VectorWrapper vw : container) {
@@ -128,8 +164,16 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     }
     container.setRecordCount(outputRecords);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    outcome = outputRecords > 0 ? IterOutcome.OK : IterOutcome.NONE;
-    return outcome;
+
+    if (sendOKNEWSCHEMA) {
+      outcome = IterOutcome.OK_NEW_SCHEMA;
+      sendOKNEWSCHEMA = false;
+    } else {
+      outcome = IterOutcome.OK;
+    }
+
+    //outcome = outputRecords > 0 ? IterOutcome.OK : IterOutcome.NONE;
+    return outputRecords > 0 ? outcome : IterOutcome.NONE;
   }
 
   @Override
@@ -221,20 +265,24 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         }
       }
 
+      if (rightContainer == null) {
+        rightRecordCounts.addLast(right.getRecordCount());
+        RecordBatchData firstBatch = new RecordBatchData(right);
+        rightContainer = new ExpandableHyperContainer(firstBatch.getContainer());
+      }
+
+      nljWorker = setupWorker();
+      //nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
+
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
       // TODO do we need this?
       for (VectorWrapper vw : container) {
-        vw.getValueVector().allocateNew();
+        //vw.getValueVector().allocateNew();
+        AllocationHelper.allocateNew(vw.getValueVector(), 4096);
       }
       container.setRecordCount(0);
 
-      if (rightContainer == null) {
-        rightRecordCounts.addLast(right.getRecordCount());
-        rightContainer = new ExpandableHyperContainer(right);
-      }
-
-      nljWorker = setupWorker();
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Cannot compile class");
     }
@@ -248,5 +296,10 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     super.cleanup();
     right.cleanup();
     left.cleanup();
+  }
+
+  // TODO REMOVE ADDED FOR DEBUGGING
+  public static void methodBreakPoint(int rightBatch, int rightRecord, int leftRecord, int outputRecordsPerIteration) {
+    logger.debug("Remaining records: " + outputRecordsPerIteration);
   }
 }

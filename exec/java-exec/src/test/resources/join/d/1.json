@@ -1,0 +1,19 @@
+{
+  "department_id" : 14,
+  "department_description" : "Store Information Systems"
+} {
+  "department_id" : 15,
+  "department_description" : "Store Permanent Checkers"
+} {
+  "department_id" : 16,
+  "department_description" : "Store Temporary Checkers"
+} {
+  "department_id" : 17,
+  "department_description" : "Store Permanent Stockers"
+} {
+  "department_id" : 18,
+  "department_description" : "Store Temporary Stockers"
+} {
+  "department_id" : 19,
+  "department_description" : "Store Permanent Butchers"
+}

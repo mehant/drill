@@ -65,27 +65,32 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     doSetup(context, right, left, outgoing);
   }
 
-  // TODO: Implement
+  // TODO: More readable, will be used when max limits per output iteration is calculated once and condition is not checked every time
   public int findMaxOutputRecordCount() {
-    int maxRecords = rightCounts.get(nextRightBatchToProcess) - nextRightRecordToProcess;
+    int pendingRecords = (leftRecordCount - nextLeftRecordToProcess);
+    pendingRecords += ((rightCounts.get(nextRightBatchToProcess) - (nextRightRecordToProcess + 1)) * leftRecordCount);
+    int maxRecords = 0;
+    //int maxRecords = rightCounts.get(nextRightBatchToProcess) - nextRightRecordToProcess;
     for (int i = nextRightBatchToProcess + 1; i < rightBatchCount; i++) {
       maxRecords += rightCounts.get(i);
     }
 
-    maxRecords *= (leftRecordCount - nextLeftRecordToProcess);
+    maxRecords *= (leftRecordCount);
+    maxRecords += pendingRecords;
 
-    return maxRecords;
+    NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, maxRecords);
+    return Math.min(maxRecords, MAX_OUTPUT_RECORD);
   }
 
   private int outputRecordsInternal() {
-    outputRecords = 0;
-    maxOutputRecords = findMaxOutputRecordCount();
+    int outputRecords = 0;
+    //maxOutputRecords = findMaxOutputRecordCount();
 
-    // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
     for (;nextRightBatchToProcess < rightBatchCount; nextRightBatchToProcess++) {
       int compositeIndexPart = nextRightBatchToProcess << 16;
+      int rightRecordCount = rightCounts.get(nextRightBatchToProcess);
 
-      for (;nextRightRecordToProcess < rightCounts.get(nextRightBatchToProcess); nextRightRecordToProcess++) {
+      for (;nextRightRecordToProcess < rightRecordCount; nextRightRecordToProcess++) {
         for (;nextLeftRecordToProcess < leftRecordCount; nextLeftRecordToProcess++) {
 
           emitLeft(nextLeftRecordToProcess, outputIndex);
@@ -93,7 +98,10 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
           outputIndex++;
           outputRecords++;
 
-          if (outputRecords >= maxOutputRecords) {
+          // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
+          if ((this.outputRecords + outputRecords)>= MAX_OUTPUT_RECORD) {
+            NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, outputRecords);
+            nextLeftRecordToProcess++;
             return outputRecords;
           }
         }
@@ -101,11 +109,12 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       }
       nextRightRecordToProcess = 0;
     }
+    NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, outputRecords);
     return outputRecords;
   }
 
   public int outputRecords() {
-    int outputRecords = 0;
+    outputRecords = 0;
     while (leftState != RecordBatch.IterOutcome.NONE) {
       outputRecords += outputRecordsInternal();
 
@@ -119,58 +128,6 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     }
     return outputRecords;
   }
-  /*
-  public int outputRecords() {
-    int outIndex = 0;
-
-    if (drainLeft) {
-      drainLeft = false;
-      // no more records to process
-      if (!getNextLeftBatch()) {
-        return 0;
-      }
-    }
-
-    // For every record in the left batch
-    for (;nextLeftRecordToProcess < leftRecordCount; nextLeftRecordToProcess++) {
-      // For every batch in the expandable right container
-      for (int i = nextRightBatchToProcess; i < rightBatchCount; i++) {
-        boolean done = false;
-        // check if we have reached max number of output records
-        int upperLimit = rightCounts.get(i);
-        if (MAX_OUTPUT_RECORD - outIndex < upperLimit) {
-          drainLeft = false;
-          done = true;
-          upperLimit = MAX_OUTPUT_RECORD - outIndex;
-        }
-        int compositeIndexPart = i << 16;
-        int j;
-
-        // For every record in this batch of the expandable right container
-        for (j = nextRightRecordToProcess; j < upperLimit; j++) {
-          emitLeft(nextLeftRecordToProcess, outIndex);
-          emitRight((compositeIndexPart | (j & 0x0000FFFF)), outIndex);
-          outIndex++;
-        }
-
-        if (done == true) {
-          nextRightBatchToProcess = i;
-          nextRightRecordToProcess = j;
-          return outIndex;
-        }
-      }
-    }
-
-    // completely drained the left batch, need to invoke next
-    drainLeft = true;
-
-    // Clear the memory in the left record batch
-    for (VectorWrapper<?> vw : left) {
-      vw.getValueVector().clear();
-    }
-    return outIndex;
-  }
-  */
 
   private void resetAndGetNext() {
 
