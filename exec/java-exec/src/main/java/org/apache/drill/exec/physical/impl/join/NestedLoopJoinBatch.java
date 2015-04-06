@@ -297,9 +297,4 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     right.cleanup();
     left.cleanup();
   }
-
-  // TODO REMOVE ADDED FOR DEBUGGING
-  public static void methodBreakPoint(int rightBatch, int rightRecord, int leftRecord, int outputRecordsPerIteration) {
-    logger.debug("Remaining records: " + outputRecordsPerIteration);
-  }
 }

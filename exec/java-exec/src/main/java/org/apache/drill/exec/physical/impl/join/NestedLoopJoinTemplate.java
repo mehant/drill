@@ -42,10 +42,6 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   int nextLeftRecordToProcess = 0;
   int outputIndex = 0;
 
-  // TODO REMOVE, added for debugging
-  int maxOutputRecords = 0;
-  int outputRecords = 0;
-
   public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts,
                                   RecordBatch left, NestedLoopJoinBatch outgoing) {
     this.context = context;
@@ -62,8 +58,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     doSetup(context, right, left, outgoing);
   }
 
-  private int outputRecordsInternal() {
-    int outputRecords = 0;
+  private void outputRecordsInternal() {
 
     for (;nextRightBatchToProcess < rightBatchCount; nextRightBatchToProcess++) {
       int compositeIndexPart = nextRightBatchToProcess << 16;
@@ -75,37 +70,32 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
           emitLeft(nextLeftRecordToProcess, outputIndex);
           emitRight((compositeIndexPart | (nextRightRecordToProcess & 0x0000FFFF)), outputIndex);
           outputIndex++;
-          outputRecords++;
 
           // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
-          if ((this.outputRecords + outputRecords)>= MAX_OUTPUT_RECORD) {
-            NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, outputRecords);
+          if (outputIndex >= MAX_OUTPUT_RECORD) {
             nextLeftRecordToProcess++;
-            return outputRecords;
+            return;
           }
         }
         nextLeftRecordToProcess = 0;
       }
       nextRightRecordToProcess = 0;
     }
-    NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, outputRecords);
-    return outputRecords;
   }
 
   public int outputRecords() {
-    outputRecords = 0;
+    outputIndex = 0;
     while (leftRecordCount != 0) {
-      outputRecords += outputRecordsInternal();
+      outputRecordsInternal();
 
-      if (outputRecords == MAX_OUTPUT_RECORD) {
-        outputIndex = 0;
-        return outputRecords;
+      if (outputIndex == MAX_OUTPUT_RECORD) {
+        break;
       }
 
       // reset state and get next left batch
       resetAndGetNext();
     }
-    return outputRecords;
+    return outputIndex;
   }
 
   private void resetAndGetNext() {
