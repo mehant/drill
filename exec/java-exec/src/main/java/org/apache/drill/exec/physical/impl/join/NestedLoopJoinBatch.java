@@ -144,7 +144,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     }
 
     if (setupNLJ) {
-      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
+      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
       setupNLJ = false;
     }
 

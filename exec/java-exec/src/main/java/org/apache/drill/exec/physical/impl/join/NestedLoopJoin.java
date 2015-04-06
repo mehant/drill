@@ -28,7 +28,8 @@ public interface NestedLoopJoin {
   public static TemplateClassDefinition<NestedLoopJoin> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(NestedLoopJoin.class, NestedLoopJoinTemplate.class);
 
-  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts, RecordBatch left, RecordBatch.IterOutcome leftStatus, NestedLoopJoinBatch outgoing);
+  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts, RecordBatch left,
+                                  NestedLoopJoinBatch outgoing);
   public int outputRecords();
   public void emitRight(int rightCompositeIndex, int outIndex);
   public void emitLeft(int leftIndex, int outIndex);

@@ -41,15 +41,13 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   int nextRightRecordToProcess = 0;
   int nextLeftRecordToProcess = 0;
   int outputIndex = 0;
-  // TODO: Make the left iteroutcome variable name same in nestedloopjoinbatch and in this template
-  RecordBatch.IterOutcome leftState = RecordBatch.IterOutcome.NONE;
 
   // TODO REMOVE, added for debugging
   int maxOutputRecords = 0;
   int outputRecords = 0;
 
   public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts,
-                                  RecordBatch left, RecordBatch.IterOutcome leftState, NestedLoopJoinBatch outgoing) {
+                                  RecordBatch left, NestedLoopJoinBatch outgoing) {
     this.context = context;
     this.right = right;
     this.left = left;
@@ -60,31 +58,12 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     this.outgoing = outgoing;
     this.rightBatchCount = rightCounts.size();
     this.rightCounts = rightCounts;
-    this.leftState = leftState;
 
     doSetup(context, right, left, outgoing);
   }
 
-  // TODO: More readable, will be used when max limits per output iteration is calculated once and condition is not checked every time
-  public int findMaxOutputRecordCount() {
-    int pendingRecords = (leftRecordCount - nextLeftRecordToProcess);
-    pendingRecords += ((rightCounts.get(nextRightBatchToProcess) - (nextRightRecordToProcess + 1)) * leftRecordCount);
-    int maxRecords = 0;
-    //int maxRecords = rightCounts.get(nextRightBatchToProcess) - nextRightRecordToProcess;
-    for (int i = nextRightBatchToProcess + 1; i < rightBatchCount; i++) {
-      maxRecords += rightCounts.get(i);
-    }
-
-    maxRecords *= (leftRecordCount);
-    maxRecords += pendingRecords;
-
-    NestedLoopJoinBatch.methodBreakPoint(nextRightBatchToProcess, nextRightRecordToProcess, nextLeftRecordToProcess, maxRecords);
-    return Math.min(maxRecords, MAX_OUTPUT_RECORD);
-  }
-
   private int outputRecordsInternal() {
     int outputRecords = 0;
-    //maxOutputRecords = findMaxOutputRecordCount();
 
     for (;nextRightBatchToProcess < rightBatchCount; nextRightBatchToProcess++) {
       int compositeIndexPart = nextRightBatchToProcess << 16;
@@ -115,7 +94,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
   public int outputRecords() {
     outputRecords = 0;
-    while (leftState != RecordBatch.IterOutcome.NONE) {
+    while (leftRecordCount != 0) {
       outputRecords += outputRecordsInternal();
 
       if (outputRecords == MAX_OUTPUT_RECORD) {
@@ -142,8 +121,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       case NONE:
       case NOT_YET:
       case STOP:
-        // TODO: Handle this more gracefully
-        leftState = RecordBatch.IterOutcome.NONE;
+        leftRecordCount = 0;
         break;
       case OK:
         leftRecordCount = left.getRecordCount();

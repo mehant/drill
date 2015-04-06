@@ -127,7 +127,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
 
   // EXECUTION TESTS
   @Test
-  public void testNLJNonScalar() throws Exception {
+  public void testNLJNonScalar_exec() throws Exception {
 
     // Simple NLJ between employee and department
     testBuilder()
