@@ -106,7 +106,8 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     RecordBatch.IterOutcome leftOutcome = left.next();
     switch (leftOutcome) {
       case OK_NEW_SCHEMA:
-        throw new DrillRuntimeException("Nested loop join does not handle schema changes");
+        throw new DrillRuntimeException("Nested loop join does not handle schema change. Schema change" +
+            " found on the left side of NLJ.");
       case NONE:
       case NOT_YET:
       case STOP:
@@ -115,8 +116,6 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       case OK:
         leftRecordCount = left.getRecordCount();
         break;
-      default:
-        throw new UnsupportedOperationException("Incorrect state in nested loop join");
     }
   }
 

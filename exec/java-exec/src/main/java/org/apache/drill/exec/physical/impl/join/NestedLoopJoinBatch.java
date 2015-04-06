@@ -109,7 +109,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         switch (rightUpstream) {
           case OK_NEW_SCHEMA:
             if (!right.getSchema().equals(rightSchema)) {
-              throw new DrillRuntimeException("Nested loop join does not support schema changes");
+              throw new DrillRuntimeException("Nested loop join does not handle schema change. Schema change" +
+                  " found on the right side of NLJ.");
             }
             // fall through
           case OK:
@@ -122,8 +123,6 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
           case NOT_YET:
             getRight = false;
             break;
-          default:
-            throw new DrillRuntimeException("Invalid state");
         }
       }
       nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
@@ -134,14 +133,14 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
     outputRecords = nljWorker.outputRecords();
 
-    logger.debug("emitted " + outputRecords);
-
     // Set the record count
     for (VectorWrapper vw : container) {
       vw.getValueVector().getMutator().setValueCount(outputRecords);
     }
     container.setRecordCount(outputRecords);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+
+    logger.debug("Number of records emitted: " + outputRecords);
 
     return (outputRecords > 0) ? IterOutcome.OK : IterOutcome.NONE;
   }
@@ -250,7 +249,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       container.setRecordCount(0);
 
     } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Cannot compile class");
+      throw new SchemaChangeException(e);
     }
   }
 
