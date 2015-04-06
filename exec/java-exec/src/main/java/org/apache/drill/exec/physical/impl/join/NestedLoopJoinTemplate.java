@@ -36,7 +36,6 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   int rightBatchCount = 0;
   int leftRecordCount = 0;
   boolean drainLeft = false;
-  private static final int MAX_OUTPUT_RECORD = 4096;
   int nextRightBatchToProcess = 0;
   int nextRightRecordToProcess = 0;
   int nextLeftRecordToProcess = 0;
@@ -72,7 +71,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
           outputIndex++;
 
           // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
-          if (outputIndex >= MAX_OUTPUT_RECORD) {
+          if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
             nextLeftRecordToProcess++;
             return;
           }
@@ -88,7 +87,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
     while (leftRecordCount != 0) {
       outputRecordsInternal();
 
-      if (outputIndex == MAX_OUTPUT_RECORD) {
+      if (outputIndex == NestedLoopJoinBatch.MAX_BATCH_SIZE) {
         break;
       }
 

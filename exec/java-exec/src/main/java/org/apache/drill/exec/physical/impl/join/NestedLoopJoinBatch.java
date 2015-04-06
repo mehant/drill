@@ -60,6 +60,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   int outputRecords = 0;
   boolean getRight = true;
 
+  protected static final int MAX_BATCH_SIZE = 4096;
+
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
 
   private static final GeneratorMapping EMIT_RIGHT =
@@ -109,15 +111,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             if (!right.getSchema().equals(rightSchema)) {
               throw new DrillRuntimeException("Nested loop join does not support schema changes");
             }
-            // TODO: Do we need to do this?
-          /*
-          for (VectorWrapper vw : container) {
-            //vw.getValueVector().allocateNew();
-            // TODO replace this with constant from template file
-            AllocationHelper.allocateNew(vw.getValueVector(), 4096);
-          }
-          */
-          // fall through
+            // fall through
           case OK:
             rightRecordCounts.addLast(right.getRecordCount());
             RecordBatchData nextBatch = new RecordBatchData(right);
@@ -136,12 +130,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       state = BatchState.NOT_FIRST;
     }
 
-    // TODO: remove, figure out the right place
-    for (VectorWrapper vw : container) {
-      //vw.getValueVector().allocateNew();
-      // TODO replace this with constant from template file
-      AllocationHelper.allocateNew(vw.getValueVector(), 4096);
-    }
+    allocateVectors();
+
     outputRecords = nljWorker.outputRecords();
 
     logger.debug("emitted " + outputRecords);
@@ -252,15 +242,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
       }
 
       nljWorker = setupWorker();
-      //nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, leftUpstream, this);
 
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
-      // TODO do we need this?
-      for (VectorWrapper vw : container) {
-        //vw.getValueVector().allocateNew();
-        AllocationHelper.allocateNew(vw.getValueVector(), 4096);
-      }
+      allocateVectors();
+
       container.setRecordCount(0);
 
     } catch (ClassTransformationException | IOException e) {
@@ -276,5 +262,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     super.cleanup();
     right.cleanup();
     left.cleanup();
+  }
+
+  private void allocateVectors() {
+    for (VectorWrapper vw : container) {
+      AllocationHelper.allocateNew(vw.getValueVector(), MAX_BATCH_SIZE);
+    }
   }
 }
