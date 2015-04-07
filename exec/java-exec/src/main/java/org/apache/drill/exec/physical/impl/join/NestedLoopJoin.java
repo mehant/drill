@@ -22,14 +22,25 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 
+/**
+ * Interface for the nested loop join operator.
+ */
 public interface NestedLoopJoin {
   public static TemplateClassDefinition<NestedLoopJoin> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(NestedLoopJoin.class, NestedLoopJoinTemplate.class);
 
-  public void setupNestedLoopJoin(FragmentContext context, ExpandableHyperContainerContext containerContext, RecordBatch left,
+  public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
+                                  ExpandableHyperContainerContext containerContext,
                                   NestedLoopJoinBatch outgoing);
+  // Produce output records
   public int outputRecords();
-  public void emitRight(int rightCompositeIndex, int outIndex);
+
+  // Project the record at offset 'leftIndex' in the left input batch into the output container at offset 'outIndex'
   public void emitLeft(int leftIndex, int outIndex);
+
+  // Project the record from the hyper container located at 'rightCompositeIndex' into the output container at 'outIndex'
+  public void emitRight(int rightCompositeIndex, int outIndex);
+
+  // Setup the input/output value vector references
   public void doSetup(FragmentContext context, VectorContainer rightContainer, RecordBatch leftBatch, RecordBatch outgoing);
 }
