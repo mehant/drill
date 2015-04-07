@@ -47,17 +47,19 @@ import java.io.IOException;
 public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
 
+  protected static final int MAX_BATCH_SIZE = 4096;
+
+  protected static final int LEFT_INPUT = 0;
+  protected static final int RIGHT_INPUT = 1;
+
   private RecordBatch left;
   private RecordBatch right;
-  private IterOutcome leftUpstream = IterOutcome.NONE;
-  private IterOutcome rightUpstream = IterOutcome.NONE;
   private NestedLoopJoin nljWorker = null;
   private BatchSchema leftSchema = null;
   private BatchSchema rightSchema = null;
   private int outputRecords = 0;
   private boolean getRight = true;
   private ExpandableHyperContainerContext containerContext = new ExpandableHyperContainerContext();
-  protected static final int MAX_BATCH_SIZE = 4096;
 
   private static final GeneratorMapping EMIT_RIGHT =
       GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,
@@ -99,8 +101,9 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
     // Accumulate the record batch on the right in a hyper container
     if (state == BatchState.FIRST) {
+      IterOutcome rightUpstream;
       while (getRight == true) {
-        rightUpstream = next(right);
+        rightUpstream = next(RIGHT_INPUT, right);
         switch (rightUpstream) {
           case OK_NEW_SCHEMA:
             if (!right.getSchema().equals(rightSchema)) {
@@ -208,8 +211,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   protected void buildSchema() throws SchemaChangeException {
 
     try {
-      leftUpstream = next(left);
-      rightUpstream = next(right);
+      next(LEFT_INPUT, left);
+      next(RIGHT_INPUT, right);
 
       // TODO check for Iteroutcome.NONE in the incoming schema
       leftSchema = left.getSchema();

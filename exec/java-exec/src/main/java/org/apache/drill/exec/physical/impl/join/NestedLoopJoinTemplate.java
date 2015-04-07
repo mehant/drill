@@ -28,9 +28,8 @@ import java.util.List;
 
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
-  private FragmentContext context = null;
   private RecordBatch left = null;
-  private RecordBatch outgoing = null;
+  private NestedLoopJoinBatch outgoing = null;
   private List<Integer> rightCounts = null;
   private int rightBatchCount = 0;
   private int leftRecordCount = 0;
@@ -41,17 +40,16 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
   public void setupNestedLoopJoin(FragmentContext context, ExpandableHyperContainerContext rightContainerContext,
                                   RecordBatch left, NestedLoopJoinBatch outgoing) {
-    this.context = context;
     this.left = left;
     leftRecordCount = left.getRecordCount();
-    this.outgoing = outgoing;
     this.rightBatchCount = rightContainerContext.getNumberOfBatches();
     this.rightCounts = rightContainerContext.getRecordCounts();
+    this.outgoing = outgoing;
 
     doSetup(context, rightContainerContext.getContainer(), left, outgoing);
   }
 
-  private void outputRecordsInternal() {
+  private boolean populateOutgoingBatch() {
 
     for (;nextRightBatchToProcess < rightBatchCount; nextRightBatchToProcess++) {
       int compositeIndexPart = nextRightBatchToProcess << 16;
@@ -64,27 +62,25 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
           emitRight((compositeIndexPart | (nextRightRecordToProcess & 0x0000FFFF)), outputIndex);
           outputIndex++;
 
-          // TODO: Remove the check to see if we reached max record count from within the inner most loop. Simply calculate the limits once before the loop starts
+          // TODO: Optimization; We can eliminate this check and compute the limits before the loop
           if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
             nextLeftRecordToProcess++;
-            return;
+            return false;
           }
         }
         nextLeftRecordToProcess = 0;
       }
       nextRightRecordToProcess = 0;
     }
+    return true;
   }
 
   public int outputRecords() {
     outputIndex = 0;
     while (leftRecordCount != 0) {
-      outputRecordsInternal();
-
-      if (outputIndex == NestedLoopJoinBatch.MAX_BATCH_SIZE) {
+      if (!populateOutgoingBatch()) {
         break;
       }
-
       // reset state and get next left batch
       resetAndGetNext();
     }
@@ -97,7 +93,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
       vw.getValueVector().clear();
     }
     nextRightBatchToProcess = nextRightRecordToProcess = nextLeftRecordToProcess = 0;
-    RecordBatch.IterOutcome leftOutcome = left.next();
+    RecordBatch.IterOutcome leftOutcome = outgoing.next(NestedLoopJoinBatch.LEFT_INPUT, left);
     switch (leftOutcome) {
       case OK_NEW_SCHEMA:
         throw new DrillRuntimeException("Nested loop join does not handle schema change. Schema change" +
