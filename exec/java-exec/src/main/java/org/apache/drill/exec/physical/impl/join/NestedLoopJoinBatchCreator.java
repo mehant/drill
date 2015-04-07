@@ -25,9 +25,6 @@ import org.apache.drill.exec.record.RecordBatch;
 
 import java.util.List;
 
-/**
- * Created by mbaid on 1/22/15.
- */
 public class NestedLoopJoinBatchCreator implements BatchCreator<NestedLoopJoinPOP> {
   @Override
   public RecordBatch getBatch(FragmentContext context, NestedLoopJoinPOP config, List<RecordBatch> children) throws ExecutionSetupException {
