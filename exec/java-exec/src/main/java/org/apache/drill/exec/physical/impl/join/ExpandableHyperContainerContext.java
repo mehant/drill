@@ -24,6 +24,10 @@ import org.apache.drill.exec.record.RecordBatch;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * A thin wrapper around the ExpandableHyperContainer. In addition to the hyper container
+ * we also maintain a list of record counts corresponding to each batch in the hyper container.
+ */
 public class ExpandableHyperContainerContext {
   private ExpandableHyperContainer container = null;
   private LinkedList<Integer> recordCounts = new LinkedList<>();
