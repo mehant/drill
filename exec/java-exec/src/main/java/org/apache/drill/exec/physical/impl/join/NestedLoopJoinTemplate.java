@@ -29,32 +29,26 @@ import java.util.List;
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
   FragmentContext context = null;
-  VectorContainer right = null;
   RecordBatch left = null;
   RecordBatch outgoing = null;
   List<Integer> rightCounts = null;
   int rightBatchCount = 0;
   int leftRecordCount = 0;
-  boolean drainLeft = false;
   int nextRightBatchToProcess = 0;
   int nextRightRecordToProcess = 0;
   int nextLeftRecordToProcess = 0;
   int outputIndex = 0;
 
-  public void setupNestedLoopJoin(FragmentContext context, VectorContainer right, List<Integer> rightCounts,
+  public void setupNestedLoopJoin(FragmentContext context, ExpandableHyperContainerContext rightContainerContext,
                                   RecordBatch left, NestedLoopJoinBatch outgoing) {
     this.context = context;
-    this.right = right;
     this.left = left;
     leftRecordCount = left.getRecordCount();
-    if (leftRecordCount == 0) {
-      drainLeft = true;
-    }
     this.outgoing = outgoing;
-    this.rightBatchCount = rightCounts.size();
-    this.rightCounts = rightCounts;
+    this.rightBatchCount = rightContainerContext.getNumberOfBatches();
+    this.rightCounts = rightContainerContext.getRecordCounts();
 
-    doSetup(context, right, left, outgoing);
+    doSetup(context, rightContainerContext.getContainer(), left, outgoing);
   }
 
   private void outputRecordsInternal() {

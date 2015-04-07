@@ -31,7 +31,6 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -44,7 +43,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
 import java.io.IOException;
-import java.util.LinkedList;
 
 public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> {
 
@@ -52,13 +50,13 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   RecordBatch right;
   IterOutcome leftUpstream = IterOutcome.NONE;
   IterOutcome rightUpstream = IterOutcome.NONE;
-  ExpandableHyperContainer rightContainer;
-  LinkedList<Integer> rightRecordCounts = new LinkedList<>();
   NestedLoopJoin nljWorker = null;
   BatchSchema leftSchema = null;
   BatchSchema rightSchema = null;
   int outputRecords = 0;
   boolean getRight = true;
+  ExpandableHyperContainerContext containerContext = new ExpandableHyperContainerContext();
+
 
   protected static final int MAX_BATCH_SIZE = 4096;
 
@@ -114,10 +112,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             }
             // fall through
           case OK:
-            rightRecordCounts.addLast(right.getRecordCount());
-            RecordBatchData nextBatch = new RecordBatchData(right);
-            rightContainer.addBatch(nextBatch.getContainer());
-            break;
+            containerContext.addBatch(right);
+           break;
           case NONE:
           case STOP:
           case NOT_YET:
@@ -125,7 +121,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             break;
         }
       }
-      nljWorker.setupNestedLoopJoin(context, rightContainer, rightRecordCounts, left, this);
+      nljWorker.setupNestedLoopJoin(context, containerContext, left, this);
       state = BatchState.NOT_FIRST;
     }
 
@@ -234,11 +230,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         }
       }
 
-      if (rightContainer == null) {
-        rightRecordCounts.addLast(right.getRecordCount());
-        RecordBatchData firstBatch = new RecordBatchData(right);
-        rightContainer = new ExpandableHyperContainer(firstBatch.getContainer());
-      }
+      containerContext.addBatch(right);
 
       nljWorker = setupWorker();
 
@@ -255,9 +247,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
   @Override
   public void cleanup() {
-    if (rightContainer != null) {
-      rightContainer.clear();
-    }
+    containerContext.cleanup();
     super.cleanup();
     right.cleanup();
     left.cleanup();
