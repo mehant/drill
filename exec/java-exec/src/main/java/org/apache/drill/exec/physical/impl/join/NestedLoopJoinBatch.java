@@ -59,17 +59,23 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   // Left input to the nested loop join operator
   private RecordBatch left;
 
-  // Right input to the nested loop join operator.
-  private RecordBatch right;
-
-  // Runtime generated class implementing the NestedLoopJoin interface
-  private NestedLoopJoin nljWorker = null;
-
   // Schema on the left side
   private BatchSchema leftSchema = null;
 
+  // state (IterOutcome) of the left input
+  private IterOutcome leftUpstream = IterOutcome.NONE;
+
+  // Right input to the nested loop join operator.
+  private RecordBatch right;
+
   // Schema on the right side
   private BatchSchema rightSchema = null;
+
+  // state (IterOutcome) of the right input
+  private IterOutcome rightUpstream = IterOutcome.NONE;
+
+  // Runtime generated class implementing the NestedLoopJoin interface
+  private NestedLoopJoin nljWorker = null;
 
   // Number of output records in the current outgoing batch
   private int outputRecords = 0;
@@ -129,7 +135,6 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
     // Accumulate batches on the right in a hyper container
     if (state == BatchState.FIRST) {
-      IterOutcome rightUpstream;
       boolean drainRight = true;
       while (drainRight == true) {
         rightUpstream = next(RIGHT_INPUT, right);
@@ -196,14 +201,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     int fieldId = 0;
     int outputFieldId = 0;
     // Set the input and output value vector references corresponding to the left batch
-    for (VectorWrapper<?> vv : left) {
-      TypeProtos.MajorType fieldType = vv.getField().getType();
+    for (MaterializedField field : leftSchema) {
+      final TypeProtos.MajorType fieldType = field.getType();
 
-      ValueVector v = container.addOrGet(MaterializedField.create(vv.getField().getPath(), fieldType));
-      if (v instanceof AbstractContainerVector) {
-        vv.getValueVector().makeTransferPair(v);
-        v.clear();
-      }
+      // Add the vector to the output container
+      container.addOrGet(field);
 
       JVar inVV = g.declareVectorValueSetupAndMember("leftBatch", new TypedFieldId(fieldType, false, fieldId));
       JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, outputFieldId));
@@ -221,10 +223,9 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     // Set the input and output value vector references corresponding to the left batch
     for (MaterializedField field : rightSchema) {
 
-      TypeProtos.MajorType fieldType = field.getType();
-      final MaterializedField projected = field.cloneWithType(fieldType);
+      final TypeProtos.MajorType fieldType = field.getType();
       // Add the vector to our output container
-      container.addOrGet(projected);
+      container.addOrGet(field);
 
       JVar inVV = g.declareVectorValueSetupAndMember("rightContainer", new TypedFieldId(field.getType(), true, fieldId));
       JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(fieldType, false, outputFieldId));
@@ -258,25 +259,23 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   protected void buildSchema() throws SchemaChangeException {
 
     try {
-      next(LEFT_INPUT, left);
-      next(RIGHT_INPUT, right);
+      leftUpstream = next(LEFT_INPUT, left);
+      rightUpstream = next(RIGHT_INPUT, right);
 
-      leftSchema = left.getSchema();
-      rightSchema = right.getSchema();
-
-      if (leftSchema != null) {
+      if (leftUpstream != IterOutcome.NONE) {
+        leftSchema = left.getSchema();
         for (VectorWrapper vw : left) {
           container.addOrGet(vw.getField());
         }
       }
 
-      if (rightSchema != null) {
+      if (rightUpstream != IterOutcome.NONE) {
+        rightSchema = right.getSchema();
         for (VectorWrapper vw : right) {
           container.addOrGet(vw.getField());
         }
+        containerContext.addBatch(right);
       }
-
-      containerContext.addBatch(right);
 
       nljWorker = setupWorker();
 
