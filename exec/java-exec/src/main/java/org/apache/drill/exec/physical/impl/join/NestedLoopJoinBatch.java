@@ -45,22 +45,19 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import java.io.IOException;
 
 public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> {
-
-  RecordBatch left;
-  RecordBatch right;
-  IterOutcome leftUpstream = IterOutcome.NONE;
-  IterOutcome rightUpstream = IterOutcome.NONE;
-  NestedLoopJoin nljWorker = null;
-  BatchSchema leftSchema = null;
-  BatchSchema rightSchema = null;
-  int outputRecords = 0;
-  boolean getRight = true;
-  ExpandableHyperContainerContext containerContext = new ExpandableHyperContainerContext();
-
-
-  protected static final int MAX_BATCH_SIZE = 4096;
-
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
+
+  private RecordBatch left;
+  private RecordBatch right;
+  private IterOutcome leftUpstream = IterOutcome.NONE;
+  private IterOutcome rightUpstream = IterOutcome.NONE;
+  private NestedLoopJoin nljWorker = null;
+  private BatchSchema leftSchema = null;
+  private BatchSchema rightSchema = null;
+  private int outputRecords = 0;
+  private boolean getRight = true;
+  private ExpandableHyperContainerContext containerContext = new ExpandableHyperContainerContext();
+  protected static final int MAX_BATCH_SIZE = 4096;
 
   private static final GeneratorMapping EMIT_RIGHT =
       GeneratorMapping.create("doSetup"/* setup method */, "emitRight" /* eval method */, null /* reset */,

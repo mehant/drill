@@ -28,16 +28,16 @@ import java.util.List;
 
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
-  FragmentContext context = null;
-  RecordBatch left = null;
-  RecordBatch outgoing = null;
-  List<Integer> rightCounts = null;
-  int rightBatchCount = 0;
-  int leftRecordCount = 0;
-  int nextRightBatchToProcess = 0;
-  int nextRightRecordToProcess = 0;
-  int nextLeftRecordToProcess = 0;
-  int outputIndex = 0;
+  private FragmentContext context = null;
+  private RecordBatch left = null;
+  private RecordBatch outgoing = null;
+  private List<Integer> rightCounts = null;
+  private int rightBatchCount = 0;
+  private int leftRecordCount = 0;
+  private int nextRightBatchToProcess = 0;
+  private int nextRightRecordToProcess = 0;
+  private int nextLeftRecordToProcess = 0;
+  private int outputIndex = 0;
 
   public void setupNestedLoopJoin(FragmentContext context, ExpandableHyperContainerContext rightContainerContext,
                                   RecordBatch left, NestedLoopJoinBatch outgoing) {
