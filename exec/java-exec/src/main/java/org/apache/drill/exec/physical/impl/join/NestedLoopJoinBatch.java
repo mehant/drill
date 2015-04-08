@@ -267,6 +267,11 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         for (VectorWrapper vw : left) {
           container.addOrGet(vw.getField());
         }
+
+        // if we have a schema batch, skip it
+        if (left.getRecordCount() == 0) {
+          leftUpstream = next(LEFT_INPUT, left);
+        }
       }
 
       if (rightUpstream != IterOutcome.NONE) {

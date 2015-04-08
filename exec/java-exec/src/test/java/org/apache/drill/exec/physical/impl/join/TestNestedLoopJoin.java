@@ -59,6 +59,14 @@ public class TestNestedLoopJoin extends PlanTestBase {
       + " where r_regionkey > (select min(n_regionkey) from cp.`tpch/nation.parquet` "
       + "                        where n_nationkey < 4)";
 
+  private static final String testNlJoinAggrs_1 = "select total1, total2 from "
+      + "(select sum(l_quantity) as total1 from cp.`tpch/lineitem.parquet` where l_suppkey between 100 and 200), "
+      + "(select sum(l_quantity) as total2 from cp.`tpch/lineitem.parquet` where l_suppkey between 100 and 200)  ";
+
+  private static final String testNlJoinAggrs_2 = "select total1, total2 from "
+      + "(select sum(l_quantity) as total1 from cp.`tpch/lineitem.parquet` where l_suppkey between 100 and 200), "
+      + "(select sum(l_quantity) as total2 from cp.`tpch/lineitem.parquet` where l_suppkey between 200 and 300)  ";
+
 
   // PLANNING TESTS
   @Test
@@ -78,10 +86,7 @@ public class TestNestedLoopJoin extends PlanTestBase {
 
   @Test
   public void testNlJoinAggrs_1() throws Exception {
-    String query = "select total1, total2 from "
-       + "(select sum(l_quantity) as total1 from cp.`tpch/lineitem.parquet` where l_suppkey between 100 and 200), "
-       + "(select sum(l_quantity) as total2 from cp.`tpch/lineitem.parquet` where l_suppkey between 200 and 300)  ";
-    testPlanMatchingPatterns(query, new String[]{nlpattern}, new String[]{});
+    testPlanMatchingPatterns(testNlJoinAggrs_1, new String[]{nlpattern}, new String[]{});
   }
 
   @Test // equality join and scalar right input, hj and mj disabled
@@ -265,12 +270,6 @@ public class TestNestedLoopJoin extends PlanTestBase {
 
     test("drop view region_view_testNLJ_DRILL2715");
     test("drop view nation_view_testNLJ_DRILL2715 ");
-
-    // complex types with NLJ
-    query = "select t1.uid, t1.events, t1.events[0].evnt_id as event_id, t2.transactions, " +
-        "t2.transactions[0] as trans, t1.odd, t2.even from cp.`project/complex/a.json` t1, " +
-        "cp.`project/complex/b.json` t2 where t1.uid = t2.uid";
-    testNLJHelper(query);
   }
 
   @Test
@@ -280,6 +279,28 @@ public class TestNestedLoopJoin extends PlanTestBase {
         "cp.`project/complex/b.json` t2 where t1.uid = t2.uid";
     testNLJHelper(query);
   }
+
+  @Test
+  public void testNlJoinAggrs_1_exec() throws Exception {
+    testBuilder()
+        .sqlQuery(testNlJoinAggrs_1)
+        .unOrdered()
+        .baselineColumns("total1", "total2")
+        .baselineValues(15595.0d, 15595.0d)
+        .go();
+  }
+
+  @Test
+  @Ignore ("DRILL_2411")
+  public void testNlJoinAggrs_2_exec() throws Exception {
+    testBuilder()
+        .sqlQuery(testNlJoinAggrs_1)
+        .unOrdered()
+        .baselineColumns("total1", "total2")
+        .baselineValues(15595.0d, null)
+        .go();
+  }
+
   // TPCH SINGLE MODE TESTS WITH NLJ
   private void testTpchNonDistributeNLJ(String fileName) throws Exception {
     String query = getFile(fileName);
