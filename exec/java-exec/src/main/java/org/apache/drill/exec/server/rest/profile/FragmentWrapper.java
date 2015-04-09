@@ -32,7 +32,7 @@ public class FragmentWrapper {
   private final MajorFragmentProfile major;
   private final long start;
 
-  public FragmentWrapper(MajorFragmentProfile major, long start) {
+  public FragmentWrapper(final MajorFragmentProfile major, final long start) {
     this.major = Preconditions.checkNotNull(major);
     this.start = start;
   }
@@ -45,22 +45,22 @@ public class FragmentWrapper {
     return String.format("fragment-%s", major.getMajorFragmentId());
   }
 
-  public void addSummary(TableBuilder tb) {
+  public void addSummary(final TableBuilder tb, final int colCount) {
     final String fmt = " (%d)";
-    long t0 = start;
+    final long t0 = start;
 
-    ArrayList<MinorFragmentProfile> complete = new ArrayList<MinorFragmentProfile>(
+    final ArrayList<MinorFragmentProfile> complete = new ArrayList<MinorFragmentProfile>(
         Collections2.filter(major.getMinorFragmentProfileList(), Filters.hasOperatorsAndTimes));
 
     tb.appendCell(new OperatorPathBuilder().setMajor(major).build(), null);
     tb.appendCell(complete.size() + " / " + major.getMinorFragmentProfileCount(), null);
 
     if (complete.size() < 1) {
-      tb.appendRepeated("", null, 7);
+      tb.appendRepeated("", null, colCount - 2);
       return;
     }
 
-    int li = complete.size() - 1;
+    final int li = complete.size() - 1;
 
     Collections.sort(complete, Comparators.startTimeCompare);
     tb.appendMillis(complete.get(0).getStartTime() - t0, String.format(fmt, complete.get(0).getMinorFragmentId()));
@@ -71,7 +71,7 @@ public class FragmentWrapper {
     tb.appendMillis(complete.get(li).getEndTime() - t0, String.format(fmt, complete.get(li).getMinorFragmentId()));
 
     long total = 0;
-    for (MinorFragmentProfile p : complete) {
+    for (final MinorFragmentProfile p : complete) {
       total += p.getEndTime() - p.getStartTime();
     }
     Collections.sort(complete, Comparators.runTimeCompare);
@@ -80,6 +80,12 @@ public class FragmentWrapper {
     tb.appendMillis((long) (total / complete.size()), null);
     tb.appendMillis(complete.get(li).getEndTime() - complete.get(li).getStartTime(),
         String.format(fmt, complete.get(li).getMinorFragmentId()));
+
+    Collections.sort(complete, Comparators.lastUpdateCompare);
+    tb.appendTime(complete.get(complete.size() - 1).getLastUpdate(), null);
+
+    Collections.sort(complete, Comparators.lastProgressCompare);
+    tb.appendTime(complete.get(complete.size() - 1).getLastProgress(), null);
 
     Collections.sort(complete, Comparators.fragPeakMemAllocated);
     tb.appendBytes(complete.get(li).getMaxMemoryUsed(), null);
@@ -90,9 +96,10 @@ public class FragmentWrapper {
   }
 
 
-  public String majorFragmentTimingProfile(MajorFragmentProfile major) {
-    final String[] columns = {"Minor Fragment", "Host", "Start", "End", "Total Time", "Max Records", "Max Batches", "Peak Memory", "State"};
-    TableBuilder builder = new TableBuilder(columns);
+  public String majorFragmentTimingProfile(final MajorFragmentProfile major) {
+    final String[] columns = { "Minor Fragment", "Host", "Start", "End", "Total Time", "Max Records", "Max Batches",
+        "Last Update", "Last Progress", "Peak Memory", "State" };
+    final TableBuilder builder = new TableBuilder(columns);
 
     ArrayList<MinorFragmentProfile> complete, incomplete;
     complete = new ArrayList<MinorFragmentProfile>(Collections2.filter(
@@ -101,17 +108,17 @@ public class FragmentWrapper {
         major.getMinorFragmentProfileList(), Filters.missingOperatorsOrTimes));
 
     Collections.sort(complete, Comparators.minorIdCompare);
-    for (MinorFragmentProfile minor : complete) {
-      ArrayList<OperatorProfile> ops = new ArrayList<OperatorProfile>(minor.getOperatorProfileList());
+    for (final MinorFragmentProfile minor : complete) {
+      final ArrayList<OperatorProfile> ops = new ArrayList<OperatorProfile>(minor.getOperatorProfileList());
 
-      long t0 = start;
+      final long t0 = start;
       long biggestIncomingRecords = 0;
       long biggestBatches = 0;
 
-      for (OperatorProfile op : ops) {
+      for (final OperatorProfile op : ops) {
         long incomingRecords = 0;
         long batches = 0;
-        for (StreamProfile sp : op.getInputProfileList()) {
+        for (final StreamProfile sp : op.getInputProfileList()) {
           incomingRecords += sp.getRecords();
           batches += sp.getBatches();
         }
@@ -127,14 +134,17 @@ public class FragmentWrapper {
 
       builder.appendFormattedInteger(biggestIncomingRecords, null);
       builder.appendFormattedInteger(biggestBatches, null);
+
+      builder.appendTime(minor.getLastUpdate(), null);
+      builder.appendTime(minor.getLastProgress(), null);
       builder.appendBytes(minor.getMaxMemoryUsed(), null);
       builder.appendCell(minor.getState().name(), null);
     }
-    for (MinorFragmentProfile m : incomplete) {
+    for (final MinorFragmentProfile m : incomplete) {
       builder.appendCell(
           major.getMajorFragmentId() + "-"
               + m.getMinorFragmentId(), null);
-      builder.appendRepeated(m.getState().toString(), null, 6);
+      builder.appendRepeated(m.getState().toString(), null, columns.length - 1);
     }
     return builder.toString();
   }
