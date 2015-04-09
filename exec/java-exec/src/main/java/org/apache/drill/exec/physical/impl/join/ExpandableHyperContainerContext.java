@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class ExpandableHyperContainerContext {
   private ExpandableHyperContainer container = null;
-  private LinkedList<Integer> recordCounts = new LinkedList<>();
+  private final LinkedList<Integer> recordCounts = new LinkedList<>();
 
   public ExpandableHyperContainer getContainer() {
     return container;
@@ -58,6 +58,6 @@ public class ExpandableHyperContainerContext {
     if (container != null) {
       container.clear();
     }
-    recordCounts = null;
+    recordCounts.clear();
   }
 }

@@ -38,8 +38,8 @@ public interface NestedLoopJoin {
   // Project the record at offset 'leftIndex' in the left input batch into the output container at offset 'outIndex'
   public void emitLeft(int leftIndex, int outIndex);
 
-  // Project the record from the hyper container located at 'rightCompositeIndex' into the output container at 'outIndex'
-  public void emitRight(int rightCompositeIndex, int outIndex);
+  // Project the record from the hyper container given the batch index and the record within the batch at 'outIndex'
+  public void emitRight(int batchIndex, int recordIndexWithinBatch, int outIndex);
 
   // Setup the input/output value vector references
   public void doSetup(FragmentContext context, VectorContainer rightContainer, RecordBatch leftBatch, RecordBatch outgoing);

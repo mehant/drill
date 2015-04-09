@@ -41,14 +41,8 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   // List of record counts  per batch in the hyper container
   private List<Integer> rightCounts = null;
 
-  // Total number of batches on the right side
-  private int totalRightBatches = 0;
-
   // Output batch
   private NestedLoopJoinBatch outgoing = null;
-
-  // Current index to be populated in the output batch
-  private int outputIndex = 0;
 
   // Next right batch to process
   private int nextRightBatchToProcess = 0;
@@ -64,15 +58,14 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    * input and output value vector references
    * @param context Fragment context
    * @param left Current left input batch being processed
-   * @param rightContainerContext hyper container context
-   * @param outgoing output batch
+   * @param rightContainerContext Hyper container context
+   * @param outgoing Output batch
    */
   public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
                                   ExpandableHyperContainerContext rightContainerContext,
                                   NestedLoopJoinBatch outgoing) {
     this.left = left;
     leftRecordCount = left.getRecordCount();
-    this.totalRightBatches = rightContainerContext.getNumberOfBatches();
     this.rightCounts = rightContainerContext.getRecordCounts();
     this.outgoing = outgoing;
 
@@ -82,37 +75,62 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
   /**
    * This method is the core of the nested loop join. For every record on the right we go over
    * the left batch and produce the cross product output
-   * @return a boolean indicating if there is more space in the output batch and can continue processing more left batches
+   * @param outputIndex index to start emitting records at
+   * @return final outputIndex after producing records in the output batch
    */
-  private boolean populateOutgoingBatch() {
+  private int populateOutgoingBatch(int outputIndex) {
 
-    for (;nextRightBatchToProcess < totalRightBatches; nextRightBatchToProcess++) { // for every batch on the right
-      int compositeIndexPart = nextRightBatchToProcess << 16;
-      int rightRecordCount = rightCounts.get(nextRightBatchToProcess);
+    // Total number of batches on the right side
+    int totalRightBatches = rightCounts.size();
 
-      for (;nextRightRecordToProcess < rightRecordCount; nextRightRecordToProcess++) { // for every record in this right batch
-        for (;nextLeftRecordToProcess < leftRecordCount; nextLeftRecordToProcess++) { // for every record in the left batch
+    // Total number of records on the left
+    int localLeftRecordCount = leftRecordCount;
 
-          // project records from the left and right batches
-          emitLeft(nextLeftRecordToProcess, outputIndex);
-          emitRight((compositeIndexPart | (nextRightRecordToProcess & 0x0000FFFF)), outputIndex);
-          outputIndex++;
+    /*
+     * The below logic is the core of the NLJ. To have better performance we copy the instance members into local
+     * method variables, once we are done with the loop we need to update the instance variables to reflect the new
+     * state. To avoid code duplication of resetting the instance members at every exit point in the loop we are using
+     * 'goto'
+     */
+    int localNextRightBatchToProcess = nextRightBatchToProcess;
+    int localNextRightRecordToProcess = nextRightRecordToProcess;
+    int localNextLeftRecordToProcess = nextLeftRecordToProcess;
 
-          // TODO: Optimization; We can eliminate this check and compute the limits before the loop
-          if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
-            nextLeftRecordToProcess++;
+    outer: {
 
-            // no more space left in the batch, stop processing
-            return false;
+      for (; localNextRightBatchToProcess< totalRightBatches; localNextRightBatchToProcess++) { // for every batch on the right
+        int compositeIndexPart = localNextRightBatchToProcess << 16;
+        int rightRecordCount = rightCounts.get(localNextRightBatchToProcess);
+
+        for (; localNextRightRecordToProcess < rightRecordCount; localNextRightRecordToProcess++) { // for every record in this right batch
+          for (; localNextLeftRecordToProcess < localLeftRecordCount; localNextLeftRecordToProcess++) { // for every record in the left batch
+
+            // project records from the left and right batches
+            emitLeft(localNextLeftRecordToProcess, outputIndex);
+            emitRight(localNextRightBatchToProcess, localNextRightRecordToProcess, outputIndex);
+            outputIndex++;
+
+            // TODO: Optimization; We can eliminate this check and compute the limits before the loop
+            if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
+              localNextLeftRecordToProcess++;
+
+              // no more space left in the batch, stop processing
+              break outer;
+            }
           }
+          localNextLeftRecordToProcess = 0;
         }
-        nextLeftRecordToProcess = 0;
+        localNextRightRecordToProcess = 0;
       }
-      nextRightRecordToProcess = 0;
     }
 
+    // update the instance members
+    nextRightBatchToProcess = localNextRightBatchToProcess;
+    nextRightRecordToProcess = localNextRightRecordToProcess;
+    nextLeftRecordToProcess = localNextLeftRecordToProcess;
+
     // done with the current left batch and there is space in the output batch continue processing
-    return true;
+    return outputIndex;
   }
 
   /**
@@ -122,9 +140,10 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    * @return the number of records produced in the output batch
    */
   public int outputRecords() {
-    outputIndex = 0;
+    int outputIndex = 0;
     while (leftRecordCount != 0) {
-      if (!populateOutgoingBatch()) {
+      outputIndex = populateOutgoingBatch(outputIndex);
+      if (outputIndex >= NestedLoopJoinBatch.MAX_BATCH_SIZE) {
         break;
       }
       // reset state and get next left batch
@@ -165,7 +184,8 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
                                @Named("leftBatch") RecordBatch leftBatch,
                                @Named("outgoing") RecordBatch outgoing);
 
-  public abstract void emitRight(@Named("rightCompositeIndex") int rightCompositeIndex,
+  public abstract void emitRight(@Named("batchIndex") int batchIndex,
+                                 @Named("recordIndexWithinBatch") int recordIndexWithinBatch,
                                  @Named("outIndex") int outIndex);
 
   public abstract void emitLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
