@@ -104,7 +104,7 @@ public class NestedLoopJoinPrel  extends JoinPrel {
 
     buildJoinConditions(conditions, leftFields, rightFields, leftKeys, rightKeys);
 
-    NestedLoopJoinPOP nljoin = new NestedLoopJoinPOP(leftPop, rightPop);
+    NestedLoopJoinPOP nljoin = new NestedLoopJoinPOP(leftPop, rightPop, conditions, jtype);
     return creator.addMetadata(this, nljoin);
   }
 
