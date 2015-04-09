@@ -33,6 +33,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -86,7 +87,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
    * context keeps track of the hyper container and also maintains a list of record counts
    * per input batch
    */
-  private ExpandableHyperContainerContext containerContext = new ExpandableHyperContainerContext();
+  private ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
 
   // Generator mapping for the right side
   private static final GeneratorMapping EMIT_RIGHT =
@@ -149,7 +150,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             }
             // fall through
           case OK:
-            containerContext.addBatch(right);
+            rightContainer.addBatch(right);
            break;
           case NONE:
           case STOP:
@@ -158,7 +159,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             break;
         }
       }
-      nljWorker.setupNestedLoopJoin(context, left, containerContext, this);
+      nljWorker.setupNestedLoopJoin(context, left, rightContainer, this);
       state = BatchState.NOT_FIRST;
     }
 
@@ -224,7 +225,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     JExpression batchIndex = JExpr.direct("batchIndex");
     JExpression recordIndexWithinBatch = JExpr.direct("recordIndexWithinBatch");
 
-    // Set the input and output value vector references corresponding to the left batch
+    // Set the input and output value vector references corresponding to the right batch
     for (MaterializedField field : rightSchema) {
 
       final TypeProtos.MajorType fieldType = field.getType();
@@ -283,7 +284,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         for (VectorWrapper vw : right) {
           container.addOrGet(vw.getField());
         }
-        containerContext.addBatch(right);
+        rightContainer.addBatch(right);
       }
 
       nljWorker = setupWorker();
@@ -301,7 +302,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
   @Override
   public void cleanup() {
-    containerContext.cleanup();
+    rightContainer.clear();
     super.cleanup();
     right.cleanup();
     left.cleanup();

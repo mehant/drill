@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -58,18 +59,18 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    * input and output value vector references
    * @param context Fragment context
    * @param left Current left input batch being processed
-   * @param rightContainerContext Hyper container context
+   * @param rightContainer Hyper container
    * @param outgoing Output batch
    */
   public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
-                                  ExpandableHyperContainerContext rightContainerContext,
+                                  ExpandableHyperContainer rightContainer,
                                   NestedLoopJoinBatch outgoing) {
     this.left = left;
     leftRecordCount = left.getRecordCount();
-    this.rightCounts = rightContainerContext.getRecordCounts();
+    this.rightCounts = rightContainer.getBatchCounts();
     this.outgoing = outgoing;
 
-    doSetup(context, rightContainerContext.getContainer(), left, outgoing);
+    doSetup(context, rightContainer, left, outgoing);
   }
 
   /**

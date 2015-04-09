@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 
@@ -30,7 +31,7 @@ public interface NestedLoopJoin {
       new TemplateClassDefinition<>(NestedLoopJoin.class, NestedLoopJoinTemplate.class);
 
   public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
-                                  ExpandableHyperContainerContext containerContext,
+                                  ExpandableHyperContainer rightContainer,
                                   NestedLoopJoinBatch outgoing);
   // Produce output records
   public int outputRecords();

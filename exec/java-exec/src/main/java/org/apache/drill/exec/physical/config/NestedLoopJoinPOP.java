@@ -42,6 +42,12 @@ public class NestedLoopJoinPOP extends AbstractBase {
 
   private final PhysicalOperator left;
   private final PhysicalOperator right;
+
+  /*
+   * Conditions and jointype are currently not used, since the condition is always true
+   * and we don't perform any special execution operation based on join type either. However
+   * when we enhance NLJ this would be used.
+   */
   private final List<JoinCondition> conditions;
   private final JoinRelType joinType;
 
@@ -89,18 +95,6 @@ public class NestedLoopJoinPOP extends AbstractBase {
 
   public List<JoinCondition> getConditions() {
     return conditions;
-  }
-
-  public NestedLoopJoinPOP flipIfRight(){
-    if(joinType == JoinRelType.RIGHT){
-      List<JoinCondition> flippedConditions = Lists.newArrayList();
-      for(JoinCondition c : conditions){
-        flippedConditions.add(c.flip());
-      }
-      return new NestedLoopJoinPOP(right, left, flippedConditions, JoinRelType.LEFT);
-    }else{
-      return this;
-    }
   }
 
   @Override
