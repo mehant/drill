@@ -161,7 +161,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             break;
         }
       }
-      nljWorker.setupNestedLoopJoin(context, left, rightContainer, this);
+      nljWorker.setupNestedLoopJoin(context, left, rightContainer, rightCounts, this);
       state = BatchState.NOT_FIRST;
     }
 

@@ -23,6 +23,8 @@ import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 
+import java.util.LinkedList;
+
 /**
  * Interface for the nested loop join operator.
  */
@@ -32,6 +34,7 @@ public interface NestedLoopJoin {
 
   public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
                                   ExpandableHyperContainer rightContainer,
+                                  LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing);
   // Produce output records
   public int outputRecords();

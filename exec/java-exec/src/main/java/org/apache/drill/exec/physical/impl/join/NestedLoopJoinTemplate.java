@@ -25,6 +25,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 
 import javax.inject.Named;
+import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -64,10 +65,11 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    */
   public void setupNestedLoopJoin(FragmentContext context, RecordBatch left,
                                   ExpandableHyperContainer rightContainer,
+                                  LinkedList<Integer> rightCounts,
                                   NestedLoopJoinBatch outgoing) {
     this.left = left;
     leftRecordCount = left.getRecordCount();
-    this.rightCounts = rightContainer.getBatchCounts();
+    this.rightCounts = rightCounts;
     this.outgoing = outgoing;
 
     doSetup(context, rightContainer, left, outgoing);
