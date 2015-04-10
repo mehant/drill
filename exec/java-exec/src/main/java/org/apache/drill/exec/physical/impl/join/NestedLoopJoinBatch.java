@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
+import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -44,6 +45,7 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 /*
  * RecordBatch implementation for the nested loop join operator
@@ -82,12 +84,12 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
   // Number of output records in the current outgoing batch
   private int outputRecords = 0;
 
-  /*
-   * We accumulate all the batches on the right side in a hyper container. The below
-   * context keeps track of the hyper container and also maintains a list of record counts
-   * per input batch
-   */
+  // We accumulate all the batches on the right side in a hyper container.
   private ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
+
+  // Record count of the individual batches in the right hypoer container
+  private LinkedList<Integer> rightCounts = new LinkedList<>();
+
 
   // Generator mapping for the right side
   private static final GeneratorMapping EMIT_RIGHT =
@@ -150,8 +152,8 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
             }
             // fall through
           case OK:
-            rightContainer.addBatch(right);
-           break;
+            addBatchToHyperContainer(right);
+            break;
           case NONE:
           case STOP:
           case NOT_YET:
@@ -284,7 +286,7 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
         for (VectorWrapper vw : right) {
           container.addOrGet(vw.getField());
         }
-        rightContainer.addBatch(right);
+        addBatchToHyperContainer(right);
       }
 
       nljWorker = setupWorker();
@@ -300,9 +302,16 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
     }
   }
 
+  private void addBatchToHyperContainer(RecordBatch inputBatch) {
+    RecordBatchData batchCopy = new RecordBatchData(inputBatch);
+    rightCounts.addLast(inputBatch.getRecordCount());
+    rightContainer.addBatch(batchCopy.getContainer());
+  }
+
   @Override
   public void cleanup() {
     rightContainer.clear();
+    rightCounts.clear();
     super.cleanup();
     right.cleanup();
     left.cleanup();

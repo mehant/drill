@@ -23,16 +23,12 @@ import java.util.LinkedList;
 
 public class ExpandableHyperContainer extends VectorContainer {
 
-  // maintains a list of record counts per batch
-  LinkedList<Integer> batchCounts = new LinkedList<>();
-
   public ExpandableHyperContainer() {
     super();
   }
 
   public ExpandableHyperContainer(VectorAccessible batch) {
     super();
-    batchCounts.addLast(batch.getRecordCount());
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
       for (VectorWrapper w : batch) {
         ValueVector[] hyperVector = w.getValueVectors();
@@ -47,7 +43,6 @@ public class ExpandableHyperContainer extends VectorContainer {
   }
 
   public void addBatch(VectorAccessible batch) {
-    batchCounts.addLast(batch.getRecordCount());
     if (wrappers.size() == 0) {
       if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {
         for (VectorWrapper w : batch) {
@@ -75,9 +70,5 @@ public class ExpandableHyperContainer extends VectorContainer {
         hyperVectorWrapper.addVector(w.getValueVector());
       }
     }
-  }
-
-  public LinkedList<Integer> getBatchCounts() {
-    return batchCounts;
   }
 }
