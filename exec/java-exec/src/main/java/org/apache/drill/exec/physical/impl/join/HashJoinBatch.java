@@ -415,7 +415,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         MajorType outputType;
         // If left join, then the output type must be nullable. However, map types are
         // not nullable so we must exclude them from the check below (see DRILL-2197).
-        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED
+        if ((joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) && inputType.getMode() == DataMode.REQUIRED
             && inputType.getMinorType() != TypeProtos.MinorType.MAP) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
@@ -451,7 +451,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
         MajorType inputType = vv.getField().getType();
         MajorType outputType;
-        if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
+        if ((joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) && inputType.getMode() == DataMode.REQUIRED) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
           outputType = inputType;

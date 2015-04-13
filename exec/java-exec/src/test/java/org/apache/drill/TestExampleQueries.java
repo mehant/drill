@@ -755,4 +755,18 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues((long) 3, (long) 6)
         .build().run();
   }
+
+  @Test
+  public void testFOJWithRequiredTypes() throws Exception {
+    String query = "select t1.varchar_col from " +
+        "cp.`parquet/drill-2707_required_types.parquet` t1 full outer join cp.`parquet/alltypes.json` t2 " +
+        "on t1.int_col = t2.INT_col order by t1.varchar_col limit 1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("varchar_col")
+        .baselineValues("doob")
+        .go();
+  }
 }
