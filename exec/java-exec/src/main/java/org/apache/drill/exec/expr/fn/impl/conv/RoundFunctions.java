@@ -38,6 +38,10 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
 public class RoundFunctions {
 
+  /*
+   * Following are round functions with no parameter. Per the SQL standard we simply return the same output
+   * type as the input type for exact inputs (int, bigint etc) and inexact types (float, double).
+   */
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RoundInt implements DrillSimpleFunc {
 
@@ -186,155 +190,161 @@ public class RoundFunctions {
     }
   }
 
+  /*
+   * Following are round functions which accept a parameter indicating the number of digits to be
+   * maintained after the decimal point.
+   * The input and output will be the same for integer types like int, bigint, smallint etc.
+   * However for float and double we need to calculate the rounded value.
+   */
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddInt implements DrillSimpleFunc {
+  public static class RoundWithParamInt implements DrillSimpleFunc {
 
-    @Param IntHolder input1;
-    @Param IntHolder input2;
+    @Param IntHolder in;
+    @Param IntHolder scale;
     @Output IntHolder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddBigInt implements DrillSimpleFunc {
+  public static class RoundWithParamBigInt implements DrillSimpleFunc {
 
-    @Param BigIntHolder input1;
-    @Param IntHolder input2;
+    @Param BigIntHolder in;
+    @Param IntHolder scale;
     @Output BigIntHolder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddFloat4 implements DrillSimpleFunc {
+  public static class RoundWithParamFloat4 implements DrillSimpleFunc {
 
-    @Param Float4Holder input1;
-    @Param IntHolder input2;
+    @Param Float4Holder in;
+    @Param IntHolder scale;
     @Output Float4Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      java.math.BigDecimal input = new java.math.BigDecimal(input1.value);
-      out.value = input.setScale(input2.value, java.math.RoundingMode.HALF_UP).floatValue();
+      java.math.BigDecimal input = new java.math.BigDecimal(in.value);
+      out.value = input.setScale(scale.value, java.math.RoundingMode.HALF_UP).floatValue();
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddFloat8 implements DrillSimpleFunc {
+  public static class RoundWithParamFloat8 implements DrillSimpleFunc {
 
-    @Param Float8Holder input1;
-    @Param IntHolder input2;
+    @Param Float8Holder in;
+    @Param IntHolder scale;
     @Output Float8Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      java.math.BigDecimal input = new java.math.BigDecimal(input1.value);
-      out.value = input.setScale(input2.value, java.math.RoundingMode.HALF_UP).doubleValue();
+      java.math.BigDecimal input = new java.math.BigDecimal(in.value);
+      out.value = input.setScale(scale.value, java.math.RoundingMode.HALF_UP).doubleValue();
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddSmallInt implements DrillSimpleFunc {
+  public static class RoundWithParamSmallInt implements DrillSimpleFunc {
 
-    @Param SmallIntHolder input1;
-    @Param IntHolder input2;
+    @Param SmallIntHolder in;
+    @Param IntHolder scale;
     @Output SmallIntHolder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddTinyInt implements DrillSimpleFunc {
+  public static class RoundWithParamTinyInt implements DrillSimpleFunc {
 
-    @Param TinyIntHolder input1;
-    @Param IntHolder input2;
+    @Param TinyIntHolder in;
+    @Param IntHolder scale;
     @Output TinyIntHolder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddUInt1 implements DrillSimpleFunc {
+  public static class RoundWithParamUInt1 implements DrillSimpleFunc {
 
-    @Param UInt1Holder input1;
-    @Param IntHolder input2;
+    @Param UInt1Holder in;
+    @Param IntHolder scale;
     @Output UInt1Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddUInt2 implements DrillSimpleFunc {
+  public static class RoundWithParamUInt2 implements DrillSimpleFunc {
 
-    @Param UInt2Holder input1;
-    @Param IntHolder input2;
+    @Param UInt2Holder in;
+    @Param IntHolder scale;
     @Output UInt2Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddUInt4 implements DrillSimpleFunc {
+  public static class RoundWithParamUInt4 implements DrillSimpleFunc {
 
-    @Param UInt4Holder input1;
-    @Param IntHolder input2;
+    @Param UInt4Holder in;
+    @Param IntHolder scale;
     @Output UInt4Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 
   @FunctionTemplate(name = "round", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class RounddUInt8 implements DrillSimpleFunc {
+  public static class RoundWithParamUInt8 implements DrillSimpleFunc {
 
-    @Param UInt8Holder input1;
-    @Param IntHolder input2;
+    @Param UInt8Holder in;
+    @Param IntHolder scale;
     @Output UInt8Holder out;
 
     public void setup() {
     }
 
     public void eval() {
-      out.value = input1.value;
+      out.value = in.value;
     }
   }
 }
