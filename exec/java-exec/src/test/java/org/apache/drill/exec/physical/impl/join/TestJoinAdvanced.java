@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestHashJoinAdvanced extends BaseTestQuery {
+public class TestJoinAdvanced extends BaseTestQuery {
 
   // Have to disable merge join, if this testcase is to test "HASH-JOIN".
   @BeforeClass
@@ -87,5 +87,43 @@ public class TestHashJoinAdvanced extends BaseTestQuery {
         .jsonBaselineFile("join/DRILL-2197-result-1.json")
         .build()
         .run();
+  }
+  private void testBothJoinsHelper(String query, String columnName, Object result) throws Exception{
+    // test merge join
+    testBuilder()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = false")
+        .unOrdered()
+        .baselineColumns(columnName)
+        .baselineValues(result)
+        .go();
+
+    // test hash join
+    testBuilder()
+        .sqlQuery(query)
+        .optionSettingQueriesForTestQuery("alter session set `planner.enable_hashjoin` = true")
+        .unOrdered()
+        .baselineColumns(columnName)
+        .baselineValues(result)
+        .go();
+  }
+  @Test
+  public void testJoinWithDifferentTypesInCondition() throws Exception {
+    String query = "select t1.full_name from cp.`employee.json` t1, cp.`department.json` t2 " +
+        "where cast(t1.department_id as double) = t2.department_id and t1.employee_id = 1";
+    String resultColumnName = "full_name";
+    Object resultValue = "Sheri Nowmer";
+
+    testBothJoinsHelper(query, resultColumnName, resultValue);
+
+    query = "select t1.bigint_col from cp.`jsoninput/implicit_cast_join_1.json` t1, cp.`jsoninput/implicit_cast_join_1.json` t2 " +
+        " where t1.bigint_col = cast(t2.bigint_col as int) and" + // join condition with bigint and int
+        " t1.double_col  = cast(t2.double_col as float) and" + // join condition with double and float
+        " t1.bigint_col = cast(t2.bigint_col as double)"; // join condition with bigint and double
+
+    resultColumnName = "bigint_col";
+    resultValue = 1l;
+
+    testBothJoinsHelper(query, resultColumnName, resultValue);
   }
 }
