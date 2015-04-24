@@ -80,7 +80,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
 	  <#if aggrtype.funcName == "min">
 
-    <#if type.outputType == "Interval">
+    <#if type.outputType.endsWith("Interval")>
 
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
@@ -88,7 +88,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
     value.value = Math.min(value.value, inMS);
 
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType.endsWith("IntervalDay")>
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
@@ -99,13 +99,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = Math.min(value.value, in.value);
     </#if>
 	  <#elseif aggrtype.funcName == "max">
-    <#if type.outputType == "Interval">
+    <#if type.outputType.endsWith("Interval")>
     long inMS = (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis+
                        in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
     value.value = Math.max(value.value, inMS);
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType.endsWith("IntervalDay")>
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliseconds;
 
@@ -115,11 +115,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 
 	  <#elseif aggrtype.funcName == "sum">
-    <#if type.outputType == "Interval">
+    <#if type.outputType.endsWith("Interval")>
     value.days += in.days;
     value.months += in.months;
     value.milliseconds += in.milliseconds;
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType.endsWith("IntervalDay")>
     value.days += in.days;
     value.milliseconds += in.milliseconds;
     <#else>
@@ -139,23 +139,23 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   public void output() {
 
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
-    <#if type.outputType == "Interval">
+    <#if type.outputType.endsWith("Interval")>
     out.months = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
     value.value = value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
     out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType.endsWith("IntervalDay")>
     out.days = (int) (value.value / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     out.milliseconds = (int) (value.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     <#else>
     out.value = value.value;
     </#if>
     <#else>
-    <#if type.outputType == "Interval">
+    <#if type.outputType.endsWith("Interval")>
     out.months = value.months;
     out.days = value.days;
     out.milliseconds = value.milliseconds;
-    <#elseif type.outputType == "IntervalDay">
+    <#elseif type.outputType.endsWith("IntervalDay")>
     out.days = value.days;
     out.milliseconds = value.milliseconds;
     <#else>

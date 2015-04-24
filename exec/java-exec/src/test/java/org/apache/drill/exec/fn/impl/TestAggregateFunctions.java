@@ -220,4 +220,18 @@ public class TestAggregateFunctions extends BaseTestQuery {
         .baselineValues(0l, null, null)
         .go();
   }
+
+  @Test
+  public void testAggregateWithRequiredTypeAndEmptyInput() throws Exception {
+    String query = "select " +
+        "count(r_regionkey) col1, sum(r_regionkey) col2, avg(r_regionkey) col3, var_pop(r_regionkey) col4, stddev_pop(r_regionkey) col 5" +
+        "from cp.`tpch/region.parquet`";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3", "col4", "col5")
+        .baselineValues(0l, null, null, null, null)
+        .go();
+  }
 }
