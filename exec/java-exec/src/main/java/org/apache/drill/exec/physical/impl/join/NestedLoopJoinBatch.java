@@ -141,6 +141,12 @@ public class NestedLoopJoinBatch extends AbstractRecordBatch<NestedLoopJoinPOP> 
 
     // Accumulate batches on the right in a hyper container
     if (state == BatchState.FIRST) {
+
+      // if we have empty batch on the left, exit early
+      if (leftUpstream == IterOutcome.NONE) {
+        return IterOutcome.NONE;
+      }
+
       boolean drainRight = true;
       while (drainRight == true) {
         rightUpstream = next(RIGHT_INPUT, right);

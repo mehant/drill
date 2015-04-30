@@ -831,4 +831,13 @@ public class TestExampleQueries extends BaseTestQuery{
         .baselineValues("MIDDLE EAST")
         .build().run();
   }
+
+  @Test
+  public void t() throws Exception {
+    test("select a.last_name " +
+        "from cp.`employee.json` a " +
+        "where exists (select n_name from cp.`tpch/nation.parquet` b) AND 1 = 0");
+
+    //test("select * from cp.`employee.json` limit 1");
+  }
 }
