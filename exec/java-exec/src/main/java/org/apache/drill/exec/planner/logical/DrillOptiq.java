@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCallFactory;
@@ -55,6 +56,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.NlsString;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 /**
  * Utilities for Drill's planner.
@@ -252,6 +254,11 @@ public class DrillOptiq {
       case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
       case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
       case "DECIMAL":
+
+        if (context.getPlannerSettings().getOptions().getOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY).bool_val == false ) {
+          throw UserException.unsupportedError().message("Decimal data type is not enabled. As part of this release decimal data type is a beta" +
+          "level feature and is not recommended to use in production environments").build();
+        }
 
           int precision = call.getType().getPrecision();
           int scale = call.getType().getScale();
