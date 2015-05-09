@@ -57,9 +57,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Param ${type.inputType}Holder in;
   @Workspace ${type.sumRunningType}Holder sum;
   @Workspace ${type.countRunningType}Holder count;
+  <#if type.outputType?starts_with("Nullable")>
+  @Workspace IntHolder nonNullCount;
+  </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup() {
+  <#if type.outputType?starts_with("Nullable")>
+    nonNullCount = new IntHolder();
+    nonNullCount.value = 0;
+  </#if>
   	sum = new ${type.sumRunningType}Holder();
     count = new ${type.countRunningType}Holder();
     sum.value = 0;
@@ -74,7 +81,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    // processing nullable input and the value is null, so don't do anything...
 		    break sout;
 	    }
+      <#if type.outputType?starts_with("Nullable")>
+      else {
+        nonNullCount.value = 1;
+      }
+      </#if>
 	  </#if>
+    <#if type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 1;
+    </#if>
 	  <#if aggrtype.funcName == "avg">
     <#if type.inputType.endsWith("Interval")>
     sum.value += (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays +
@@ -98,6 +113,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
+  <#if type.outputType?starts_with("Nullable")>
+    sout: {
+      if (nonNullCount.value == 0) {
+        break sout;
+      }
+  </#if>
     double millis = sum.value / ((double) count.value);
     <#if type.inputType.endsWith("Interval") || type.inputType.endsWith("IntervalYear")>
     out.months = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
@@ -109,10 +130,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.days = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     out.milliseconds = (int) (millis % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
     </#if>
+  <#if type.outputType?starts_with("Nullable")>
+    }
+  </#if>
   }
 
   @Override
   public void reset() {
+  <#if type.outputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 0;
+  </#if>
     sum.value = 0;
     count.value = 0;
   }

@@ -62,14 +62,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Param ${type.inputType}Holder in;
   <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
   @Workspace ObjectHolder value;
-  @Workspace UInt1Holder init; 
+  @Workspace UInt1Holder init;
   @Inject DrillBuf buf;
   <#else>
   @Workspace  ${type.runningType}Holder value;
   </#if>
+  <#if type.outputType?starts_with("Nullable")>
+  @Workspace IntHolder nonNullCount;
+  </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup() {
+    <#if type.outputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+    nonNullCount = new IntHolder();
+    nonNullCount.value = 0;
+    </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     init = new UInt1Holder();
     init.value = 0;
@@ -91,6 +98,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         // processing nullable input and the value is null, so don't do anything...
         break sout;
       }
+    <#if type.outputType?starts_with("Nullable")>
+      else {
+        nonNullCount.value = 1;
+      }
+    </#if>
+    </#if>
+    <#if type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 1;
     </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
@@ -133,6 +148,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
+  <#if type.outputType?starts_with("Nullable")>
+    sout: {
+    if (nonNullCount.value == 0) {
+      break sout;
+    }
+  </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     org.apache.drill.exec.expr.fn.impl.DrillByteArray tmp = (org.apache.drill.exec.expr.fn.impl.DrillByteArray) value.obj;
     buf = buf.reallocIfNeeded(tmp.getLength());
@@ -143,10 +164,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#else>
     out.value = value.value;
     </#if>
+    <#if type.outputType?starts_with("Nullable")>
+      }
+    </#if>
   }
 
   @Override
   public void reset() {
+    <#if type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 0;
+    </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     value = new ObjectHolder();
     init.value = 0;

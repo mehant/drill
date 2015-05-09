@@ -54,15 +54,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Param ${type.inputType}Holder in;
   @Workspace ${type.runningType}Holder value;
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
-    @Workspace BigIntHolder nonNullCount;
+  <#if type.outputType?starts_with("Nullable")>
+    @Workspace IntHolder nonNullCount;
   </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup() {
 	value = new ${type.runningType}Holder();
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
-	  nonNullCount = new BigIntHolder();
+  <#if type.outputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+	  nonNullCount = new IntHolder();
 	  nonNullCount.value = 0;
 	</#if>
 	<#if aggrtype.funcName == "sum" || aggrtype.funcName == "count">
@@ -105,10 +105,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	    }
       <#if type.outputType?starts_with("Nullable")>
         else {
-  	        nonNullCount.value++;
+  	        nonNullCount.value = 1;
 	      }
       </#if>
 	  </#if>
+    <#if type.outputType?starts_with("Nullable")>
+      nonNullCount.value = 1;
+    </#if>
 	  <#if aggrtype.funcName == "min">
 	    value.value = Math.min(value.value, in.value);
 	  <#elseif aggrtype.funcName == "max">
@@ -127,7 +130,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {   
-    <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+    <#if type.outputType?starts_with("Nullable")>
       if (nonNullCount.value > 0) {
         out.value = value.value;
         out.isSet = 1;
@@ -141,7 +144,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void reset() {
-  <#if type.inputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+  <#if type.outputType?starts_with("Nullable")>
     nonNullCount.value = 0;
   </#if>
 	<#if aggrtype.funcName == "sum" || aggrtype.funcName == "count">

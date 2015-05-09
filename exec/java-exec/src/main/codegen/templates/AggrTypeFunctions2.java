@@ -57,14 +57,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Param ${type.inputType}Holder in;
   @Workspace ${type.sumRunningType}Holder sum;
   @Workspace ${type.countRunningType}Holder count;
-  @Workspace BigIntHolder nonNullCount;
+  @Workspace IntHolder nonNullCount;
   @Output ${type.outputType}Holder out;
 
   public void setup() {
   	sum = new ${type.sumRunningType}Holder();  
     count = new ${type.countRunningType}Holder();  
-    <#if type.inputType?starts_with("Nullable") >
-  	  nonNullCount = new BigIntHolder();
+    <#if type.outputType?starts_with("Nullable") >
+  	  nonNullCount = new IntHolder();
   	  nonNullCount.value = 0;
   	</#if>
     sum.value = 0;
@@ -80,9 +80,14 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    break sout;
 	    } 
       else {
-        nonNullCount.value++;
+      <#if type.outputType?starts_with("Nullable")>
+        nonNullCount.value = 1;
+      </#if>
       } 
 	  </#if>
+    <#if type.outputType?starts_with("Nullable")>
+      nonNullCount.value = 1;
+    </#if>
 	  <#if aggrtype.funcName == "avg">
  	    sum.value += in.value;
  	    count.value++;
@@ -96,7 +101,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    <#if type.inputType?starts_with("Nullable") >
+    <#if type.outputType?starts_with("Nullable") >
       if (nonNullCount.value > 0) {
         out.value = sum.value / ((double) count.value);
         out.isSet = 1;
@@ -110,7 +115,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void reset() {
-    <#if type.inputType?starts_with("Nullable") >
+    <#if type.outputType?starts_with("Nullable") >
       nonNullCount.value = 0;
     </#if>
     sum.value = 0;

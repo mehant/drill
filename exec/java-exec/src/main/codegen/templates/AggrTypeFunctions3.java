@@ -60,15 +60,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Workspace ${type.movingAverageType}Holder avg;
   @Workspace ${type.movingDeviationType}Holder dev;
   @Workspace ${type.countRunningType}Holder count;
-  @Workspace BigIntHolder nonNullCount;
+  <#if type.outputType?starts_with("Nullable")>
+    @Workspace IntHolder nonNullCount;
+  </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup() {
   	avg = new ${type.movingAverageType}Holder();
     dev = new ${type.movingDeviationType}Holder();
     count = new ${type.countRunningType}Holder();
-    <#if type.inputType?starts_with("Nullable") >
-  	  nonNullCount = new BigIntHolder();
+    <#if type.outputType?starts_with("Nullable") >
+  	  nonNullCount = new IntHolder();
   	  nonNullCount.value = 0;
   	</#if>
     // Initialize the workspace variables
@@ -86,10 +88,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	   break sout;
 	  }
     else {
-      nonNullCount.value++;
+    <#if type.outputType?starts_with("Nullable")>
+      nonNullCount.value = 1;
+    </#if>
     }
 	</#if>
 
+  <#if type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 1;
+  </#if>
     // Welford's approach to compute standard deviation
     double temp = avg.value;
     avg.value += ((in.value - temp) / count.value);
@@ -103,7 +110,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-   <#if type.inputType?starts_with("Nullable") >
+   <#if type.outputType?starts_with("Nullable") >
      if (nonNullCount.value > 0) {
        out.isSet = 1;
       <#if aggrtype.funcName == "stddev_pop">
@@ -141,7 +148,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void reset() {
-    <#if type.inputType?starts_with("Nullable") >
+    <#if type.outputType?starts_with("Nullable") >
       nonNullCount.value = 0;
     </#if>
     avg.value = 0;

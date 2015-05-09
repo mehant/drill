@@ -71,10 +71,17 @@ public class ${aggrtype.className}Functions {
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
+  <#if type.outputType?starts_with("Nullable")>
+  @Workspace IntHolder nonNullCount;
+  </#if>
   @Workspace ${type.outputType}Holder inter;
   @Output ${type.outputType}Holder out;
 
   public void setup() {
+  <#if type.outputType?starts_with("Nullable") && type.outputType?starts_with("Nullable")>
+  nonNullCount = new IntHolder();
+  nonNullCount.value = 0;
+  </#if>
   inter = new ${type.outputType}Holder();
 
     // Initialize the workspace variables
@@ -93,6 +100,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
      // processing nullable input and the value is null, so don't do anything...
      break sout;
     }
+    <#if type.outputType?starts_with("Nullable")>
+    else {
+      nonNullCount.value = 1;
+    }
+    </#if>
+  </#if>
+
+  <#if type.outputType?starts_with("Nullable")>
+  nonNullCount.value = 1;
   </#if>
 
   <#if aggrtype.funcName == "bit_and">
@@ -108,15 +124,27 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
+  <#if type.outputType?starts_with("Nullable")>
+  sout: {
+  if (nonNullCount.value == 0) {
+    break sout;
+  }
+  </#if>
     <#if aggrtype.funcName == "bit_and">
       out.value = inter.value;
       <#elseif aggrtype.funcName == "bit_or">
       out.value = inter.value;
     </#if>
+  <#if type.outputType?starts_with("Nullable")>
+    }
+  </#if>
   }
 
   @Override
   public void reset() {
+  <#if type.outputType?starts_with("Nullable")>
+    nonNullCount.value = 0;
+  </#if>
     <#if aggrtype.funcName == "bit_and">
       inter.value = ${type.maxval}.MAX_VALUE;
       <#elseif aggrtype.funcName == "bit_or">
