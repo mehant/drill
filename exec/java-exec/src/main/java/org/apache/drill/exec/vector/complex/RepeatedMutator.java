@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.vector.complex;
+
+import org.apache.drill.exec.vector.ValueVector;
 
 public interface RepeatedMutator extends ValueVector.Mutator {
   public void startNewGroup(int index);

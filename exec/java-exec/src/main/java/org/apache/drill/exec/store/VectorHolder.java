@@ -18,9 +18,9 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.RepeatedFixedWidthVectorLike;
-import org.apache.drill.exec.vector.RepeatedMutator;
-import org.apache.drill.exec.vector.RepeatedVariableWidthVectorLike;
+import org.apache.drill.exec.vector.complex.RepeatedFixedWidthVectorLike;
+import org.apache.drill.exec.vector.complex.RepeatedMutator;
+import org.apache.drill.exec.vector.complex.RepeatedVariableWidthVectorLike;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class VectorHolder {

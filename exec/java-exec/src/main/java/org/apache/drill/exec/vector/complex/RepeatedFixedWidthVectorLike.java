@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector;
+package org.apache.drill.exec.vector.complex;
 
 import io.netty.buffer.DrillBuf;
 
 /**
  * A {@link org.apache.drill.exec.vector.ValueVector} mix-in that can be used in conjunction with
- * {@link org.apache.drill.exec.vector.RepeatedValueVector} subtypes.
+ * {@link RepeatedValueVector} subtypes.
  */
 public interface RepeatedFixedWidthVectorLike {
   /**
