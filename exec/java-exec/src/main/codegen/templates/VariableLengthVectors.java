@@ -282,34 +282,60 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       allocationMonitor = 0;
     }
 
-    DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
-    if(newBuf == null){
-      return false;
-    }
+    /* Boolean to keep track if all the memory allocations were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      DrillBuf newBuf = allocator.buffer(allocationTotalByteCount);
+      if (newBuf == null) {
+        return false;
+      }
 
-    this.data = newBuf;
-    data.readerIndex(0);
+      this.data = newBuf;
+      data.readerIndex(0);
 
-    if(!offsetVector.allocateNewSafe()){
-      return false;
+      if (!offsetVector.allocateNewSafe()) {
+        return false;
+      }
+      offsetVector.zeroVector();
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
+      return success;
     }
-    offsetVector.zeroVector();
-    return true;
   }
 
   public void allocateNew(int totalBytes, int valueCount) {
     clear();
     assert totalBytes >= 0;
-    DrillBuf newBuf = allocator.buffer(totalBytes);
-    if(newBuf == null){
-      throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
-    }
+    /* Boolean to keep track if all the memory allocations were successful
+     * Used in the case of composite vectors when we need to allocate multiple
+     * buffers for multiple vectors. If one of the allocations failed we need to
+     * clear all the memory that we allocated
+     */
+    boolean success = false;
+    try {
+      DrillBuf newBuf = allocator.buffer(totalBytes);
+      if (newBuf == null) {
+        throw new OutOfMemoryRuntimeException(String.format("Failure while allocating buffer of %d bytes", totalBytes));
+      }
 
-    this.data = newBuf;
-    data.readerIndex(0);
-    allocationTotalByteCount = totalBytes;
-    offsetVector.allocateNew(valueCount+1);
-    offsetVector.zeroVector();
+      this.data = newBuf;
+      data.readerIndex(0);
+      allocationTotalByteCount = totalBytes;
+      offsetVector.allocateNew(valueCount + 1);
+      offsetVector.zeroVector();
+      success = true;
+    } finally {
+      if (!success) {
+        clear();
+      }
+    }
   }
 
     public void reAlloc() {
