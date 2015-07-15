@@ -18,12 +18,21 @@
 
 package org.apache.drill.exec.planner.sql.logical;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.calcite.util.BitSets;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.PartitionDescriptor;
 import org.apache.drill.exec.planner.logical.DirPathBuilder;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
@@ -31,6 +40,8 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.PartitionPruningUtil;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.HivePartitionDescriptor;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
@@ -41,8 +52,109 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.hadoop.hive.metastore.api.Partition;
 
 public abstract class HivePushPartitionFilterIntoScan extends StoragePluginOptimizerRule {
+
+  public static final StoragePluginOptimizerRule getFilterOnHive(QueryContext context) {
+    return new PruneScanRule(
+        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
+        "HivePushPartitionFilterIntoScan:Filter_On_Scan", context) {
+
+      @Override
+      public boolean matches(RelOptRuleCall call) {
+        final DrillScanRel scan = (DrillScanRel) call.rel(1);
+        GroupScan groupScan = scan.getGroupScan();
+        // this rule is applicable only for dfs based partition pruning
+        return groupScan.supportsPartitionFilterPushdown();
+      }
+
+      @Override
+      public void onMatch(RelOptRuleCall call) {
+        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
+        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+        doOnMatch(call, filterRel, null, scanRel);
+      }
+
+      @Override
+      protected PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+        HiveReadEntry origReadEntry = ((HiveScan)scanRel.getGroupScan()).hiveReadEntry;
+        return new HivePartitionDescriptor(origReadEntry.table.partitionKeys);
+      }
+
+      @Override
+      protected void populatePartitionVectors(ValueVector[] vectors, List<PathPartition> partitions, BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap, GroupScan groupScan) {
+        int record = 0;
+        for(Iterator<PathPartition> iter = partitions.iterator(); iter.hasNext(); record++){
+          final PathPartition partition = iter.next();
+          for(int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)){
+            if(partition.dirs[partitionColumnIndex] == null){
+              ((NullableIntVector) vectors[partitionColumnIndex]).getMutator().setNull(record);
+            }else{
+              String dir = partition.dirs[partitionColumnIndex];
+              dir = dir.substring(dir.indexOf('=') + 1);
+              ((NullableIntVector) vectors[partitionColumnIndex]).getMutator().setSafe(record, Integer.parseInt(dir));
+            }
+          }
+        }
+
+        for(ValueVector v : vectors){
+          if(v == null){
+            continue;
+          }
+          v.getMutator().setValueCount(partitions.size());
+        }
+      }
+
+
+      @Override
+      protected TypeProtos.MajorType getVectorType(GroupScan groupScan, SchemaPath column) {
+        // TODO FIX LOGIC TO RETURN THE CORRECT TYPE
+        return TypeProtos.MajorType.newBuilder().setMode(TypeProtos.DataMode.OPTIONAL).setMinorType(TypeProtos.MinorType.INT).build();
+      }
+
+      @Override
+      protected List<String> getFiles(DrillScanRel scanRel) {
+        HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+        List<String> partitionLocations = new LinkedList<>();
+        for (Partition partition: origEntry.getPartitions()) {
+          partitionLocations.add(partition.getSd().getLocation());
+        }
+        return partitionLocations;
+      }
+
+      @Override
+      public String getTableSelectionRoot(DrillScanRel scanRel) {
+        HiveReadEntry origEntry = ((HiveScan) scanRel.getGroupScan()).hiveReadEntry;
+        return origEntry.table.getTable().getSd().getLocation();
+      }
+
+      @Override
+      public GroupScan createNewGroupScan(DrillScanRel oldScanRel, List<String> newFiles) throws Exception {
+        HiveScan hiveScan = (HiveScan) oldScanRel.getGroupScan();
+        HiveReadEntry origReadEntry = hiveScan.hiveReadEntry;
+        List<HivePartition> oldPartitions = origReadEntry.partitions;
+        List<HivePartition> newPartitions = new LinkedList<>();
+
+        for (HivePartition part: oldPartitions) {
+          String partitionLocation = part.getPartition().getSd().getLocation();
+          for (String newPartitionLocation: newFiles) {
+            if (partitionLocation.equals(newPartitionLocation)) {
+              newPartitions.add(part);
+            }
+          }
+        }
+
+        HiveReadEntry newReadEntry = new HiveReadEntry(origReadEntry.table, newPartitions, origReadEntry.hiveConfigOverride);
+        HiveScan newScan = new HiveScan(hiveScan.getUserName(), newReadEntry, hiveScan.storagePlugin, hiveScan.columns);
+        return newScan;
+      }
+
+    };
+  }
+
 
   public static final StoragePluginOptimizerRule HIVE_FILTER_ON_PROJECT =
       new HivePushPartitionFilterIntoScan(

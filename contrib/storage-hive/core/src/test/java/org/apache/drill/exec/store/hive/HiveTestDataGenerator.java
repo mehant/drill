@@ -49,11 +49,11 @@ public class HiveTestDataGenerator {
 
   public static synchronized HiveTestDataGenerator getInstance() throws Exception {
     if (instance == null) {
-      final String dbDir = getTempDir("metastore_db");
-      final String whDir = getTempDir("warehouse");
+      final String dbDir = "/tmp/metastore_db"; //getTempDir("metastore_db");
+      final String whDir = "/tmp/warehouse"; //getTempDir("warehouse");
 
       instance = new HiveTestDataGenerator(dbDir, whDir);
-      instance.generateTestData();
+      //instance.generateTestData();
     }
 
     return instance;

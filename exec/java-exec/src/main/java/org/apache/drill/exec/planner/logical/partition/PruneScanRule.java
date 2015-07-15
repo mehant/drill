@@ -17,6 +17,7 @@
   */
 package org.apache.drill.exec.planner.logical.partition;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
  import java.util.Collections;
@@ -27,7 +28,8 @@ import java.util.BitSet;
  import org.apache.calcite.rex.RexUtil;
  import org.apache.calcite.util.BitSets;
 
- import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
  import org.apache.drill.common.expression.LogicalExpression;
  import org.apache.drill.common.expression.SchemaPath;
  import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -35,7 +37,8 @@ import java.util.BitSet;
  import org.apache.drill.common.types.Types;
  import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
  import org.apache.drill.exec.expr.TypeHelper;
- import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.interpreter.InterpreterEvaluator;
  import org.apache.drill.exec.memory.BufferAllocator;
  import org.apache.drill.exec.ops.QueryContext;
  import org.apache.drill.exec.physical.base.FileGroupScan;
@@ -54,7 +57,8 @@ import org.apache.drill.exec.planner.PartitionDescriptor;
  import org.apache.drill.exec.planner.physical.PrelUtil;
  import org.apache.drill.exec.record.MaterializedField;
  import org.apache.drill.exec.record.VectorContainer;
- import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.vector.NullableBitVector;
@@ -71,7 +75,7 @@ import org.apache.drill.exec.vector.NullableBitVector;
  import com.google.common.collect.Maps;
  import org.apache.drill.exec.vector.ValueVector;
 
-public abstract class PruneScanRule extends RelOptRule {
+public abstract class PruneScanRule extends StoragePluginOptimizerRule {
    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
 
    public static final RelOptRule getFilterOnProject(QueryContext context){
@@ -315,9 +319,67 @@ public abstract class PruneScanRule extends RelOptRule {
     };
   }
 
+  public static final RelOptRule getFilterOnScanHive(QueryContext context) {
+    return new PruneScanRule(
+        RelOptHelper.some(DrillFilterRel.class, RelOptHelper.any(DrillScanRel.class)),
+        "PruneScanRule:Filter_On_Scan_Hive", context) {
+
+      @Override
+      public boolean matches(RelOptRuleCall call) {
+        final DrillScanRel scan = (DrillScanRel) call.rel(1);
+        GroupScan groupScan = scan.getGroupScan();
+        // this rule is applicable only for dfs based partition pruning
+        return groupScan instanceof FileGroupScan && groupScan.supportsPartitionFilterPushdown();
+      }
+
+      @Override
+      public void onMatch(RelOptRuleCall call) {
+        final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
+        final DrillScanRel scanRel = (DrillScanRel) call.rel(1);
+        doOnMatch(call, filterRel, null, scanRel);
+      }
+
+      @Override
+      protected PartitionDescriptor getPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+        return new ParquetPartitionDescriptor(scanRel.getGroupScan().getPartitionColumns());
+      }
+
+      @Override
+      protected void populatePartitionVectors(ValueVector[] vectors, List<PathPartition> partitions, BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap, GroupScan groupScan) {
+        int record = 0;
+        for(Iterator<PathPartition> iter = partitions.iterator(); iter.hasNext(); record++){
+          final PathPartition partition = iter.next();
+          for(int partitionColumnIndex : BitSets.toIter(partitionColumnBitSet)){
+            SchemaPath column = SchemaPath.getSimplePath(fieldNameMap.get(partitionColumnIndex));
+            ((ParquetGroupScan)groupScan).populatePruningVector(vectors[partitionColumnIndex], record, column, partition.file);
+          }
+        }
+
+        for(ValueVector v : vectors){
+          if(v == null){
+            continue;
+          }
+          v.getMutator().setValueCount(partitions.size());
+        }
+      }
+
+      @Override
+      protected MajorType getVectorType(GroupScan groupScan, SchemaPath column) {
+        return ((ParquetGroupScan)groupScan).getTypeForColumn(column);
+      }
+
+      @Override
+      protected List<String> getFiles(DrillScanRel scanRel) {
+        ParquetGroupScan groupScan = (ParquetGroupScan) scanRel.getGroupScan();
+        return new ArrayList(groupScan.getFileSet());
+      }
+    };
+  }
+
+
    final QueryContext context;
 
-   private PruneScanRule(RelOptRuleOperand operand, String id, QueryContext context) {
+   public PruneScanRule(RelOptRuleOperand operand, String id, QueryContext context) {
      super(operand, id);
      this.context = context;
    }
@@ -374,9 +436,7 @@ public abstract class PruneScanRule extends RelOptRule {
 
      // set up the partitions
      final GroupScan groupScan = scanRel.getGroupScan();
-     final FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
      final List<String> files = getFiles(scanRel);
-     final String selectionRoot = origSelection.getSelection().selectionRoot;
      List<PathPartition> partitions = Lists.newLinkedList();
 
      // let's only deal with one batch of files for now.
@@ -385,7 +445,7 @@ public abstract class PruneScanRule extends RelOptRule {
      }
 
      for(String f : files){
-       partitions.add(new PathPartition(descriptor.getMaxHierarchyLevel(), selectionRoot, f));
+       partitions.add(new PathPartition(descriptor.getMaxHierarchyLevel(), getTableSelectionRoot(scanRel), f));
      }
 
      final NullableBitVector output = new NullableBitVector(MaterializedField.create("", Types.optional(MinorType.BIT)), allocator);
@@ -452,16 +512,13 @@ public abstract class PruneScanRule extends RelOptRule {
        condition = condition.accept(reverseVisitor);
        pruneCondition = pruneCondition.accept(reverseVisitor);
 
-       final FileSelection newFileSelection = new FileSelection(newFiles, selectionRoot, true);
-       final FileGroupScan newScan = ((FileGroupScan)scanRel.getGroupScan()).clone(newFileSelection);
        final DrillScanRel newScanRel =
            new DrillScanRel(scanRel.getCluster(),
                scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
                scanRel.getTable(),
-               newScan,
+               createNewGroupScan(scanRel, newFiles),
                scanRel.getRowType(),
                scanRel.getColumns());
-
        RelNode inputRel = newScanRel;
 
        if(projectRel != null){
@@ -485,15 +542,30 @@ public abstract class PruneScanRule extends RelOptRule {
      }
    }
 
+  public GroupScan createNewGroupScan(DrillScanRel oldScanRel, List<String> newFiles) throws Exception {
+    final FileSelection newFileSelection = new FileSelection(newFiles, getTableSelectionRoot(oldScanRel), true);
+    final FileGroupScan newScan = ((FileGroupScan)oldScanRel.getGroupScan()).clone(newFileSelection);
+    return newScan;
+  }
+
+  public String getTableSelectionRoot(DrillScanRel scanRel) {
+    final FormatSelection origSelection = (FormatSelection)scanRel.getDrillTable().getSelection();
+    return origSelection.getSelection().selectionRoot;
+  }
+
+
+
+
+
    protected abstract void populatePartitionVectors(ValueVector[] vectors, List<PathPartition> partitions, BitSet partitionColumnBitSet, Map<Integer, String> fieldNameMap, GroupScan groupScan);
 
    protected abstract MajorType getVectorType(GroupScan groupScan, SchemaPath column);
 
    protected abstract List<String> getFiles(DrillScanRel scanRel);
 
-   private static class PathPartition {
-        final String[] dirs;
-        final String file;
+   public static class PathPartition {
+        public final String[] dirs;
+        public final String file;
 
         public PathPartition(int max, String selectionRoot, String file){
           this.file = file;
@@ -507,7 +579,9 @@ public abstract class PruneScanRule extends RelOptRule {
             postPath = postPath.substring(1);
           }
           String[] mostDirs = postPath.split("/");
-          int maxLoop = Math.min(max, mostDirs.length - 1);
+          //TODO: FIX LOGIC HERE
+          //int maxLoop = Math.min(max, mostDirs.length - 1);
+          int maxLoop = max;
           for(int i =0; i < maxLoop; i++){
             this.dirs[i] = mostDirs[i];
           }

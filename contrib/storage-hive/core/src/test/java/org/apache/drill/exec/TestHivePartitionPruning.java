@@ -63,4 +63,11 @@ public class TestHivePartitionPruning extends HiveTestBase {
     // Check and make sure that Filter is not present in the plan
     assertFalse(plan.contains("Filter"));
   }
+
+  @Test
+  public void test() throws Exception {
+    //test("explain plan for select a from hive.`default`.partition_pruning_test where" +
+      //  "c > 1");
+    test("use hive; explain plan for select a from bar where c > 1");
+  }
 }

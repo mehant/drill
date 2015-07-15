@@ -1091,4 +1091,9 @@ public class TestExampleQueries extends BaseTestQuery {
 
   }
 
+  @Test
+  public void testDFSPruning() throws Exception {
+    test("select b from dfs.`/tmp/a` where dir0 > 1");
+  }
+
 }

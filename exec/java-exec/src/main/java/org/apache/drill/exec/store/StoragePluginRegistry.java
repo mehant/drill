@@ -283,11 +283,11 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     return plugins.entrySet().iterator();
   }
 
-  public RuleSet getStoragePluginRuleSet() {
+  public RuleSet getStoragePluginRuleSet(QueryContext queryContext) {
     // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.values()) {
-      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
+      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules(queryContext);
       if (rules != null && rules.size() > 0) {
         setBuilder.addAll(rules);
       }
