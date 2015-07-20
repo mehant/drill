@@ -19,6 +19,9 @@ package org.apache.drill.exec.planner;
 
 import com.google.common.collect.Maps;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +34,9 @@ public class ParquetPartitionDescriptor implements PartitionDescriptor {
 
   private final List<SchemaPath> partitionColumns;
 
-  public ParquetPartitionDescriptor(List<SchemaPath> partitionColumns) {
-    this.partitionColumns = partitionColumns;
+  public ParquetPartitionDescriptor(PlannerSettings settings, DrillScanRel scanRel) {
+    ParquetGroupScan scan = (ParquetGroupScan) scanRel.getGroupScan();
+    this.partitionColumns = scan.getPartitionColumns();
   }
 
   @Override
