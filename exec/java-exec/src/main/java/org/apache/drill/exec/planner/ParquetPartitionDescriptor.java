@@ -34,6 +34,7 @@ import java.util.BitSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -85,7 +86,7 @@ public class ParquetPartitionDescriptor implements PartitionDescriptor {
 
   @Override
   public List<PartitionLocation> getPartitions() {
-    List<String> fileLocations = ((FormatSelection) scanRel.getDrillTable().getSelection()).getAsFiles();
+    Set<String> fileLocations = ((ParquetGroupScan) scanRel.getGroupScan()).getFileSet();
     List<PartitionLocation> partitions = new LinkedList<>();
     for (String file: fileLocations) {
       partitions.add(new DFSPartitionLocation(MAX_NESTED_SUBDIRS, getBaseTableLocation(), file));
