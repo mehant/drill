@@ -79,9 +79,10 @@ public class DropTableHandler extends DefaultSqlHandler {
     DrillFileSystem fs = wsSchema.getFS();
     String defaultLocation = wsSchema.getDefaultLocation();
 
-    fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
+    boolean outcome = fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
 
     return DirectPlan.createDirectPlan(context, true,
-        String.format("Table [%s] dropped successfully ", tableName));
+        String.format("Table [%s] dropped %s", tableName, outcome == true ? "successfully" : "failed"));
+
   }
 }
