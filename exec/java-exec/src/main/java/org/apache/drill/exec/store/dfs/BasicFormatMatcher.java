@@ -72,7 +72,7 @@ public class BasicFormatMatcher extends FormatMatcher{
 
   @Override
   public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
-    if (isReadable(fs, selection.getFirstPath(fs))) {
+    if (isFileReadable(fs, selection.getFirstPath(fs))) {
       if (plugin.getName() != null) {
         NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
         namedConfig.name = plugin.getName();
@@ -84,8 +84,9 @@ public class BasicFormatMatcher extends FormatMatcher{
     return null;
   }
 
-  protected final boolean isReadable(DrillFileSystem fs, FileStatus status) throws IOException {
-    CompressionCodec codec = null;
+  @Override
+  public boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException {
+  CompressionCodec codec = null;
     if (compressible) {
       codec = codecFactory.getCodec(status.getPath());
     }
@@ -110,7 +111,6 @@ public class BasicFormatMatcher extends FormatMatcher{
     }
     return false;
   }
-
 
   @Override
   @JsonIgnore
