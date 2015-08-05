@@ -51,6 +51,36 @@ public class DropTableHandler extends DefaultSqlHandler {
 
     String tableName = ((SqlDropTable) sqlNode).getName();
 
+    List<String> fullPath = ((SqlDropTable) sqlNode).getFullPath();
+    SqlIdentifier table = ((SqlDropTable) sqlNode).getTableName();
+
+    SchemaPlus defaultSchema = context.getNewDefaultSchema();
+    SchemaPlus drillSchema = defaultSchema;
+
+    if (table != null) {
+      drillSchema = SchemaUtilites.findSchema(defaultSchema, table.names.subList(0, table.names.size() - 1));
+    }
+
+    if (drillSchema == null) {
+      throw UserException.validationError()
+          .message("Invalid table_name [%s]", table.toString())
+          .build(logger);
+    }
+
+    WorkspaceSchemaFactory.WorkspaceSchema wsSchema;
+    try {
+      wsSchema = (WorkspaceSchemaFactory.WorkspaceSchema) drillSchema.unwrap(AbstractSchema.class).getDefaultSchema();
+    } catch (ClassCastException e) {
+      throw UserException.validationError()
+          .message("SHOW FILES is supported in workspace type schema only. Schema [%s] is not a workspace schema.",
+              SchemaUtilites.getSchemaPath(drillSchema))
+          .build(logger);
+    }
+    DrillFileSystem fs = wsSchema.getFS();
+    String defaultLocation = wsSchema.getDefaultLocation();
+
+    fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
+
     return DirectPlan.createDirectPlan(context, true,
         String.format("Table [%s] dropped successfully ", tableName));
   }

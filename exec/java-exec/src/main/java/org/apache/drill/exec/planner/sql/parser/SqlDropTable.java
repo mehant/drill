@@ -20,9 +20,6 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.calcite.tools.Planner;
-
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DropTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -46,11 +43,11 @@ public class SqlDropTable extends DrillSqlCall {
     }
   };
 
-  private SqlIdentifier tablName;
+  private SqlIdentifier tableName;
 
   public SqlDropTable(SqlParserPos pos, SqlIdentifier tableName) {
     super(pos);
-    this.tablName = tableName;
+    this.tableName = tableName;
   }
 
   @Override
@@ -60,14 +57,14 @@ public class SqlDropTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return Collections.singletonList((SqlNode) tablName);
+    return Collections.singletonList((SqlNode) tableName);
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("DROP");
     writer.keyword("TABLE");
-    tablName.unparse(writer, leftPrec, rightPrec);
+    tableName.unparse(writer, leftPrec, rightPrec);
   }
 
   @Override
@@ -75,20 +72,24 @@ public class SqlDropTable extends DrillSqlCall {
     return new DropTableHandler(config);
   }
 
-  public List<String> getSchemaPath() {
-    if (tablName.isSimple()) {
+  public List<String> getFullPath() {
+    if (tableName.isSimple()) {
       return ImmutableList.of();
     }
 
-    return tablName.names.subList(0, tablName.names.size()-1);
+    return tableName.names.subList(0, tableName.names.size()-1);
   }
 
   public String getName() {
-    if (tablName.isSimple()) {
-      return tablName.getSimple();
+    if (tableName.isSimple()) {
+      return tableName.getSimple();
     }
 
-    return tablName.names.get(tablName.names.size() - 1);
+    return tableName.names.get(tableName.names.size() - 1);
+  }
+
+  public SqlIdentifier getTableName() {
+    return tableName;
   }
 
 }

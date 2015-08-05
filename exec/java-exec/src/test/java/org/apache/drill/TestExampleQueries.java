@@ -1101,4 +1101,10 @@ public class TestExampleQueries extends BaseTestQuery {
     test(query1);
     test(query2);
   }
+
+  @Test
+  public void t() throws Exception {
+    test("drop table dfs.`/tmp/foo`");
+  }
+
 }
