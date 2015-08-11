@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import org.apache.hadoop.fs.FileStatus;
+
 import java.io.IOException;
 
 public abstract class FormatMatcher {
@@ -24,5 +26,7 @@ public abstract class FormatMatcher {
 
   public abstract boolean supportDirectoryReads();
   public abstract FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException;
+  public abstract boolean isReadable(DrillFileSystem fs, FileStatus status) throws IOException;
   public abstract FormatPlugin getFormatPlugin();
+  public abstract FormatSelection isHomogenousReadable(DrillFileSystem fs, FileSelection selection) throws IOException;
 }

@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.SubSchemaWrapper;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -36,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DropTableHandler extends DefaultSqlHandler {
@@ -72,16 +74,23 @@ public class DropTableHandler extends DefaultSqlHandler {
       wsSchema = (WorkspaceSchemaFactory.WorkspaceSchema) drillSchema.unwrap(AbstractSchema.class).getDefaultSchema();
     } catch (ClassCastException e) {
       throw UserException.validationError()
-          .message("SHOW FILES is supported in workspace type schema only. Schema [%s] is not a workspace schema.",
+          .message("DROP TABLE is only supported for workspace type schema only. Schema [%s] is not a workspace schema.",
               SchemaUtilites.getSchemaPath(drillSchema))
           .build(logger);
     }
-    DrillFileSystem fs = wsSchema.getFS();
-    String defaultLocation = wsSchema.getDefaultLocation();
 
-    boolean outcome = fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
+    String tblName = table.names.get(table.names.size() - 1);
 
-    return DirectPlan.createDirectPlan(context, true,
+    boolean outcome = true;
+    if (wsSchema.drop(tblName)) {
+      DrillFileSystem fs = wsSchema.getFS();
+      String defaultLocation = wsSchema.getDefaultLocation();
+      outcome = fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
+    } else {
+      outcome = false;
+    }
+
+    return DirectPlan.createDirectPlan(context, outcome,
         String.format("Table [%s] dropped %s", tableName, outcome == true ? "successfully" : "failed"));
 
   }

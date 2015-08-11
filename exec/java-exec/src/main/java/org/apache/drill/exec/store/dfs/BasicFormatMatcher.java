@@ -20,7 +20,9 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
@@ -72,6 +74,7 @@ public class BasicFormatMatcher extends FormatMatcher{
 
   @Override
   public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+
     if (isReadable(fs, selection.getFirstPath(fs))) {
       if (plugin.getName() != null) {
         NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
@@ -84,7 +87,31 @@ public class BasicFormatMatcher extends FormatMatcher{
     return null;
   }
 
-  protected final boolean isReadable(DrillFileSystem fs, FileStatus status) throws IOException {
+  public FormatSelection isHomogenousReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+    if (isDirectoryHomogenous(fs, selection)) {
+      if (plugin.getName() != null) {
+        NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
+        namedConfig.name = plugin.getName();
+        return new FormatSelection(namedConfig, selection);
+      } else {
+        return new FormatSelection(plugin.getConfig(), selection);
+      }
+    }
+    return null;
+  }
+
+  private boolean isDirectoryHomogenous(DrillFileSystem fs, FileSelection selection) {
+    Queue<FileSelection> listOfFiles = new LinkedList<>();
+    listOfFiles.add(selection);
+
+    while (listOfFiles.size() > 0) {
+      FileSelection file = listOfFiles.poll();
+      //listOfFiles.addAll(file.)
+    }
+    return false;
+  }
+
+  public final boolean isReadable(DrillFileSystem fs, FileStatus status) throws IOException {
     CompressionCodec codec = null;
     if (compressible) {
       codec = codecFactory.getCodec(status.getPath());
@@ -93,6 +120,33 @@ public class BasicFormatMatcher extends FormatMatcher{
     String fileNameHacked = null;
     if (codec != null) {
         fileNameHacked = fileName.substring(0, fileName.lastIndexOf('.'));
+    }
+
+    // Check for a matching pattern for compressed and uncompressed file name
+    for (Pattern p : patterns) {
+      if (p.matcher(fileName).matches()) {
+        return true;
+      }
+      if (fileNameHacked != null  &&  p.matcher(fileNameHacked).matches()) {
+        return true;
+      }
+    }
+
+    if (matcher.matches(fs, status)) {
+      return true;
+    }
+    return false;
+  }
+
+  public boolean isHomogenous(DrillFileSystem fs, FileStatus status) throws IOException {
+    CompressionCodec codec = null;
+    if (compressible) {
+      codec = codecFactory.getCodec(status.getPath());
+    }
+    String fileName = status.getPath().toString();
+    String fileNameHacked = null;
+    if (codec != null) {
+      fileNameHacked = fileName.substring(0, fileName.lastIndexOf('.'));
     }
 
     // Check for a matching pattern for compressed and uncompressed file name

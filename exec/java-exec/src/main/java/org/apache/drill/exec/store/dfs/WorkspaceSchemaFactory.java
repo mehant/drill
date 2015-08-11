@@ -20,7 +20,9 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -319,6 +321,51 @@ public class WorkspaceSchemaFactory {
       }
 
       return null;
+    }
+
+    public boolean drop(String key) {
+      try {
+
+        FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
+
+        if (fileSelection == null) {
+          return false;
+        }
+
+        FormatMatcher previousMatcher = null;
+        Queue<FileStatus> listOfFiles = new LinkedList<>();
+        listOfFiles.addAll(fileSelection.getFileStatusList(fs));
+
+        while (!listOfFiles.isEmpty()) {
+          FileStatus currentFile = listOfFiles.poll();
+          if (currentFile.isDirectory()) {
+            listOfFiles.addAll(fs.list(true, currentFile.getPath()));
+          } else {
+            for (FormatMatcher m : fileMatchers) {
+              if (m.isReadable(fs, currentFile)) {
+                if (previousMatcher == null) {
+                  previousMatcher = m;
+                } else if (previousMatcher != m) {
+                  // diferent format matched
+                  return false;
+                }
+              }
+            }
+          }
+        }
+        return true;
+
+      } catch (AccessControlException e) {
+        if (!schemaConfig.getIgnoreAuthErrors()) {
+          logger.debug(e.getMessage());
+          throw UserException.permissionError(e)
+              .message("Not authorized to read table [%s] in schema [%s]", key, getFullSchemaName())
+              .build(logger);
+        }
+      } catch (IOException e) {
+        logger.debug("Failed to create DrillTable with root {} and name {}", config.getLocation(), key, e);
+      }
+      return false;
     }
 
     @Override
