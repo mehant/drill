@@ -1104,7 +1104,8 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void t() throws Exception {
-    test("drop table dfs.`/tmp/foo`");
+    //test("drop table dfs.`/tmp/foo/1`");
+    test("explain plan for select * from dfs.`/tmp/foo`");
   }
 
 }

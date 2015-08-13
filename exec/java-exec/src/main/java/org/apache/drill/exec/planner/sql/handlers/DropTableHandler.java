@@ -81,11 +81,22 @@ public class DropTableHandler extends DefaultSqlHandler {
 
     String tblName = table.names.get(table.names.size() - 1);
 
+    String[] pathSplit = tblName.split(Path.SEPARATOR);
+    String dirName = "_" + pathSplit[pathSplit.length - 1];
+    int lastSlashIndex = tblName.lastIndexOf(Path.SEPARATOR);
+
+    if (lastSlashIndex != -1) {
+      dirName = tblName.substring(0, lastSlashIndex + 1) + dirName;
+    }
+
+    // String rename the file
+
     boolean outcome = true;
     if (wsSchema.drop(tblName)) {
       DrillFileSystem fs = wsSchema.getFS();
       String defaultLocation = wsSchema.getDefaultLocation();
-      outcome = fs.delete(new Path(defaultLocation, table.names.get(table.names.size() - 1)), true);
+      fs.rename(new Path(tblName), new Path(dirName));
+      outcome = fs.delete(new Path(defaultLocation, dirName), true);
     } else {
       outcome = false;
     }
