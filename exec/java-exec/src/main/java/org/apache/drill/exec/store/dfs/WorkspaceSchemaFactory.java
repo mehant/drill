@@ -64,6 +64,7 @@ public class WorkspaceSchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
+  private final List<FormatMatcher> dropFileMatchers;
   private final List<FormatMatcher> dirMatchers;
 
   private final WorkspaceConfig config;
@@ -106,6 +107,9 @@ public class WorkspaceSchemaFactory {
       final FormatMatcher fallbackMatcher = new BasicFormatMatcher(formatPlugin,
           ImmutableList.of(Pattern.compile(".*")), ImmutableList.<MagicString>of());
       fileMatchers.add(fallbackMatcher);
+      dropFileMatchers = fileMatchers.subList(0, fileMatchers.size() - 1);
+    } else {
+      dropFileMatchers = fileMatchers.subList(0, fileMatchers.size());
     }
   }
 
@@ -323,7 +327,7 @@ public class WorkspaceSchemaFactory {
       return null;
     }
 
-    public boolean drop(String key) {
+    private boolean isHomogenous(String key) {
       try {
 
         FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
@@ -332,7 +336,7 @@ public class WorkspaceSchemaFactory {
           return false;
         }
 
-        FormatMatcher previousMatcher = null;
+        FormatMatcher matcher = null;
         Queue<FileStatus> listOfFiles = new LinkedList<>();
         listOfFiles.addAll(fileSelection.getFileStatusList(fs));
 
@@ -341,15 +345,12 @@ public class WorkspaceSchemaFactory {
           if (currentFile.isDirectory()) {
             listOfFiles.addAll(fs.list(true, currentFile.getPath()));
           } else {
-            for (FormatMatcher m : fileMatchers) {
-              if (m.isReadable(fs, currentFile)) {
-                if (previousMatcher == null) {
-                  previousMatcher = m;
-                } else if (previousMatcher != m) {
-                  // diferent format matched
-                  return false;
-                }
+            if (matcher != null) {
+              if (!matcher.isReadable(fs, currentFile)) {
+                return false;
               }
+            } else {
+              matcher = findMatcher(currentFile);
             }
           }
         }
@@ -359,7 +360,7 @@ public class WorkspaceSchemaFactory {
         if (!schemaConfig.getIgnoreAuthErrors()) {
           logger.debug(e.getMessage());
           throw UserException.permissionError(e)
-              .message("Not authorized to read table [%s] in schema [%s]", key, getFullSchemaName())
+              .message("Not authorized to drop table [%s] in schema [%s]", key, getFullSchemaName())
               .build(logger);
         }
       } catch (IOException e) {
@@ -368,8 +369,50 @@ public class WorkspaceSchemaFactory {
       return false;
     }
 
+    private FormatMatcher findMatcher(FileStatus file) {
+      FormatMatcher matcher = null;
+      try {
+        for (FormatMatcher m : dropFileMatchers) {
+          if (m.isReadable(fs, file)) {
+            return m;
+          }
+        }
+      } catch (IOException e) {
+        logger.debug("Failed to find format matcher for file: %s", file, e);
+      }
+      return matcher;
+    }
+
     @Override
     public void destroy(DrillTable value) {
+    }
+
+    @Override
+    public boolean dropTable(String table) {
+
+      String[] pathSplit = table.split(Path.SEPARATOR);
+      String dirName = "_" + pathSplit[pathSplit.length - 1];
+      int lastSlashIndex = table.lastIndexOf(Path.SEPARATOR);
+
+      if (lastSlashIndex != -1) {
+        dirName = table.substring(0, lastSlashIndex + 1) + dirName;
+      }
+
+      // String rename the file
+      boolean outcome;
+      if (isHomogenous(table)) {
+        DrillFileSystem fs = getFS();
+        String defaultLocation = getDefaultLocation();
+        try {
+          fs.rename(new Path(defaultLocation, table), new Path(defaultLocation, dirName));
+          outcome = fs.delete(new Path(defaultLocation, dirName), true);
+        } catch (IOException e) {
+          outcome = false;
+        }
+      } else {
+        outcome = false;
+      }
+      return outcome;
     }
   }
 }

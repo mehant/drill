@@ -53,14 +53,14 @@ public class DropTableHandler extends DefaultSqlHandler {
 
     String tableName = ((SqlDropTable) sqlNode).getName();
 
-    List<String> fullPath = ((SqlDropTable) sqlNode).getFullPath();
     SqlIdentifier table = ((SqlDropTable) sqlNode).getTableName();
 
     SchemaPlus defaultSchema = context.getNewDefaultSchema();
-    SchemaPlus drillSchema = defaultSchema;
+    AbstractSchema drillSchema = null;
 
     if (table != null) {
-      drillSchema = SchemaUtilites.findSchema(defaultSchema, table.names.subList(0, table.names.size() - 1));
+      //drillSchema = SchemaUtilites.findSchema(defaultSchema, table.names.subList(0, table.names.size() - 1));
+      drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, table.names.subList(0, table.names.size() - 1));
     }
 
     if (drillSchema == null) {
@@ -69,40 +69,11 @@ public class DropTableHandler extends DefaultSqlHandler {
           .build(logger);
     }
 
-    WorkspaceSchemaFactory.WorkspaceSchema wsSchema;
-    try {
-      wsSchema = (WorkspaceSchemaFactory.WorkspaceSchema) drillSchema.unwrap(AbstractSchema.class).getDefaultSchema();
-    } catch (ClassCastException e) {
-      throw UserException.validationError()
-          .message("DROP TABLE is only supported for workspace type schema only. Schema [%s] is not a workspace schema.",
-              SchemaUtilites.getSchemaPath(drillSchema))
-          .build(logger);
-    }
-
-    String tblName = table.names.get(table.names.size() - 1);
-
-    String[] pathSplit = tblName.split(Path.SEPARATOR);
-    String dirName = "_" + pathSplit[pathSplit.length - 1];
-    int lastSlashIndex = tblName.lastIndexOf(Path.SEPARATOR);
-
-    if (lastSlashIndex != -1) {
-      dirName = tblName.substring(0, lastSlashIndex + 1) + dirName;
-    }
-
-    // String rename the file
-
-    boolean outcome = true;
-    if (wsSchema.drop(tblName)) {
-      DrillFileSystem fs = wsSchema.getFS();
-      String defaultLocation = wsSchema.getDefaultLocation();
-      fs.rename(new Path(tblName), new Path(dirName));
-      outcome = fs.delete(new Path(defaultLocation, dirName), true);
-    } else {
-      outcome = false;
-    }
+    //boolean outcome = drillSchema.unwrap(AbstractSchema.class).getDefaultSchema().dropTable(tableName);
+    boolean outcome = drillSchema.dropTable(tableName);
 
     return DirectPlan.createDirectPlan(context, outcome,
-        String.format("Table [%s] dropped %s", tableName, outcome == true ? "successfully" : "failed"));
+        String.format("Table [%s] %s", tableName, outcome == true ? "dropped" : "drop failed"));
 
   }
 }
