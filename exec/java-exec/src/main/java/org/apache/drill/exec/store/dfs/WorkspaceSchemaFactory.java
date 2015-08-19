@@ -351,6 +351,10 @@ public class WorkspaceSchemaFactory {
               }
             } else {
               matcher = findMatcher(currentFile);
+              // Did not match any of the file patterns, exit
+              if (matcher == null) {
+                return false;
+              }
             }
           }
         }
