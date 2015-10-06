@@ -1191,9 +1191,4 @@ public class TestExampleQueries extends BaseTestQuery {
         .build()
         .run();
   }
-
-  @Test
-  public void test() throws Exception {
-    test("select 1 from dfs.`/tmp/b`");
-  }
 }
