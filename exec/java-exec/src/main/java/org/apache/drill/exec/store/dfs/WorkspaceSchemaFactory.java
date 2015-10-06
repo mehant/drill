@@ -35,7 +35,6 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -323,7 +322,7 @@ public class WorkspaceSchemaFactory {
         if (fileSelection.containsDirectories(fs)) {
           for (FormatMatcher m : dirMatchers) {
             try {
-              Object selection = m.isReadable(fs, fileSelection);
+              Object selection = m.isDirReadable(fs, fileSelection);
               if (selection != null) {
                 return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
               }
@@ -335,7 +334,7 @@ public class WorkspaceSchemaFactory {
         }
 
         for (FormatMatcher m : fileMatchers) {
-          Object selection = m.isReadable(fs, fileSelection);
+          Object selection = m.isExpandedDirReadable(fs, fileSelection);
           if (selection != null) {
             return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
           }

@@ -71,17 +71,22 @@ public class BasicFormatMatcher extends FormatMatcher{
   }
 
   @Override
-  public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
-    if (isFileReadable(fs, selection.getFirstPath(fs))) {
-      if (plugin.getName() != null) {
-        NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
-        namedConfig.name = plugin.getName();
-        return new FormatSelection(namedConfig, selection);
-      } else {
+  public FormatSelection isDirReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+    return null;
+  }
+
+  @Override
+  public FormatSelection isExpandedDirReadable(DrillFileSystem fs, FileSelection selection) {
+    // check if the first file is readable
+    try {
+      if (isFileReadable(fs, selection.getFirstPath(fs))) {
         return new FormatSelection(plugin.getConfig(), selection);
       }
+      return null;
+    } catch (IOException e) {
+      logger.info("Failure while attempting to check if file is readable by Drill.", e);
+      return null;
     }
-    return null;
   }
 
   /*

@@ -204,14 +204,14 @@ public class ParquetFormatPlugin implements FormatPlugin{
     }
 
     @Override
-    public FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
+    public FormatSelection isDirReadable(DrillFileSystem fs, FileSelection selection) throws IOException {
       // TODO: we only check the first file for directory reading.  This is because
-      if(selection.containsDirectories(fs)){
+      if(selection.containsDirectories(fs)) {
         if(isDirReadable(fs, selection.getFirstPath(fs))){
           return new FormatSelection(plugin.getConfig(), expandSelection(fs, selection));
         }
       }
-      return super.isReadable(fs, selection);
+      return null;
     }
 
     private FileSelection expandSelection(DrillFileSystem fs, FileSelection selection) throws IOException {
@@ -238,21 +238,10 @@ public class ParquetFormatPlugin implements FormatPlugin{
     boolean isDirReadable(DrillFileSystem fs, FileStatus dir) {
       Path p = new Path(dir.getPath(), ParquetFileWriter.PARQUET_METADATA_FILE);
       try {
-        if (fs.exists(p)) {
+        if (fs.exists(p) || metaDataFileExists(fs, dir)) {
           return true;
-        } else {
-
-          if (metaDataFileExists(fs, dir)) {
-            return true;
-          }
-          PathFilter filter = new DrillPathFilter();
-
-          FileStatus[] files = fs.listStatus(dir.getPath(), filter);
-          if (files.length == 0) {
-            return false;
-          }
-          return super.isFileReadable(fs, files[0]);
         }
+        return false;
       } catch (IOException e) {
         logger.info("Failure while attempting to check for Parquet metadata file.", e);
         return false;

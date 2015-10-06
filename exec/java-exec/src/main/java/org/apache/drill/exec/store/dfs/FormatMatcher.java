@@ -25,7 +25,8 @@ public abstract class FormatMatcher {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatMatcher.class);
 
   public abstract boolean supportDirectoryReads();
-  public abstract FormatSelection isReadable(DrillFileSystem fs, FileSelection selection) throws IOException;
+  public abstract FormatSelection isDirReadable(DrillFileSystem fs, FileSelection selection) throws IOException;
+  public abstract FormatSelection isExpandedDirReadable(DrillFileSystem fs, FileSelection selection) throws IOException;
   public abstract boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException;
   public abstract FormatPlugin getFormatPlugin();
 }
