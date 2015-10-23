@@ -175,7 +175,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
     if (partitionColumnBitSet.isEmpty()) {
       logger.debug("No partition columns are projected from the scan..continue. " +
-              "Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
+          "Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
       return;
     }
 
@@ -276,9 +276,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
         batchIndex++;
       } catch (Exception e) {
         logger.warn("Exception while trying to prune partition.", e);
+        logger.debug("Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
         return; // continue without partition pruning
       } finally {
-        logger.debug("Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
         container.clear();
         if (output != null) {
           output.clear();
@@ -336,6 +336,8 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
 
     } catch (Exception e) {
       logger.warn("Exception while using the pruned partitions.", e);
+    } finally {
+      logger.debug("Total pruning elapsed time: {} ms", totalPruningTime.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
