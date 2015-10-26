@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.SchemaPath.De;
 import org.apache.drill.exec.store.TimedRunnable;
@@ -40,6 +41,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import parquet.column.statistics.Statistics;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.BlockMetaData;
@@ -53,6 +55,7 @@ import parquet.schema.Type;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -474,9 +477,9 @@ public class Metadata {
     public PrimitiveTypeName primitiveType;
     @JsonProperty
     public OriginalType originalType;
-    @JsonProperty
+//    @JsonProperty
     public Object max;
-    @JsonProperty
+//    @JsonProperty
     public Object min;
     @JsonProperty
     public Long nulls;
@@ -493,6 +496,54 @@ public class Metadata {
       this.max = max;
       this.min = min;
       this.nulls = nulls;
+    }
+
+    @JsonProperty(value = "min")
+    public Object getMin() {
+      return min;
+    }
+
+    @JsonProperty(value = "max")
+    public Object getMax() {
+      return max;
+    }
+
+    /**
+     * setter used during deserialization of the 'min' field of the metadata
+     * cache file.  The entry in the cache file can be of two forms: (a) primitive
+     * type such as integer or (b) a map with key: "bytes" and value: a string
+     * representation of the parquet varbinary data.
+     * The second case is read by Jackson deserializer as a LinkedHashMap.
+     * We need to extract the value from the <key, value> pair and store it.
+     * @param min
+     */
+    @JsonProperty(value = "min")
+    public void setMin(Object min) {
+      if (min instanceof Map<?,?>) {
+        Object value = ((Map<?,?>)min).values().iterator().next();
+        this.min = value;
+      } else {
+        this.min = min;
+      }
+    }
+
+    /**
+     * setter used during deserialization of the 'max' field of the metadata
+     * cache file.  The entry in the cache file can be of two forms: (a) primitive
+     * type such as integer or (b) a map with key: "bytes" and value: a string
+     * representation of the parquet varbinary data.
+     * The second case is read by Jackson deserializer as a LinkedHashMap.
+     * We need to extract the value from the <key, value> pair and store it.
+     * @param max
+     */
+    @JsonProperty(value = "max")
+    public void setMax(Object max) {
+      if (max instanceof Map<?,?>) {
+        Object value = ((Map<?,?>)max).values().iterator().next();
+        this.max = value;
+      } else {
+        this.max = max;
+      }
     }
   }
 }
