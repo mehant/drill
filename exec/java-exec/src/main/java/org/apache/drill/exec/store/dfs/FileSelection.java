@@ -108,7 +108,7 @@ public class FileSelection {
         newList.add(p);
       }
     }
-    logger.debug("FileSelection.minusDirectories() took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+    logger.info("FileSelection.minusDirectories() took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
     return new FileSelection(newList, selectionRoot);
   }
 
@@ -140,7 +140,7 @@ public class FileSelection {
         statuses.add(fs.getFileStatus(new Path(p)));
       }
     }
-    logger.debug("FileSelection.init() took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
+    logger.info("FileSelection.init() took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
   }
 
   public List<FileStatus> getFileStatusList(DrillFileSystem fs) throws IOException {
