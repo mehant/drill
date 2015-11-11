@@ -255,7 +255,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
    * specialExpression count.
    */
   private void analyzeCall(RexCall call, PushDirFilter callPushDirFilter) {
-    if (isHolisticExpression(call)) {
+    if (isHolisticExpression(call) || holisticExpression > 0) {
       holisticExpression++;
     } else {
       opStack.push(new OpState(call.getOperator()));
@@ -306,7 +306,7 @@ public class FindPartitionConditions extends RexVisitorImpl<Void> {
     // pop operands off of the stack
     operandStack.clear();
 
-    if (isHolisticExpression(call)) {
+    if (isHolisticExpression(call) || holisticExpression > 0) {
       assert holisticExpression > 0;
       holisticExpression--;
       if (callPushDirFilter == PushDirFilter.PUSH) {
