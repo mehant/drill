@@ -217,4 +217,8 @@ public class FileSelection {
     }
   }
 
+  public List<FileStatus> getFileStatuses() {
+    return statuses;
+  }
+
 }
