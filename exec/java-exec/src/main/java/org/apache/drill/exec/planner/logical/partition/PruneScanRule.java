@@ -76,6 +76,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.exec.vector.ValueVector;
 
+
 public abstract class PruneScanRule extends StoragePluginOptimizerRule {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PruneScanRule.class);
 
@@ -147,6 +148,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     };
   }
 
+  // TODO: Combine the doOnMatch and doOnMatchLogical
   protected void doOnMatchLogical(RelOptRuleCall call, LogicalFilter filterRel, Project projectRel, EnumerableTableScan scanRel) {
     final String pruningClassName = getClass().getName();
     logger.info("Beginning partition pruning, pruning class: {}", pruningClassName);
@@ -335,6 +337,9 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
       DynamicDrillTable newTable = new DynamicDrillTable(oldTable.getPlugin(), oldTable.getStorageEngineName(),
           oldTable.getUserName(), newFormatSelection);
       RelOptTableImpl newOptTableImpl = RelOptTableImpl.create(t.getRelOptSchema(), t.getRowType(), newTable);
+
+      // TODO: The new scan should come from the PartitionDescriptor
+      // TODO: Update the PartitionDescriptor to return ScanRel instead of the GroupScan 
       EnumerableTableScan newScan = EnumerableTableScan.create(scanRel.getCluster(), newOptTableImpl);
 
       RelNode inputRel = newScan;
